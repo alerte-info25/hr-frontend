@@ -1,0 +1,65 @@
+<!-- task-form-dialog.component.html -->
+<h2 mat-dialog-title class="text-2xl font-semibold text-gray-800 mb-4">
+  {{ data.mode === 'create' ? 'Créer une nouvelle tâche' : 'Modifier la tâche' }}
+</h2>
+
+<form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="space-y-5">
+  <!-- Titre -->
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Titre de la tâche</mat-label>
+    <input matInput formControlName="title" placeholder="Ex: Préparer le rapport RH" />
+    <mat-error *ngIf="taskForm.get('title')?.hasError('required')">Titre requis</mat-error>
+  </mat-form-field>
+
+  <!-- Description -->
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description" rows="3" placeholder="Détails de la tâche..."></textarea>
+  </mat-form-field>
+
+  <!-- Deadline -->
+  <mat-form-field appearance="outline" class="w-full md:w-1/2">
+    <mat-label>Date limite</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="deadline" />
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <!-- Statut -->
+  <mat-form-field appearance="outline" class="w-full md:w-1/2">
+    <mat-label>Statut</mat-label>
+    <mat-select formControlName="status">
+      <mat-option value="en_attente">En attente</mat-option>
+      <mat-option value="en_cours">En cours</mat-option>
+      <mat-option value="terminée">Terminée</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Progression -->
+  <div>
+    <label class="text-gray-700 font-medium">Progression</label>
+    <div class="flex items-center gap-3 mt-2">
+      <mat-slider formControlName="progress" min="0" max="100" step="5" thumbLabel></mat-slider>
+      <span class="font-semibold text-indigo-600">{{ taskForm.value.progress }}%</span>
+    </div>
+  </div>
+
+  <!-- Visibilité -->
+  <div class="flex items-center justify-between border rounded-xl p-3 bg-gray-50">
+    <div>
+      <p class="font-medium text-gray-800">Tâche publique ?</p>
+      <p class="text-sm text-gray-500">Visible par la direction et le service</p>
+    </div>
+    <mat-slide-toggle color="primary" formControlName="visibility">
+      {{ taskForm.value.visibility === 'public' ? 'Publique' : 'Privée' }}
+    </mat-slide-toggle>
+  </div>
+
+  <!-- Boutons -->
+  <div class="flex justify-end gap-4 mt-6">
+    <button mat-stroked-button mat-dialog-close>Annuler</button>
+    <button mat-flat-button color="primary" [disabled]="taskForm.invalid">
+      {{ data.mode === 'create' ? 'Créer' : 'Mettre à jour' }}
+    </button>
+  </div>
+</form>

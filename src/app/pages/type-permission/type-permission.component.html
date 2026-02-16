@@ -1,0 +1,28 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="roles-header">
+  <h1>Gestion des types de permissions</h1>
+  <button class="btn-add" (click)="openAddDialog()">
+    <i class="fas fa-plus"></i> Ajouter un type permission
+  </button>
+</div>
+<div class="roles-list">
+  <div class="role-item" *ngFor="let typeP of typePermissions">
+    <div class="role-info">
+      <h4>{{ typeP.nom }}</h4>
+      <p>{{ typeP.description }}</p>
+    </div>
+    <div class="role-actions">
+      <button class="btn-edit" (click)="openEditDialog(typeP)">Modifier</button>
+      <button class="btn-delete" (click)="openDeleteModal(typeP)">Supprimer</button>
+    </div>
+  </div>
+</div>
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de type permission ?'"
+  [message]="'Voulez-vous vraiment supprimer le type' + itemToDelete?.nom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

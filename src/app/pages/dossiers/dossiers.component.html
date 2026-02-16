@@ -1,0 +1,105 @@
+<div class="dossiers-container">
+  <!-- En-tête -->
+  <div class="header">
+    @if(nomEmploye || prenomEmploye) {
+      <h2 class="title">
+        <span class="material-icons">folder_open</span>
+        Dossier de l'employé
+        <span class="text-primary">{{ nomEmploye || '' }} {{ prenomEmploye || '' }}</span>
+      </h2>
+      } @else {
+      <h2 class="title">
+        <span class="material-icons">folder_open</span>
+        Mon Dossier
+      </h2>
+      }
+    <span>
+      <button class="btn-retour" (click)="goToList()">
+        Retour
+      </button>
+    </span>
+
+    <button mat-raised-button color="primary" (click)="openAddDialog()">
+      <mat-icon>upload_file</mat-icon>
+      Ajouter un fichier
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des documents...</p>
+  </div>
+
+  <!-- Message vide -->
+  <div class="empty" *ngIf="!isLoading && dossiers.length === 0">
+    <span class="material-icons" style="font-size: 5rem; color: #d1d5db; display: block; margin-bottom: 1.5rem;">
+      folder_off
+    </span>
+    <p>Aucun document trouvé pour cet employé.</p>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="openAddDialog()"
+      style="margin-top: 1.5rem;">
+      <mat-icon>add</mat-icon>
+      Ajouter le premier document
+    </button>
+  </div>
+
+  <!-- Grille des documents -->
+  <div class="grid" *ngIf="!isLoading && dossiers.length > 0">
+    <div class="card" *ngFor="let doc of dossiers; let i = index">
+
+      <!-- Bouton supprimer -->
+      <button class="btn-delete" (click)="openDeleteModal(doc)" title="Supprimer le document">
+        <span class="material-icons">delete</span>
+      </button>
+
+      <!-- Icône du type de fichier -->
+      <div class="icon">
+        <!-- <mat-icon color="warn">picture_as_pdf</mat-icon> -->
+      </div>
+
+      <!-- Informations du document -->
+      <div class="info">
+        <h3 [title]="doc.nom_fichier">{{ doc.nom_fichier }}</h3>
+        <p class="meta">
+          <span>{{ doc.extension?.toUpperCase() || 'FILE' }}</span>
+          <span *ngIf="doc.taille">•</span>
+          <span *ngIf="doc.taille">{{ (doc.taille / 1024 | number:'1.0-0') }} Ko</span>
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openFile(doc.chemin_url)"
+          title="Voir le document">
+          <span class="material-icons">visibility</span>
+          Voir
+        </button>
+
+        <button
+          mat-stroked-button
+          color="accent"
+          (click)="downloadFile(doc.chemin_url, doc.nom_fichier)"
+          title="Télécharger le document">
+          <span class="material-icons">download</span>
+          Télécharger
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de fichier'"
+  [message]="'Voulez-vous vraiment supprimer ce fichier du dossier ? Cette action est irréversible.'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

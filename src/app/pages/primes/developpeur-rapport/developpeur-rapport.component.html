@@ -1,0 +1,269 @@
+<!-- src/app/components/developpeur-rapport/developpeur-rapport.component.html -->
+<div class="rapport-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">person</span>
+        Rapport Développeur
+        <button class="btn btn-primary" (click)="retour()">
+          <i class="material-icons me-1">arrow_back</i>
+          Retour
+        </button>
+      </h1>
+    </div>
+  </div>
+
+  <!-- Sélection Développeur -->
+  <div class="selection-section">
+    <div class="select-wrapper">
+      <label>
+        <span class="material-icons">search</span>
+        Sélectionner un Développeur
+      </label>
+      <select
+        [(ngModel)]="selectedDeveloppeur"
+        (change)="onDeveloppeurChange()"
+        [disabled]="loadingDevs">
+        <option value="">-- Choisir un développeur --</option>
+        <option
+          *ngFor="let dev of developpeurs"
+          [value]="dev.slug">
+          {{ dev.prenom }} {{ dev.nom }}
+          <span *ngIf="dev.service"> - {{ dev.service.nom }}</span>
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loadingRapport" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement du rapport...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loadingRapport" class="error-container">
+    <span class="material-icons">error_outline</span>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadRapport()">
+      <span class="material-icons">refresh</span>
+      Réessayer
+    </button>
+  </div>
+
+  <!-- Rapport Content -->
+  <div *ngIf="rapport && !loadingRapport" class="rapport-content">
+
+    <!-- Profil Développeur -->
+    <div class="profile-section">
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <img
+            *ngIf="rapport.employe.photo_url"
+            [src]="rapport.employe.photo_url"
+            [alt]="rapport.employe.prenom + ' ' + rapport.employe.nom">
+          <div class="avatar-placeholder" *ngIf="!rapport.employe.photo_url">
+            <span class="material-icons">person</span>
+          </div>
+        </div>
+
+        <div class="profile-info">
+          <h2>{{ rapport.employe.prenom }} {{ rapport.employe.nom }}</h2>
+          <p class="service-name" *ngIf="rapport.service">
+            <span class="material-icons">business</span>
+            {{ rapport.service.nom }}
+          </p>
+          <div class="contact-info">
+            <span *ngIf="rapport.employe.email">
+              <span class="material-icons">email</span>
+              {{ rapport.employe.email }}
+            </span>
+            <span *ngIf="rapport.employe.telephone">
+              <span class="material-icons">phone</span>
+              {{ rapport.employe.telephone }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques Globales -->
+    <div class="stats-section">
+      <h2>
+        <span class="material-icons">analytics</span>
+        Statistiques Globales
+      </h2>
+
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <div class="stat-icon">
+            <span class="material-icons">work</span>
+          </div>
+          <div class="stat-info">
+            <h3>{{ rapport.nombre_projets }}</h3>
+            <p>Projet(s)</p>
+          </div>
+        </div>
+
+        <div class="stat-card warning">
+          <div class="stat-icon">
+            <span class="material-icons">account_balance_wallet</span>
+          </div>
+          <div class="stat-info">
+            <h3>{{ formatMontant(rapport.total_primes_attribuees) }}</h3>
+            <p>Primes Attribuées</p>
+          </div>
+        </div>
+
+        <div class="stat-card success">
+          <div class="stat-icon">
+            <span class="material-icons">paid</span>
+          </div>
+          <div class="stat-info">
+            <h3>{{ formatMontant(rapport.total_paye) }}</h3>
+            <p>Déjà Payé</p>
+          </div>
+        </div>
+
+        <div class="stat-card danger">
+          <div class="stat-icon">
+            <span class="material-icons">schedule</span>
+          </div>
+          <div class="stat-info">
+            <h3>{{ formatMontant(rapport.total_restant) }}</h3>
+            <p>Reste à Percevoir</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progression Globale -->
+      <div class="global-progress">
+        <div class="progress-header">
+          <span class="label">Progression Globale des Paiements</span>
+          <span class="percentage">{{ getPourcentageGlobal() | number:'1.0-1' }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="getPourcentageGlobal()">
+          </div>
+        </div>
+        <div class="progress-details">
+          <span>{{ formatMontant(rapport.total_paye) }} sur {{ formatMontant(rapport.total_primes_attribuees) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des Projets -->
+    <div class="projets-section">
+      <h2>
+        <span class="material-icons">list</span>
+        Détail par Projet
+      </h2>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="rapport.projets.length === 0">
+        <span class="material-icons">inbox</span>
+        <p>Aucun projet assigné à ce développeur</p>
+      </div>
+
+      <!-- Projets List -->
+      <div class="projets-list" *ngIf="rapport.projets.length > 0">
+        <div
+          class="projet-card"
+          *ngFor="let attribution of rapport.projets"
+          (click)="navigateToProjet(attribution.projet?.id!)">
+
+          <div class="card-header">
+            <div class="projet-info">
+              <div class="projet-icon">
+                <span class="material-icons">work</span>
+              </div>
+              <div>
+                <h3>{{ attribution.projet?.nom }}</h3>
+                <p *ngIf="attribution.projet?.description">
+                  {{ attribution.projet?.description }}
+                </p>
+              </div>
+            </div>
+            <span class="badge" [ngClass]="getStatutBadgeClass(attribution.statut)">
+              {{ getStatutLabel(attribution.statut) }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div class="projet-stats">
+              <div class="stat-item">
+                <span class="material-icons">percent</span>
+                <div>
+                  <span class="label">Part</span>
+                  <span class="value">{{ attribution.pourcentage_prime | number:'1.0-2' }}%</span>
+                </div>
+              </div>
+
+              <div class="stat-item highlight">
+                <span class="material-icons">card_giftcard</span>
+                <div>
+                  <span class="label">Prime</span>
+                  <span class="value">{{ formatMontant(attribution.montant_prime) }}</span>
+                </div>
+              </div>
+
+              <div class="stat-item success">
+                <span class="material-icons">paid</span>
+                <div>
+                  <span class="label">Payé</span>
+                  <span class="value">{{ formatMontant(attribution.montant_paye) }}</span>
+                </div>
+              </div>
+
+              <div class="stat-item warning">
+                <span class="material-icons">hourglass_empty</span>
+                <div>
+                  <span class="label">Reste</span>
+                  <span class="value">{{ formatMontant(attribution.montant_restant) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="projet-progress">
+              <div class="progress-bar-mini">
+                <div
+                  class="progress-fill-mini"
+                  [style.width.%]="getPourcentagePaiement(attribution)">
+                </div>
+              </div>
+              <span class="progress-text">{{ getPourcentagePaiement(attribution) | number:'1.0-1' }}% payé</span>
+            </div>
+
+            <!-- Paiements -->
+            <div class="paiements-mini" *ngIf="attribution.paiements && attribution.paiements.length > 0">
+              <div class="paiements-header">
+                <span class="material-icons">payment</span>
+                <span>{{ attribution.paiements.length }} paiement(s)</span>
+              </div>
+              <div class="paiements-preview">
+                <div class="paiement-mini-item" *ngFor="let paiement of attribution.paiements.slice(0, 3)">
+                  <span class="amount">{{ formatMontant(paiement.montant) }}</span>
+                  <span class="date">{{ paiement.date_paiement | date:'dd/MM/yy' }}</span>
+                </div>
+                <span class="more" *ngIf="attribution.paiements.length > 3">
+                  +{{ attribution.paiements.length - 3 }} autre(s)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="view-link">
+              Voir les détails
+              <span class="material-icons">arrow_forward</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

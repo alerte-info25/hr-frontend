@@ -1,0 +1,448 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="taches-container">
+  <!-- En-tête -->
+  <div class="header">
+    <div class="header-content">
+      <h1 class="title">Gestion des Tâches</h1>
+      <button class="btn-primary" (click)="openModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nouvelle tâche
+      </button>
+    </div>
+  </div>
+
+  <!-- Barre de recherche et filtres -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher une tâche..."
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="filters">
+      <button
+        [class.active]="filterActive() === 'all'"
+        (click)="filterActive.set('all')"
+        class="filter-btn"
+      >
+        Toutes
+      </button>
+      <button
+        [class.active]="filterActive() === 'encours'"
+        (click)="filterActive.set('encours')"
+        class="filter-btn"
+      >
+        En cours
+      </button>
+      <button
+        [class.active]="filterActive() === 'terminées'"
+        (click)="filterActive.set('terminées')"
+        class="filter-btn"
+      >
+        Terminées
+      </button>
+      <button
+        [class.active]="filterActive() === 'retard'"
+        (click)="filterActive.set('retard')"
+        class="filter-btn"
+      >
+        En retard
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des tâches -->
+  <div class="taches-grid">
+    @for (tache of filteredTaches(); track tache.id) {
+      <div class="tache-card">
+        <div class="tache-header">
+          <h3 class="tache-title">{{ tache.titre }}</h3>
+          <button
+            class="toggle-sous-taches-btn"
+            [class.active]="isSousTachesVisible(tache)"
+            (click)="toggleSousTaches(tache)"
+            *ngIf="tache.sous_taches?.length"
+          >
+            {{ isSousTachesVisible(tache) ? 'Cacher sous-tâches' : 'Afficher sous-tâches' }}
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="tache-actions">
+            <button class="icon-btn" (click)="openDetailModal(tache)" title="Détails">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button class="icon-btn" *ngIf="canEdit(tache)" (click)="openModal(tache)" title="Modifier">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+              </svg>
+            </button>
+            <button class="icon-btn icon-btn-danger" *ngIf="canDelete(tache)"  (click)="openDeleteModal(tache)" title="Supprimer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <p class="tache-description">{{ tache.description || 'Aucune description' }}</p>
+
+        <div class="tache-meta">
+          <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>{{ tache.delai | date:'dd/MM/yyyy' }}</span>
+          </div>
+
+          @if (tache.assigne_au_service) {
+            <div class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>{{ tache?.service?.nom }}</span>
+            </div>
+          }
+
+          @if (tache.assigne_a_employe) {
+            <div class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>{{ tache?.employe?.nom }} {{ tache?.employe?.prenom }}</span>
+            </div>
+          }
+
+          <span [class]="'status-badge ' + getStatusClass(tache)">
+            {{ getStatusBadge(tache) }}
+          </span>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="progress-label">Progression</span>
+            <span class="progress-value">{{ tache.progression }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="tache.progression"
+              [style.background-color]="getProgressColor(tache.progression)"
+            ></div>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="tache.progression"
+            (input)="tache.progression = $any($event.target).value"
+            (change)="updateProgression(tache, $any($event.target).value)"
+            class="progress-slider"
+          />
+        </div>
+        <div class="tache-footer">
+          <span class="assigned-by">Par {{ tache?.assignateur?.nom }} {{ tache?.assignateur?.prenom }}</span>
+          <button class="btn-add-sub" (click)="openSousTacheModal(tache)">
+            <i class="fas fa-plus"></i> Ajouter une sous-tâche
+          </button>
+          <button
+            class="visibility-btn"
+            (click)="toggleVisibility(tache)"
+            [title]="tache.visible === 1 ? 'Rendre privée' : 'Rendre publique'"
+          >
+            @if (tache.visible === 1) {
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            }
+          </button>
+        </div>
+          @if (isSousTachesVisible(tache)) {
+          <div class="sous-taches">
+            <h4>Sous-tâches</h4>
+            @for (st of tache.sous_taches; track st.id) {
+              <div class="sous-tache-card">
+                <strong>{{ st.titre }}</strong>
+                <div class="tache-actions">
+                  <button class="icon-btn" (click)="openDetailModal(st)" title="Détails">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+                <p>{{ st.description || 'Aucune description' }}</p>
+                <div class="tache-meta">
+            <div class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>{{ st.delai | date:'dd/MM/yyyy' }}</span>
+            </div>
+
+            @if (st.assigne_au_service) {
+              <div class="meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>{{ st?.service?.nom }}</span>
+              </div>
+            }
+
+            @if (st.assigne_a_employe) {
+              <div class="meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>{{ st?.employe?.nom }} {{ st?.employe?.prenom }}</span>
+              </div>
+            }
+
+            <span [class]="'status-badge ' + getStatusClass(st)">
+              {{ getStatusBadge(st) }}
+            </span>
+          </div>
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-label">Progression</span>
+                  <span class="progress-value">{{ st.progression }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    [style.width.%]="st.progression"
+                    [style.background-color]="getProgressColor(st.progression)"
+                  ></div>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  [value]="st.progression"
+                  (input)="st.progression = $any($event.target).value"
+                  (change)="updateProgression(st, $any($event.target).value)"
+                  class="progress-slider"
+                />
+                </div>
+                <div class="tache-footer">
+                  <span class="assigned-by">Par {{ st?.assignateur?.nom }} {{ st?.assignateur?.prenom }}</span>
+                  <button
+                      class="visibility-btn"
+                      (click)="toggleVisibility(st)"
+                      [title]="tache.visible === 1 ? 'Rendre privée' : 'Rendre publique'"
+                  >
+                  @if (tache.visible === 1) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  }
+                  </button>
+                </div>
+            </div>
+            }
+        </div>
+      }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <h3>Aucune tâche trouvée</h3>
+        <p>Créez votre première tâche pour commencer</p>
+      </div>
+    }
+
+  </div>
+
+<!-- Modal Création/Édition -->
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode() ? 'Modifier la tâche' : 'Nouvelle tâche' }}</h2>
+          <button class="close-btn" (click)="closeModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <form [formGroup]="tacheForm" (ngSubmit)="submitTache()" class="modal-form">
+          <div class="form-group">
+            <label>Titre *</label>
+            <input type="text" formControlName="titre" placeholder="Nom de la tâche" />
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea formControlName="description" rows="3" placeholder="Description détaillée"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service</label>
+              <select formControlName="assigne_au_service">
+                <option value="" disabled>Sélectionner</option>
+                <option value="">Aucun service</option>
+                @for (service of services(); track service) {
+                  <option [value]="service.slug">{{ service?.nom }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Employé</label>
+              <select
+                formControlName="assigne_a_employe"
+                [disabled]="!tacheForm.get('assigne_au_service')?.value"
+              >
+                <option value="" disabled>Sélectionner</option>
+                <option value="">Aucun employé</option>
+                @for (employe of employesFiltres(); track employe) {
+                  <option [value]="employe.slug">{{ employe?.nom }} {{ employe?.prenom }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date limite *</label>
+              <input type="date" formControlName="delai" />
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="visible" [value]="1" />
+                <span>Visible par l'administration</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button type="submit" class="btn-primary" [disabled]="!tacheForm.valid">
+              {{ isEditMode() ? 'Mettre à jour' : 'Créer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Détails -->
+  @if (showDetailModal() && selectedTache()) {
+    <div class="modal-overlay" (click)="closeDetailModal()">
+      <div class="modal-content modal-detail" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Détails de la tâche</h2>
+          <button class="close-btn" (click)="closeDetailModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="detail-content">
+          <h3>{{ selectedTache()!.titre }}</h3>
+          <p class="detail-description">{{ selectedTache()!.description }}</p>
+
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Assignée par</span>
+              <span class="detail-value">{{ selectedTache()!.assignateur?.nom }} {{ selectedTache()!.assignateur?.prenom }}</span>
+            </div>
+
+            @if (selectedTache()!.assigne_au_service) {
+              <div class="detail-item">
+                <span class="detail-label">Au service</span>
+                <span class="detail-value">{{ selectedTache()!.service?.nom }}</span>
+              </div>
+            }
+
+            @if (selectedTache()!.assigne_a_employe) {
+              <div class="detail-item">
+                <span class="detail-label">A l'employé</span>
+                <span class="detail-value">{{ selectedTache()!.employe?.nom }} {{ selectedTache()!.employe?.prenom }}</span>
+              </div>
+            }
+
+            <div class="detail-item">
+              <span class="detail-label">Date limite</span>
+              <span class="detail-value">{{ selectedTache()!.delai | date:'dd/MM/yyyy' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Créée le</span>
+              <span class="detail-value">{{ selectedTache()!.created_at | date:'dd/MM/yyyy' }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Visibilité</span>
+              <span class="detail-value">{{ selectedTache()!.visible === 1 ? 'Publique' : 'Privée' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-progress">
+            <span class="detail-label">Progression : {{ selectedTache()!.progression }}%</span>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                [style.width.%]="selectedTache()!.progression"
+                [style.background-color]="getProgressColor(selectedTache()!.progression)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de tâches '"
+  [message]="'Voulez-vous vraiment supprimer la tâche ' + itemToDelete?.titre + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteModal()"
+></app-confirm-delete-dialog>

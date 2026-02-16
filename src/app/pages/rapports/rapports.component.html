@@ -1,0 +1,203 @@
+<div class="rapport-container" @fadeIn>
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">assessment</mat-icon>
+        <div>
+          <h1>Rapports Trimestriels</h1>
+          <p class="subtitle" style="color: #ffffff;">Gestion et suivi des rapports des employés</p>
+        </div>
+      </div>
+      <div class="stats-section">
+        <div class="stat-card">
+          <mat-icon>description</mat-icon>
+          <div class="stat-info">
+            <span class="stat-number">{{ rapports.length }}</span>
+            <span class="stat-label">Rapports</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filtres -->
+  <section class="filters-section" @fadeIn>
+    <div class="filters-header">
+      <h2><mat-icon>filter_list</mat-icon> Filtres</h2>
+      <button mat-button class="reset-btn" (click)="reinitialiserFiltres()" *ngIf="employeSelectionne || trimestreSelectionne || anneeSelectionnee">
+        <mat-icon>refresh</mat-icon>
+        Réinitialiser
+      </button>
+    </div>
+
+    <div class="filters-grid">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Employé</mat-label>
+        <mat-select [(ngModel)]="employeSelectionne" (ngModelChange)="appliquerFiltres()">
+          <mat-option [value]="null">Tous les employés</mat-option>
+          <mat-option *ngFor="let emp of employes" [value]="emp.slug">
+            {{ emp.prenom }} {{ emp.nom }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Trimestre</mat-label>
+        <mat-select [(ngModel)]="trimestreSelectionne" (ngModelChange)="appliquerFiltres()">
+          <mat-option [value]="null">Tous les trimestres</mat-option>
+          <mat-option *ngFor="let t of trimestres" [value]="t.value">
+            {{ t.label }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>date_range</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Année</mat-label>
+        <mat-select [(ngModel)]="anneeSelectionnee" (ngModelChange)="appliquerFiltres()">
+          <mat-option [value]="null">Toutes les années</mat-option>
+          <mat-option *ngFor="let annee of years" [value]="annee">
+            {{ annee }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+      </mat-form-field>
+    </div>
+  </section>
+
+  <!-- Loader -->
+  <div class="loader-container" *ngIf="isLoading">
+    <div class="loader"></div>
+    <p>Chargement des rapports...</p>
+  </div>
+
+  <!-- Liste des rapports -->
+  <section class="rapports-list" *ngIf="!isLoading" @listAnimation>
+    <div class="empty-state" *ngIf="rapportsFiltres.length === 0">
+      <mat-icon>inbox</mat-icon>
+      <h3>Aucun rapport trouvé</h3>
+      <p>Aucun rapport ne correspond aux critères sélectionnés</p>
+    </div>
+
+    <div class="rapport-card" *ngFor="let rapport of rapportsFiltres" @fadeIn>
+      <div class="rapport-header">
+        <div class="employe-info">
+          <div class="avatar">
+            {{ rapport.employe?.prenom?.charAt(0) }}{{ rapport.employe?.nom?.charAt(0) }}
+          </div>
+          <div class="employe-details">
+            <h3>{{ rapport.employe?.prenom }} {{ rapport.employe?.nom }}</h3>
+            <p class="poste">{{ rapport.employe?.fonction?.nom || '' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rapport-body">
+        <div class="info-row">
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <span>Trimestre {{ rapport.trimestre }} - {{ rapport.annee }}</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>schedule</mat-icon>
+            <span>Créé le {{ rapport.created_at | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="commentaire-preview" *ngIf="rapport.commentaire">
+          <mat-icon>comment</mat-icon>
+          <p>{{ rapport.commentaire }}</p>
+        </div>
+      </div>
+
+      <div class="rapport-actions">
+        <button mat-button class="action-btn" (click)="ouvrirDetails(rapport)">
+          <mat-icon>visibility</mat-icon>
+          Détails
+        </button>
+        <button mat-button class="action-btn" (click)="telechargerRapport(rapport)">
+          <mat-icon>download</mat-icon>
+          Télécharger
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal de détails -->
+  <div class="modal-overlay" *ngIf="rapportSelectionne" (click)="fermerDetails()" @fadeIn>
+    <div class="modal-content" (click)="$event.stopPropagation()" @fadeIn>
+      <div class="modal-header">
+        <h2>
+          <mat-icon>description</mat-icon>
+          Détails du rapport
+        </h2>
+        <button mat-icon-button (click)="fermerDetails()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <h3>Informations de l'employé</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Nom complet</label>
+              <p>{{ rapportSelectionne.employe?.prenom }} {{ rapportSelectionne.employe?.nom }}</p>
+            </div>
+            <div class="detail-item">
+              <label>Poste</label>
+              <p>{{ rapportSelectionne?.employe?.fonction?.nom || '' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Informations du rapport</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Période</label>
+              <p>Trimestre{{ rapportSelectionne.trimestre }} - {{ rapportSelectionne.annee }}</p>
+            </div>
+            <div class="detail-item">
+              <label>Date de soumission</label>
+              <p>{{ rapportSelectionne.updated_at | date: 'dd/MM/yyyy à HH:mm' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Commentaire du directeur</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Ajouter ou modifier un commentaire</mat-label>
+            <textarea matInput
+                      [(ngModel)]="nouveauCommentaire"
+                      rows="4"
+                      placeholder="Entrez votre commentaire sur ce rapport..."></textarea>
+            <mat-icon matPrefix>comment</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="document-preview">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <div>
+            <p class="doc-name">{{ rapportSelectionne.document }}</p>
+            <button mat-button class="download-link" (click)="telechargerRapport(rapportSelectionne)">
+              <mat-icon>download</mat-icon>
+              Télécharger le document
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button mat-button (click)="fermerDetails()">Annuler</button>
+        <button mat-raised-button color="primary" (click)="sauvegarderCommentaire()">
+          <mat-icon>save</mat-icon>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="authentication-wrapper cover-authentication">
+    <div class="authentication-inner row">
+        <div class="d-none d-md-flex col-lg-7 col-md-6 p-0">
+            <div class="authentication-image d-flex justify-content-center align-items-center">
+                <img src="assets/images/bg/bg_with_people.png" alt="image">
+            </div>
+        </div>
+        <div class="d-flex col-lg-5 col-md-6 col-12 align-items-center">
+            <div class="card__wrapper">
+                <div class="authentication-top text-center mb-20">
+                    <a href="javascript:;" class="authentication-logo logo-black">
+                        <img src="assets/images/logo/logo-alerteInfo.png" alt="logo">
+                    </a>
+                    <a href="javascript:;" class="authentication-logo logo-white">
+                        <img src="assets/images/logo/logo-alerteInfo.png" alt="logo">
+                    </a>
+                    <h4 class="mb-15">Bienvenue sur Ressources Humaines</h4>
+                    <p class="mb-15">Connectez-vous pour commencer</p>
+                </div>
+                <mat-progress-bar *ngIf="isLoading" mode="indeterminate" color="primary"></mat-progress-bar>
+                <form class="" (ngSubmit)="onSubmit()">
+                  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+                    <div class="from__input-box">
+                        <div class="form__input-title">
+                            <label for="nameEmail">Adresse email</label>
+                        </div>
+                        <div class="form__input">
+                            <input class="form-control" name="email" [(ngModel)]="email" id="nameEmail" type="text" required>
+                        </div>
+                    </div>
+                    <div class="from__input-box">
+                        <div class="form__input-title d-flex justify-content-between">
+                            <label for="passwordInput">Mot de passe</label>
+                            <a (click)="goToForgot()">
+                                <small>Mot de passe oublié ?</small>
+                            </a>
+                        </div>
+                        <div class="form__input position-relative">
+                            <input class="form-control" [(ngModel)]="password"
+                                   [type]="passwordVisible ? 'text' : 'password'"
+                                   name="password"
+                                   id="passwordInput"
+                                   required>
+                            <div class="pass-icon"
+                                 (click)="togglePassword()"
+                                 style="cursor: pointer;">
+                                <i class="fa-sharp fa-light"
+                                   [class.fa-eye]="passwordVisible"
+                                   [class.fa-eye-slash]="!passwordVisible"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                      <a (click)="openAutoRegister()" class="text-primary" style="cursor: pointer;">
+                        Soumettre mes informations
+                      </a>
+                    </div>
+
+                    <div class="mb-3">
+                        <button class="btn btn-primary w-100" type="submit">Connexion</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

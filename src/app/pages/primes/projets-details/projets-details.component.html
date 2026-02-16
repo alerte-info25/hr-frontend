@@ -1,0 +1,250 @@
+<!-- src/app/components/projet-detail/projet-detail.component.html -->
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="detail-container">
+  <!-- Header -->
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <div class="header-info" *ngIf="rapport">
+      <h1>{{ rapport.projet.nom }}</h1>
+      <span class="badge" [ngClass]="getStatutBadgeClass(rapport.projet.statut)">
+        {{ getStatutLabel(rapport.projet.statut) }}
+      </span>
+    </div>
+    <div class="header-actions" *ngIf="rapport">
+      <!-- <button class="btn-icon" title="Modifier">
+        <span class="material-icons">edit</span>
+      </button> -->
+      <button class="btn-icon danger" (click)="openDeleteModal(rapport.projet)" title="Supprimer">
+        <span class="material-icons">delete</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des détails du projet...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <span class="material-icons">error_outline</span>
+    <p>{{ error }}</p>
+    <!-- <button class="btn btn-outline" (click)="loadProjet(rapport?.projet)">
+      <span class="material-icons">refresh</span>
+      Réessayer
+    </button> -->
+  </div>
+
+  <!-- Projet Details -->
+  <div *ngIf="rapport && !loading" class="detail-content">
+
+    <!-- Informations Générales -->
+    <div class="info-section">
+      <h2>
+        <span class="material-icons">info</span>
+        Informations Générales
+      </h2>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <span class="material-icons">attach_money</span>
+          <div class="info-content">
+            <span class="label">Montant Total</span>
+            <span class="value">{{ formatMontant(rapport.projet.montant_total) }}</span>
+          </div>
+        </div>
+
+        <div class="info-card highlight">
+          <span class="material-icons">card_giftcard</span>
+          <div class="info-content">
+            <span class="label">Prime Totale</span>
+            <span class="value">{{ formatMontant(rapport.total_prime) }}</span>
+          </div>
+        </div>
+
+        <div class="info-card success">
+          <span class="material-icons">paid</span>
+          <div class="info-content">
+            <span class="label">Prime Payée</span>
+            <span class="value">{{ formatMontant(rapport.total_paye) }}</span>
+          </div>
+        </div>
+
+        <div class="info-card warning">
+          <span class="material-icons">hourglass_empty</span>
+          <div class="info-content">
+            <span class="label">Reste à Payer</span>
+            <span class="value">{{ formatMontant(rapport.total_restant) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="label">Progression des Paiements</span>
+          <span class="percentage">{{ rapport.pourcentage_paiement | number:'1.0-1' }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="rapport.pourcentage_paiement">
+          </div>
+        </div>
+      </div>
+
+      <div class="description" *ngIf="rapport.projet.description">
+        <h3>Description</h3>
+        <p>{{ rapport.projet.description }}</p>
+      </div>
+
+      <div class="dates" *ngIf="rapport.projet.date_debut || rapport.projet.date_fin">
+        <div class="date-item" *ngIf="rapport.projet.date_debut">
+          <span class="material-icons">event</span>
+          <div>
+            <span class="label">Date de Début</span>
+            <span class="value">{{ rapport.projet.date_debut | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+        <div class="date-item" *ngIf="rapport.projet.date_fin">
+          <span class="material-icons">event</span>
+          <div>
+            <span class="label">Date de Fin</span>
+            <span class="value">{{ rapport.projet.date_fin | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attributions des Primes -->
+    <div class="attributions-section">
+      <h2>
+        <span class="material-icons">group</span>
+        Développeurs & Primes ({{ rapport.nombre_developpeurs }})
+      </h2>
+
+      <div class="attributions-list">
+        <div
+          class="attribution-card"
+          *ngFor="let attribution of rapport.attributions">
+
+          <div class="card-header">
+            <div class="dev-info">
+              <div class="avatar">
+                <span class="material-icons">person</span>
+              </div>
+              <div class="dev-details">
+                <h3>{{ attribution.employe?.prenom }} {{ attribution.employe?.nom }}</h3>
+                <p *ngIf="attribution.employe?.service">{{ attribution.employe?.service?.nom || ''}}</p>
+              </div>
+            </div>
+            <span class="badge" [ngClass]="getStatutBadgeClass(attribution.statut)">
+              {{ getStatutLabel(attribution.statut) }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div class="stats-row">
+              <div class="stat-item">
+                <span class="material-icons">percent</span>
+                <div>
+                  <span class="label">Pourcentage</span>
+                  <span class="value">{{ attribution.pourcentage_prime | number:'1.0-2' }}%</span>
+                </div>
+              </div>
+
+              <div class="stat-item">
+                <span class="material-icons">account_balance_wallet</span>
+                <div>
+                  <span class="label">Prime Attribuée</span>
+                  <span class="value">{{ formatMontant(attribution.montant_prime) }}</span>
+                </div>
+              </div>
+
+              <div class="stat-item success">
+                <span class="material-icons">paid</span>
+                <div>
+                  <span class="label">Déjà Payé</span>
+                  <span class="value">{{ formatMontant(attribution.montant_paye) }}</span>
+                </div>
+              </div>
+
+              <div class="stat-item warning">
+                <span class="material-icons">schedule</span>
+                <div>
+                  <span class="label">Reste</span>
+                  <span class="value">{{ formatMontant(attribution.montant_restant) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="progress-mini">
+              <div class="progress-bar-mini">
+                <div
+                  class="progress-fill-mini"
+                  [style.width.%]="getPourcentagePaiement(attribution)">
+                </div>
+              </div>
+              <span class="progress-text">{{ getPourcentagePaiement(attribution) | number:'1.0-1' }}% payé</span>
+            </div>
+
+            <!-- Historique des Paiements -->
+            <div class="paiements-history" *ngIf="attribution.paiements && attribution.paiements.length > 0">
+              <h4>
+                <span class="material-icons">history</span>
+                Historique ({{ attribution.paiements.length }})
+              </h4><br>
+              <div class="paiements-list">
+                <div class="paiement-item" *ngFor="let paiement of attribution.paiements">
+                  <span class="material-icons">payment</span>
+                  <div class="paiement-info">
+                    <span class="amount">{{ formatMontant(paiement.montant) }}</span>
+                    <span class="date">{{ paiement.date_paiement | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <span class="mode-badge">{{ paiement.mode_paiement }}</span>
+                  <button
+                    class="delete-btn"
+                    (click)="supprimerPaiement(paiement, attribution)"
+                  >
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button
+              class="btn btn-primary-small"
+              (click)="openPaiementModal(attribution.id!)"
+              [disabled]="attribution.statut === 'complete'">
+              <span class="material-icons">add</span>
+              Enregistrer un paiement
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Paiement -->
+<app-paiement-form
+  *ngIf="showPaiementModal && selectedAttributionId"
+  [attributionPrimeId]="selectedAttributionId"
+  (close)="closePaiementModal()"
+  (success)="onPaiementSuccess()">
+</app-paiement-form>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de projet'"
+  [message]="'Voulez-vous vraiment supprimer ce projet  ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

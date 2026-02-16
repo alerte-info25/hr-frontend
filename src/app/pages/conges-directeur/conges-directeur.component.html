@@ -1,0 +1,610 @@
+<div class="conge-directeur-container" [class.fade-in]="fadeIn">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <mat-icon class="header-icon">event_available</mat-icon>
+        <div class="header-text">
+          <h1>Gestion des Congés</h1>
+          <p>Gerez les demandes de congés des employés</p>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" (click)="loadConges()" class="refresh-btn">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" *ngIf="!isLoading">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">
+          <mat-icon>folder</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.total }}</h3>
+          <p>Total Demandes</p>
+        </div>
+        <div class="stat-wave"></div>
+      </div>
+
+      <div class="stat-card stat-pending">
+        <div class="stat-icon">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.enAttente }}</h3>
+          <p>En Attente</p>
+        </div>
+        <div class="stat-wave"></div>
+      </div>
+
+      <div class="stat-card stat-approved">
+        <div class="stat-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.approuve }}</h3>
+          <p>Acceptée(s)</p>
+        </div>
+        <div class="stat-wave"></div>
+      </div>
+
+      <div class="stat-card stat-rejected">
+        <div class="stat-icon">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.rejete }}</h3>
+          <p>Refusée(s)</p>
+        </div>
+        <div class="stat-wave"></div>
+      </div>
+    </div>
+
+    <!-- Demandes en attente -->
+    <div class="section-container" *ngIf="congesEnAttente.length > 0">
+      <div class="section-header">
+        <mat-icon>notifications_active</mat-icon>
+        <h2>Demandes en Attente de Réponse</h2>
+        <span class="badge">{{ congesEnAttente.length }}</span>
+      </div>
+
+      <div class="pending-grid">
+        <div class="pending-card" *ngFor="let conge of congesEnAttente; let i = index"
+             [style.animation-delay.ms]="i * 100">
+          <div class="pending-header">
+            <div class="employee-info">
+              @if(conge.employe){
+                <div class="avatar">
+                  {{ conge?.employe?.prenom?.charAt(0) || '' }}{{ conge?.employe?.nom?.charAt(0) || '' }}
+                </div>
+              }@else{
+                <div class="avatar">I</div>
+              }
+              <div class="employee-details">
+                <h3>{{ conge?.employe?.prenom || 'Inconnu' }} {{ conge?.employe?.nom || '' }}</h3>
+                <span class="type-badge">{{ conge.type.nom }}</span>
+              </div>
+            </div>
+            <div class="request-date">
+              <mat-icon>calendar_today</mat-icon>
+              <span>{{ formatDate(conge.date_demande) }}</span>
+            </div>
+          </div>
+
+          <div class="pending-body">
+            <div class="info-row">
+              <div class="info-item">
+                <mat-icon>event_available</mat-icon>
+                <div>
+                  <label>Début</label>
+                  <span>{{ formatDate(conge.debut) }}</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>event_busy</mat-icon>
+                <div>
+                  <label>Fin</label>
+                  <span>{{ formatDate(conge.fin) }}</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>event_note</mat-icon>
+                <div>
+                  <label>Durée</label>
+                  <span>{{ calculateDuration(conge.debut, conge.fin) }} jours</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="raison-section">
+              <label><mat-icon>comment</mat-icon> Motif</label>
+              <p>{{ conge.raison }}</p>
+            </div>
+
+            <div class="document-section" *ngIf="conge.documents?.length">
+              <div class="doc-title">
+                <mat-icon>attach_file</mat-icon>
+                <span>{{ conge?.documents?.length || '0' }} document(s)</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="pending-footer">
+            <button mat-raised-button color="primary" (click)="openResponseModal(conge)">
+              <mat-icon>reply</mat-icon>
+              Répondre
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucune demande en attente -->
+    <div class="empty-state" *ngIf="congesEnAttente.length === 0">
+      <mat-icon>done_all</mat-icon>
+      <h3>Aucune demande en attente</h3>
+      <p>Toutes les demandes ont été traitées</p>
+    </div>
+
+    <!-- Historique des demandes -->
+    <div class="section-container">
+      <div class="section-header">
+        <mat-icon>history</mat-icon>
+        <h2>Historique des Demandes</h2>
+      </div>
+
+      <!-- Filtres -->
+      <div class="filters-container">
+        <div class="filters-row">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Rechercher</mat-label>
+            <input matInput [(ngModel)]="searchTerm" (input)="applyFilters()"
+                   placeholder="Nom, prénom, type...">
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Statut</mat-label>
+            <mat-select [(ngModel)]="selectedStatut" (selectionChange)="applyFilters()">
+              <mat-option value="">Tous</mat-option>
+              <mat-option value="2">Accepter</mat-option>
+              <mat-option value="3">Refuser</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>filter_list</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Date début</mat-label>
+
+            <input matInput
+                  [matDatepicker]="pickerDebut"
+                  [(ngModel)]="dateDebut"
+                  (dateChange)="applyFilters()">
+
+            <mat-datepicker-toggle matSuffix [for]="pickerDebut"></mat-datepicker-toggle>
+            <mat-datepicker #pickerDebut></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Date fin</mat-label>
+
+            <input matInput
+                  [matDatepicker]="pickerFin"
+                  [(ngModel)]="dateFin"
+                  (dateChange)="applyFilters()">
+
+            <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFin></mat-datepicker>
+          </mat-form-field>
+
+
+
+          <button mat-raised-button (click)="clearFilters()" class="clear-btn">
+            <mat-icon>clear</mat-icon>
+            Réinitialiser
+          </button>
+        </div>
+      </div>
+
+      <!-- Tableau -->
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th (click)="onSort('employe')" class="sortable">
+                <div class="th-content">
+                  <span>Employé</span>
+                  <mat-icon *ngIf="sortField === 'employe'">
+                    {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </div>
+              </th>
+              <th (click)="onSort('type')" class="sortable">
+                <div class="th-content">
+                  <span>Type</span>
+                  <mat-icon *ngIf="sortField === 'type'">
+                    {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </div>
+              </th>
+              <th (click)="onSort('debut')" class="sortable">
+                <div class="th-content">
+                  <span>Période</span>
+                  <mat-icon *ngIf="sortField === 'debut'">
+                    {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </div>
+              </th>
+              <th>Durée</th>
+              <th>Statut</th>
+              <th (click)="onSort('date_demande')" class="sortable">
+                <div class="th-content">
+                  <span>Date demande</span>
+                  <mat-icon *ngIf="sortField === 'date_demande'">
+                    {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </mat-icon>
+                </div>
+              </th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let conge of getPaginatedData(); let i = index"
+                [style.animation-delay.ms]="i * 50"
+                class="table-row-animated">
+              <td>
+                <div class="employee-cell">
+                  <div class="avatar-small">
+                    {{ conge.employe.prenom.charAt(0).toUpperCase() }}{{ conge.employe.nom.charAt(0).toUpperCase() }}
+                  </div>
+                  <span>{{ conge.employe.prenom }} {{ conge.employe.nom }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="type-chip">{{ conge.type.nom }}</span>
+              </td>
+              <td>
+                <div class="periode-cell">
+                  <span>{{ formatDate(conge.debut) }}</span>
+                  <mat-icon>arrow_forward</mat-icon>
+                  <span>{{ formatDate(conge.fin) }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="duree-badge">{{ calculateDuration(conge.debut, conge.fin) }} jours</span>
+              </td>
+              <td>
+                <span class="statut-badge" [ngClass]="getStatutClass(conge.statut)">
+                  {{ getStatutLabel(conge.statut) }}
+                </span>
+              </td>
+              <td>{{ formatDate(conge.date_demande) }}</td>
+              <td class="actions-cell">
+                <button mat-icon-button [matTooltip]="'Voir détails'" (click)="openDetailsModal(conge)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-icon-button [matTooltip]="'Supprimer'" color="warn" (click)="openDeleteModal(conge)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty state -->
+        <div class="table-empty" *ngIf="congesTraitesFiltered.length === 0">
+          <mat-icon>inbox</mat-icon>
+          <p>Aucune demande trouvée</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator
+        *ngIf="congesTraitesFiltered.length > 0"
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Réponse -->
+<div class="modal-overlay" *ngIf="showResponseModal" (click)="closeResponseModal()">
+  <div class="modal-container modal-response" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <mat-icon>reply</mat-icon>
+        Répondre à la demande
+      </h2>
+      <button mat-icon-button (click)="closeResponseModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedConge">
+      <!-- Info employé -->
+      <div class="employee-card">
+        <div class="avatar-large">
+          {{ selectedConge.employe.prenom.charAt(0) }}{{ selectedConge.employe.nom.charAt(0) }}
+        </div>
+        <div class="employee-info-detail">
+          <h3>{{ selectedConge.employe.prenom }} {{ selectedConge.employe.nom }}</h3>
+          <p>{{ selectedConge.employe.emailPersonnel }}</p>
+        </div>
+      </div>
+
+      <!-- Détails demande -->
+      <div class="request-details">
+        <div class="detail-item">
+          <label><mat-icon>category</mat-icon> Type de congé</label>
+          <span>{{ selectedConge.type.nom }}</span>
+        </div>
+        <div class="detail-item">
+          <label><mat-icon>event</mat-icon> Période</label>
+          <span>{{ formatDate(selectedConge.debut) }} au {{ formatDate(selectedConge.fin) }}</span>
+        </div>
+        <div class="detail-item">
+          <label><mat-icon>schedule</mat-icon> Durée</label>
+          <span>{{ calculateDuration(selectedConge.debut, selectedConge.fin) }} jours</span>
+        </div>
+        <div class="detail-item full-width">
+          <label><mat-icon>comment</mat-icon> Motif</label>
+          <p>{{ selectedConge.raison }}</p>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedConge.documents?.length">
+          <label>
+            <mat-icon>attach_file</mat-icon>
+            {{ selectedConge.documents?.length }} document(s) joint(s)
+          </label>
+
+          <div class="document-list">
+            <a
+              class="document-link"
+              *ngFor="let doc of selectedConge.documents; let i = index"
+              [href]="doc.url"
+              target="_blank"
+            >
+              <mat-icon>description</mat-icon>
+              Document {{ i + 1 }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire réponse -->
+      <form [formGroup]="responseForm" class="response-form">
+        <div class="decision-buttons">
+          <button type="button"
+                  mat-raised-button
+                  class="btn-approve"
+                  [class.active]="responseForm.value.statut === 2"
+                  (click)="setStatut(2)">
+            <mat-icon>check_circle</mat-icon>
+            Accepter
+          </button>
+          <button type="button"
+                  mat-raised-button
+                  class="btn-reject"
+                  [class.active]="responseForm.value.statut === 3"
+                  (click)="setStatut(3)">
+            <mat-icon>cancel</mat-icon>
+            Refuser
+          </button>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Commentaire {{ responseForm.value.statut === 3 ? '(obligatoire)' : '(optionnel)' }}</mat-label>
+          <textarea matInput
+                    formControlName="commentaire_admin"
+                    rows="4"
+                    placeholder="Ajoutez un commentaire..."></textarea>
+          <mat-error *ngIf="responseForm.get('commentaire_admin')?.hasError('required')">
+            Le commentaire est obligatoire pour un rejet
+          </mat-error>
+        </mat-form-field>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button mat-stroked-button (click)="closeResponseModal()" [disabled]="isSubmitting">
+        Annuler
+      </button>
+      <button mat-raised-button
+              color="primary"
+              (click)="submitResponse()"
+              [disabled]="isSubmitting || responseForm.invalid">
+        <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+        <span *ngIf="!isSubmitting">Envoyer la réponse</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détails -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-container modal-details" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <mat-icon>info</mat-icon>
+        Détails de la demande
+      </h2>
+      <button mat-icon-button (click)="closeDetailsModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedConge">
+      <!-- Status badge -->
+      <div class="status-banner" [ngClass]="getStatutClass(selectedConge.statut)">
+        <mat-icon>
+          {{ selectedConge.statut === 2 ? 'check_circle' : selectedConge.statut === 3 ? 'cancel' : 'schedule' }}
+        </mat-icon>
+        <span>{{ getStatutLabel(selectedConge.statut) }}</span>
+      </div>
+
+      <!-- Grille d'informations -->
+      <div class="details-grid">
+        <div class="detail-card">
+          <mat-icon>person</mat-icon>
+          <div>
+            <label>Employé</label>
+            <strong>{{ selectedConge.employe.prenom }} {{ selectedConge.employe.nom }}</strong>
+            <p>{{ selectedConge.employe.emailPersonnel }}</p>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <mat-icon>category</mat-icon>
+          <div>
+            <label>Type de congé</label>
+            <strong>{{ selectedConge.type.nom }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <mat-icon>calendar_today</mat-icon>
+          <div>
+            <label>Date de demande</label>
+            <strong>{{ formatDate(selectedConge.date_demande) }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <mat-icon>event</mat-icon>
+          <div>
+            <label>Période</label>
+            <strong>{{ formatDate(selectedConge.debut) }}</strong>
+            <span class="arrow">→</span>
+            <strong>{{ formatDate(selectedConge.fin) }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <mat-icon>schedule</mat-icon>
+          <div>
+            <label>Durée totale</label>
+            <strong>{{ calculateDuration(selectedConge.debut, selectedConge.fin) }} jours</strong>
+          </div>
+        </div>
+
+        <div class="detail-card" *ngIf="selectedConge.date_reponse">
+          <mat-icon>event_available</mat-icon>
+          <div>
+            <label>Date de réponse</label>
+            <strong>{{ formatDate(selectedConge.date_reponse) }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-card full-width">
+          <mat-icon>comment</mat-icon>
+          <div>
+            <label>Motif de la demande</label>
+            <p>{{ selectedConge.raison }}</p>
+          </div>
+        </div>
+
+        <div class="detail-card full-width" *ngIf="selectedConge.commentaire_admin">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <div>
+            <label>Commentaire administrateur</label>
+            <!-- <p class="admin-comment">{{ selectedConge.commentaire_admin }}</p> -->
+            <p [innerHTML]="formattedComment"></p>
+          </div>
+        </div>
+
+        <div class="detail-card full-width" *ngIf="selectedConge.documents?.length">
+          <mat-icon>attach_file</mat-icon>
+          <div>
+            <label>
+              Document(s) justificatif(s)
+            </label>
+
+            <div class="document-list">
+              <a
+                *ngFor="let doc of selectedConge.documents; let i = index"
+                [href]="doc.url"
+                target="_blank"
+                class="download-btn"
+              >
+                <mat-icon>download</mat-icon>
+                Télécharger le document {{ i + 1 }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button mat-raised-button color="primary" (click)="closeDetailsModal()">
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Suppression -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-container modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <mat-icon>warning</mat-icon>
+        Confirmer la suppression
+      </h2>
+      <button mat-icon-button (click)="closeDeleteModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedConge">
+      <div class="delete-warning">
+        <mat-icon>error_outline</mat-icon>
+        <p>Êtes-vous sûr de vouloir supprimer cette demande de congé ?</p>
+      </div>
+
+      <div class="delete-info">
+        <p><strong>Employé :</strong> {{ selectedConge.employe.prenom }} {{ selectedConge.employe.nom }}</p>
+        <p><strong>Type :</strong> {{ selectedConge.type.nom }}</p>
+        <p><strong>Période :</strong> {{ formatDate(selectedConge.debut) }} au {{ formatDate(selectedConge.fin) }}</p>
+      </div>
+
+      <div class="delete-alert">
+        <mat-icon>info</mat-icon>
+        <span>Cette action est irréversible</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button mat-stroked-button (click)="closeDeleteModal()" [disabled]="isSubmitting">
+        Annuler
+      </button>
+      <button mat-raised-button
+              color="warn"
+              (click)="confirmDelete()"
+              [disabled]="isSubmitting">
+        <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+        <span *ngIf="!isSubmitting">
+          <mat-icon>delete</mat-icon>
+          Supprimer
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

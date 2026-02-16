@@ -1,0 +1,514 @@
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #06b6d4;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+$border-radius: 16px;
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Container principal
+.employee-details-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-lg;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.5s ease-out;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, $primary-color 0%, #1e40af 50%, $info-color 100%);
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  // Titre principal
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $gray-900;
+    margin: 0 0 2rem 0;
+    text-align: center;
+    background: linear-gradient(135deg, $primary-color 0%, #1e40af 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  // Avatar section
+  .employee-avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+
+    img,
+    .avatar-placeholder {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 6px solid $gray-100;
+      box-shadow: $shadow-xl;
+      transition: $transition;
+
+      &:hover {
+        transform: scale(1.05);
+        border-color: $primary-color;
+      }
+    }
+
+    .avatar-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, $primary-color 0%, #1e40af 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 3rem;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 768px) {
+      img,
+      .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        font-size: 2.5rem;
+      }
+    }
+  }
+
+  // Grille de détails
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: $gray-50;
+    border-radius: 12px;
+    border: 1px solid $gray-200;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+      padding: 1.25rem;
+      gap: 1rem;
+    }
+
+    // Élément de détail
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid $gray-200;
+      transition: $transition;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: $primary-color;
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+      }
+
+      &:hover {
+        transform: translateX(4px);
+        box-shadow: $shadow-md;
+        border-color: $primary-color;
+
+        &::before {
+          transform: scaleY(1);
+        }
+      }
+
+      strong {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $gray-600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          font-family: 'Material Icons';
+          font-size: 1.1rem;
+          color: $primary-color;
+        }
+      }
+
+      // Icônes Material pour chaque type de donnée
+      strong:has(+ :not(.text-danger)) {
+        &::before {
+          opacity: 0.7;
+        }
+      }
+
+      // Nom
+      &:has(strong:first-child:contains('Nom')) strong::before {
+        content: 'badge';
+      }
+
+      // Prénom
+      &:has(strong:first-child:contains('Prénom')) strong::before {
+        content: 'person';
+      }
+
+      // Genre
+      &:has(strong:first-child:contains('Genre')) strong::before {
+        content: 'wc';
+      }
+
+      // Email
+      &:has(strong:first-child:contains('Email')) strong::before {
+        content: 'email';
+      }
+
+      // Telephone
+      &:has(strong:first-child:contains('Telephone')) strong::before {
+        content: 'phone';
+      }
+
+      // Date
+      &:has(strong:first-child:contains('Date')) strong::before {
+        content: 'event';
+      }
+
+      // Lieu
+      &:has(strong:first-child:contains('Lieu')) strong::before {
+        content: 'place';
+      }
+
+      // Nationalité
+      &:has(strong:first-child:contains('Nationnalité')) strong::before {
+        content: 'flag';
+      }
+
+      // Pays
+      &:has(strong:first-child:contains('Pays')) strong::before {
+        content: 'public';
+      }
+
+      // Adresse
+      &:has(strong:first-child:contains('Adresse')) strong::before {
+        content: 'home';
+      }
+
+      // Numéro
+      &:has(strong:first-child:contains('Numéro')) strong::before {
+        content: 'tag';
+      }
+
+      // Service
+      &:has(strong:first-child:contains('Service')) strong::before {
+        content: 'business';
+      }
+
+      // Fonction
+      &:has(strong:first-child:contains('Fonction')) strong::before {
+        content: 'work';
+      }
+
+      // Contrat
+      &:has(strong:first-child:contains('Contrat')) strong::before {
+        content: 'description';
+      }
+
+      // Salaire
+      &:has(strong:first-child:contains('Salaire')) strong::before {
+        content: 'payments';
+      }
+
+      // Jours restants
+      &:has(strong:first-child:contains('Jours')) strong::before {
+        content: 'schedule';
+      }
+
+      // Valeur
+      color: $gray-900;
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+
+      // Texte de danger
+      .text-danger {
+        color: $danger-color;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          font-family: 'Material Icons';
+          content: 'warning';
+          font-size: 1.2rem;
+        }
+      }
+    }
+  }
+
+  // Section actions
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 1.5rem;
+    border-top: 2px solid $gray-200;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+    }
+
+    .btn {
+      padding: 0.875rem 2rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: $transition;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: $shadow-md;
+      min-width: 140px;
+      justify-content: center;
+
+      i {
+        font-size: 1.1rem;
+      }
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: $shadow-lg;
+      }
+
+      &:active {
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 640px) {
+        width: 100%;
+      }
+
+      // Bouton retour
+      &.back {
+        background: $gray-100;
+        color: $gray-700;
+        border: 1px solid $gray-300;
+
+        &:hover {
+          background: $gray-200;
+          border-color: $gray-400;
+        }
+      }
+
+      // Bouton modifier
+      &.edit {
+        background: linear-gradient(135deg, $primary-color 0%, #1e40af 100%);
+        color: white;
+
+        &:hover {
+          background: linear-gradient(135deg, $primary-hover 0%, #1e3a8a 100%);
+        }
+      }
+
+      // Bouton supprimer
+      &.delete {
+        background: linear-gradient(135deg, $danger-color 0%, #dc2626 100%);
+        color: white;
+
+        &:hover {
+          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+      }
+    }
+
+    a {
+      text-decoration: none;
+    }
+  }
+}
+
+// Message d'erreur
+.text-danger {
+  color: $danger-color;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 3rem;
+  background: #fee2e2;
+  border-radius: $border-radius;
+  margin: 2rem auto;
+  max-width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+
+  &::before {
+    font-family: 'Material Icons';
+    content: 'error_outline';
+    font-size: 2.5rem;
+  }
+}
+
+// Loading overlay
+app-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+}
+
+// Animations
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.detail-item {
+  animation: fadeIn 0.5s ease-out forwards;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.05}s;
+    }
+  }
+}
+
+// Badge pour les statuts
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 0.5rem;
+
+  &.active {
+    background: #d1fae5;
+    color: #065f46;
+
+    &::before {
+      font-family: 'Material Icons';
+      content: 'check_circle';
+    }
+  }
+
+  &.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+
+    &::before {
+      font-family: 'Material Icons';
+      content: 'cancel';
+    }
+  }
+
+  &.pending {
+    background: #fef3c7;
+    color: #92400e;
+
+    &::before {
+      font-family: 'Material Icons';
+      content: 'schedule';
+    }
+  }
+}
+
+// Styles spécifiques pour les sections de contrat
+.details-grid + .details-grid {
+  position: relative;
+  padding-top: 2.5rem;
+
+  &::before {
+    content: 'Informations contractuelles';
+    position: absolute;
+    top: 0.5rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $primary-color;
+    letter-spacing: 1px;
+    background: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+  }
+}
+
+// Responsive final touches
+@media (max-width: 768px) {
+  .employee-details-card {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

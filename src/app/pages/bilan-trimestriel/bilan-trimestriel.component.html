@@ -1,0 +1,542 @@
+
+  <div class="bilan-container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <mat-icon>show_chart</mat-icon>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">
+            {{ isEditMode() ? 'Modifier le bilan trimestriel' : 'Ajouter un bilan trimestriel' }}
+          </h1>
+          <p class="page-subtitle">
+            {{ employe()?.prenom }} {{ employe()?.nom }} - {{ employe()?.service?.nom || 'Prestataire externe' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading()" class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+    <!-- Form Card -->
+    <div class="form-wrapper" *ngIf="!isLoading()">
+      <p-card class="bilan-card">
+        <form [formGroup]="bilanForm" (ngSubmit)="onSubmit()">
+
+          <!-- Période Section -->
+          <div class="section-header">
+            <mat-icon class="section-icon">calendar_today</mat-icon>
+            <h2>Période du bilan</h2>
+          </div>
+
+          <div class="form-grid periode-grid">
+            <div class="form-field">
+              <label for="annee">Année <span class="required">*</span></label>
+              <p-dropdown
+                id="annee"
+                formControlName="annee"
+                [options]="annees"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Sélectionner l'année"
+                styleClass="w-full"
+                [showClear]="false">
+              </p-dropdown>
+            </div>
+
+            <div class="form-field">
+              <label for="trimestre">Trimestre <span class="required">*</span></label>
+              <p-dropdown
+                id="trimestre"
+                formControlName="trimestre"
+                [options]="trimestres"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Sélectionner le trimestre"
+                styleClass="w-full"
+                [showClear]="false">
+              </p-dropdown>
+            </div>
+          </div>
+
+          <p-divider></p-divider>
+
+          <!-- Introduction Section -->
+          <div class="section-header">
+            <mat-icon class="section-icon">edit_note</mat-icon>
+            <h2>Introduction</h2>
+          </div>
+
+          <div class="form-field">
+            <label for="introduction">Présentez votre bilan <span class="required">*</span></label>
+            <p-editor
+              formControlName="introduction"
+              [style]="{'height':'250px'}"
+              [modules]="editorModules">
+            </p-editor>
+            <small class="field-hint">Décrivez brièvement le contexte et les objectifs du trimestre</small>
+          </div>
+
+          <p-divider></p-divider>
+
+          <!-- Sections spécifiques par service -->
+
+          <!-- JOURNALISTE -->
+          <ng-container *ngIf="isJournaliste()">
+            <div class="section-header">
+              <mat-icon class="section-icon">menu_book</mat-icon>
+              <h2>Production journalistique</h2>
+            </div>
+
+            <div class="form-grid stats-grid">
+              <div class="form-field stat-card">
+                <label for="nb_articles">Nombre d'articles <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_articles"
+                  formControlName="nombre_articles"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_interviews">Nombre d'interviews <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_interviews"
+                  formControlName="nombre_interviews"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_reportages">Nombre de reportages <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_reportages"
+                  formControlName="nombre_reportages"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_videos">Nombre de vidéos <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_videos"
+                  formControlName="nombre_videos"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+            </div>
+
+            <!-- Liste des articles/interviews/reportages -->
+            <div class="articles-section">
+              <div class="subsection-header">
+                <h3>Liens des productions</h3>
+                <p-button
+                  label="Ajouter un lien"
+                  (onClick)="addArticle()"
+                  [outlined]="true"
+                  size="small"
+                  class="material-icon-btn">
+                  <ng-template pTemplate="icon">
+                    <span class="material-icons">add</span>
+                  </ng-template>
+                </p-button>
+              </div>
+
+              <div class="articles-list" formArrayName="articles">
+                <div
+                  *ngFor="let article of articles.controls; let i = index"
+                  [formGroupName]="i"
+                  class="article-item">
+                  <div class="article-content">
+                    <div class="form-field">
+                      <label>Type</label>
+                      <p-dropdown
+                        formControlName="type"
+                        [options]="[
+                          {label: 'Article', value: 'article'},
+                          {label: 'Interview', value: 'interview'},
+                          {label: 'Reportage', value: 'reportage'},
+                          {label: 'Vidéo', value: 'video'}
+                        ]"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-full">
+                      </p-dropdown>
+                    </div>
+
+                    <div class="form-field flex-grow">
+                      <label>Lien URL</label>
+                      <input
+                        pInputText
+                        formControlName="lien"
+                        placeholder="https://www.alerte-info.net/article/1"
+                        class="w-full" />
+                        <small class="warning-text" *ngIf="article.get('lien')?.hasError('duplicateLink')">
+                          Ce lien a déjà été ajouté. La direction sera prévenue en cas de soumission de liens en double.
+                        </small>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="delete-btn material-btn"
+                      (click)="removeArticle(i)"
+    >
+                      <ng-template pTemplate="icon">
+                        <span id="btn-delete-link" class="material-icons">delete</span>
+                      </ng-template>
+                    </button>
+
+
+                  </div>
+                </div>
+
+                <div *ngIf="articles.length === 0" class="empty-state">
+                  <mat-icon>link</mat-icon>
+                  <p>Aucun lien ajouté. Cliquez sur "Ajouter un lien" pour commencer.</p>
+                </div>
+              </div>
+            </div>
+
+            <p-divider></p-divider>
+          </ng-container>
+
+          <!-- COMMERCIAL -->
+          <ng-container *ngIf="isCommercial()">
+            <div class="section-header">
+              <mat-icon class="section-icon">business_center</mat-icon>
+              <h2>Activités commerciales</h2>
+            </div>
+
+            <div class="form-field">
+              <label for="prospections">Prospections <span class="required">*</span></label>
+              <p-editor
+                formControlName="prospections"
+                [style]="{'height':'200px'}"
+                [modules]="editorModules">
+              </p-editor>
+            </div>
+
+            <div class="form-field">
+              <label for="suivis">Suivis des dossiers <span class="required">*</span></label>
+              <p-editor
+                formControlName="suivis_dossiers"
+                [style]="{'height':'200px'}"
+                [modules]="editorModules">
+              </p-editor>
+            </div>
+
+            <div class="form-field">
+              <label for="recouvrements">Recouvrements <span class="required">*</span></label>
+              <p-editor
+                formControlName="recouvrements"
+                [style]="{'height':'200px'}"
+                [modules]="editorModules">
+              </p-editor>
+            </div>
+
+            <div class="form-grid stats-grid">
+              <div class="form-field stat-card highlight">
+                <label for="nb_clients">Nombre de clients obtenus <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_clients"
+                  formControlName="nombre_clients"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card highlight">
+                <label for="ca">Chiffre d'affaires (FCFA) <span class="required">*</span></label>
+                <p-inputNumber
+                  id="ca"
+                  formControlName="chiffre_affaire"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="currency"
+                  currency="XOF"
+                  locale="fr-FR"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="resultats">Résultats et perspectives <span class="required">*</span></label>
+              <p-editor
+                formControlName="resultats_perspectives"
+                [style]="{'height':'250px'}"
+                [modules]="editorModules">
+              </p-editor>
+            </div>
+
+            <p-divider></p-divider>
+          </ng-container>
+
+          <!-- DÉVELOPPEUR -->
+          <ng-container *ngIf="isDeveloppeur()">
+            <div class="section-header">
+              <mat-icon class="section-icon">code</mat-icon>
+              <h2>Projets et développements</h2>
+            </div>
+
+            <div class="projets-section">
+              <div class="subsection-header">
+                <h3>Liste des projets</h3>
+                <!-- <p-button
+                  label="Ajouter un projet"
+                  icon="pi pi-plus"
+                  (onClick)="addProjet()"
+                  [outlined]="true"
+                  size="small">
+                </p-button> -->
+                <p-button
+                  label="Ajouter un projet"
+                  (onClick)="addProjet()"
+                  [outlined]="true"
+                  size="small"
+                  class="material-icon-btn">
+                  <ng-template pTemplate="icon">
+                                  <span class="material-icons">add</span>
+                  </ng-template>
+                </p-button>
+
+              </div>
+
+              <div class="projets-list" formArrayName="projets">
+                <div
+                  *ngFor="let projet of projets.controls; let i = index"
+                  [formGroupName]="i"
+                  class="projet-card">
+                  <div class="projet-header">
+                    <span class="projet-number">Projet {{ i + 1 }}</span>
+                    <!-- <button
+                      type="button"
+                      (click)="removeProjet(i)"
+                      pButton
+                      icon="pi pi-times"
+                      [rounded]="true"
+                      severity="danger"
+                      [text]="true"
+                      size="small">
+                    </button> -->
+                    <button
+                      type="button"
+                      (click)="removeProjet(i)"
+                      class="delete-project-btn material">
+                      <span class="material-icons">delete</span>
+                    </button>
+
+
+                  </div>
+
+                  <div class="form-field">
+                    <label>Nom du projet <span class="required">*</span></label>
+                    <input
+                      pInputText
+                      formControlName="nom"
+                      placeholder="Ex: Application mobile de gestion"
+                      class="w-full" />
+                  </div>
+
+                  <div class="form-field">
+                      <label>Statut <span class="required">*</span></label>
+
+                      <p-dropdown
+                        formControlName="statut"
+                        [options]="statuts"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sélectionner un statut"
+                        class="w-100">
+                      </p-dropdown>
+                    </div>
+
+
+                  <div class="taches-section" formArrayName="taches">
+                    <div class="taches-header">
+                      <label>Tâches réalisées <span class="required">*</span></label>
+                      <!-- <p-button
+                        label="Ajouter une tâche"
+                        icon="pi pi-plus-circle"
+                        (onClick)="addTache(i)"
+                        [text]="true"
+                        size="small">
+                      </p-button> -->
+                      <p-button
+                        label="Ajouter une tâche"
+                        (onClick)="addTache(i)"
+                        [outlined]="true"
+                        size="small"
+                        class="material-icon-btn">
+                        <ng-template pTemplate="icon">
+                          <span class="material-icons">add</span>
+                        </ng-template>
+                      </p-button>
+                    </div>
+
+                    <div
+                      *ngFor="let tache of getArticleTaches(i).controls; let j = index"
+                      class="tache-item">
+                      <input
+                        pInputText
+                        [formControlName]="j"
+                        placeholder="Décrivez la tâche réalisée"
+                        class="w-full" />
+                      <!-- <button
+                        style=""
+                        type="button"
+                        *ngIf="getArticleTaches(i).length > 1"
+                        (click)="removeTache(i, j)"
+                        pButton
+                        icon="pi pi-times"
+                        [rounded]="true"
+                        severity="danger"
+                        [text]="true"
+                        size="small">
+                      </button> -->
+                      <button
+                        type="button"
+                        *ngIf="getArticleTaches(i).length > 1"
+                        (click)="removeTache(i, j)"
+                        class="delete-task-btn material"
+                      >
+                        <span class="material-icons">close</span>
+                      </button>
+
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="projets.length === 0" class="empty-state">
+                  <mat-icon>folder_open</mat-icon>
+                  <p>Aucun projet ajouté. Cliquez sur "Ajouter un projet" pour commencer.</p>
+                </div>
+              </div>
+            </div>
+
+            <p-divider></p-divider>
+          </ng-container>
+
+          <!-- COMPTABLE -->
+          <ng-container *ngIf="isComptable()">
+            <div class="section-header">
+              <mat-icon>account_balance</mat-icon>
+              <h2>Activités comptables</h2>
+            </div>
+
+            <ng-container *ngFor="let mois of getMoisDuTrimestre(bilanForm.get('trimestre')?.value); let i = index">
+              <div class="form-field">
+                <label>{{ mois }}</label>
+                <p-editor
+                  [formControlName]="'mois' + (i + 1)"
+                  [style]="{'height':'200px'}"
+                  [modules]="editorModules">
+                </p-editor>
+              </div>
+            </ng-container>
+          </ng-container>
+          <!-- COURSER -->
+          <ng-container *ngIf="isCoursier()">
+            <div class="section-header">
+              <mat-icon class="section-icon">directions_bike</mat-icon>
+              <h2>Courses effectuées</h2>
+            </div>
+
+            <div formArrayName="courses">
+              <div
+                *ngFor="let course of courses.controls; let i = index"
+                [formGroupName]="i"
+                class="course-item">
+
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label>Date <span class="required">*</span></label>
+                    <input pInputText type="date" formControlName="date" class="w-full" />
+                  </div>
+                  <div class="form-field">
+                    <label>Heure arrivée <span class="required">*</span></label>
+                    <input pInputText type="time" formControlName="heure_arrive" class="w-full" />
+                  </div>
+                  <div class="form-field">
+                    <label>Heure départ <span class="required">*</span></label>
+                    <input pInputText type="time" formControlName="heure_depart" class="w-full" />
+                  </div>
+                  <div class="form-field">
+                    <label>Tâche effectuée <span class="required">*</span></label>
+                    <input pInputText formControlName="tache_effectuer" class="w-full" />
+                  </div>
+                  <div class="form-field">
+                    <label>Lieu <span class="required">*</span></label>
+                    <input pInputText formControlName="lieu" class="w-full" />
+                  </div>
+                  <div class="form-field">
+                    <label>Observation</label>
+                    <input pInputText formControlName="observation" class="w-full" />
+                  </div>
+                </div>
+
+                <button type="button" class="delete-btn material" (click)="removeCourse(i)">
+                  <span class="material-icons">delete</span> Supprimer
+                </button>
+
+                <p-divider></p-divider>
+              </div>
+
+              <button type="button" class="add-btn material" (click)="addCourse()">
+                <span class="material-icons">add</span> Ajouter une course
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Commentaire (optionnel) --> <br>
+          <div class="section-header">
+            <mat-icon class="section-icon">comment</mat-icon>
+            <h2>Commentaires additionnels</h2>
+          </div>
+
+          <div class="form-field">
+            <label for="commentaire">Perspectives et Conclusion (optionnel)</label>
+            <p-editor
+              formControlName="commentaire"
+              [style]="{'height':'200px'}"
+              [modules]="editorModules">
+            </p-editor>
+            <small class="field-hint">Ajoutez toute information complémentaire jugée pertinente</small>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <!-- <p-button
+              label="Enregistrer le bilan"
+              icon="pi pi-check"
+              type="submit"
+              [loading]="isSubmitting()"
+              [disabled]="isSubmitting()"
+              size="large">
+            </p-button> -->
+            <p-button
+              [label]="isEditMode() ? 'Mettre à jour le bilan' : 'Enregistrer le bilan'"
+              type="submit"
+              [loading]="isSubmitting()">
+            </p-button>
+          </div>
+        </form>
+      </p-card>
+    </div>
+  </div>

@@ -1,0 +1,430 @@
+<div class="edit-container">
+
+  <!-- Loader -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>{{ currentStep === totalSteps ? 'Mise à jour en cours...' : 'Chargement...' }}</p>
+  </div>
+
+  <!-- En-tête du formulaire de modification -->
+  <div class="edit-header">
+    <div class="header-content">
+      <h2>
+        <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">edit</span>
+        Modifier l'Employé {{ personalInfoForm.get('prenom')?.value }} {{ personalInfoForm.get('nom')?.value }}
+      </h2>
+      <div class="employee-info" *ngIf="!isLoading">
+        <div class="employee-avatar">
+          <img *ngIf="photoPreview" [src]="photoPreview" alt="Photo employé">
+          <div *ngIf="!photoPreview" class="avatar-placeholder">
+            {{ getInitials() }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgress()"></div>
+      </div>
+      <span class="progress-text">Étape {{ currentStep }} sur {{ totalSteps }}</span>
+    </div>
+  </div>
+
+  <!-- Navigation des étapes -->
+  <div class="steps-navigation">
+    <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+      <div class="step-number">
+        <span class="material-icons" *ngIf="currentStep <= 1">person</span>
+      </div>
+      <div class="step-label">Informations Personnelles</div>
+    </div>
+    <div class="step-separator"></div>
+    <div class="step" [class.active]="currentStep === 2">
+      <div class="step-number">
+        <span class="material-icons" *ngIf="currentStep < 2">badge</span>
+      </div>
+      <div class="step-label">Informations Professionnelles</div>
+    </div>
+  </div>
+
+  <!-- Contenu du formulaire -->
+  <div class="edit-content" *ngIf="!isLoading">
+
+    <!-- Étape 1: Informations Personnelles -->
+    <div *ngIf="currentStep === 1" class="step-content">
+      <div class="section-header">
+        <h3>Informations Personnelles</h3>
+        <div class="changes-indicator" *ngIf="hasChanges()">
+          <span class="changes-badge">Modifications détectées</span>
+        </div>
+      </div>
+
+      <form [formGroup]="personalInfoForm" class="form-grid">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nom"><span class="material-icons">badge</span> Nom *</label>
+            <input
+              type="text"
+              id="nom"
+              formControlName="nom"
+              [class.error]="isFieldInvalid(personalInfoForm, 'nom')"
+              [class.modified]="personalInfoForm.get('nom')?.dirty"
+              placeholder="Entrez le nom">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'nom')">
+              {{ getFieldError(personalInfoForm, 'nom') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prenom"><span class="material-icons">person</span> Prénom *</label>
+            <input
+              type="text"
+              id="prenom"
+              formControlName="prenom"
+              [class.error]="isFieldInvalid(personalInfoForm, 'prenom')"
+              [class.modified]="personalInfoForm.get('prenom')?.dirty"
+              placeholder="Entrez le prénom">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'prenom')">
+              {{ getFieldError(personalInfoForm, 'prenom') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="genre"><span class="material-icons">wc</span> Genre *</label>
+          <select
+            id="genre"
+            formControlName="genre"
+            [class.error]="isFieldInvalid(personalInfoForm, 'genre')"
+            [class.modified]="personalInfoForm.get('genre')?.dirty">
+            <option value="" disabled selected>Sélectionner le genre</option>
+            <option value="m">Masculin</option>
+            <option value="f">Féminin</option>
+          </select>
+          <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'genre')">
+            {{ getFieldError(personalInfoForm, 'genre') }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateNaissance"><span class="material-icons">cake</span> Date de Naissance *</label>
+            <input
+              type="date"
+              id="dateNaissance"
+              formControlName="dateNaissance"
+              [class.error]="isFieldInvalid(personalInfoForm, 'dateNaissance')"
+              [class.modified]="personalInfoForm.get('dateNaissance')?.dirty">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'dateNaissance')">
+              {{ getFieldError(personalInfoForm, 'dateNaissance') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lieuNaissance"><span class="material-icons">place</span> Lieu de Naissance *</label>
+            <input
+              type="text"
+              id="lieuNaissance"
+              formControlName="lieuNaissance"
+              [class.error]="isFieldInvalid(personalInfoForm, 'lieuNaissance')"
+              [class.modified]="personalInfoForm.get('lieuNaissance')?.dirty"
+              placeholder="Ville, Pays">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'lieuNaissance')">
+              {{ getFieldError(personalInfoForm, 'lieuNaissance') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emailPersonnel"><span class="material-icons">email</span> Email Personnel *</label>
+            <input
+              type="email"
+              id="emailPersonnel"
+              formControlName="emailPersonnel"
+              [class.error]="isFieldInvalid(personalInfoForm, 'emailPersonnel')"
+              [class.modified]="personalInfoForm.get('emailPersonnel')?.dirty"
+              placeholder="exemple@email.com">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'emailPersonnel')">
+              {{ getFieldError(personalInfoForm, 'emailPersonnel') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="telephone"><span class="material-icons">phone</span> Téléphone *</label>
+            <input
+              type="tel"
+              id="telephone"
+              formControlName="telephone"
+              [class.error]="isFieldInvalid(personalInfoForm, 'telephone')"
+              [class.modified]="personalInfoForm.get('telephone')?.dirty"
+              placeholder="+225 07 12 34 56 78">
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'telephone')">
+              {{ getFieldError(personalInfoForm, 'telephone') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nationalite"><span class="material-icons">flag</span> Nationalité *</label>
+            <select
+              id="nationalite"
+              formControlName="nationalite"
+              [class.error]="isFieldInvalid(personalInfoForm, 'nationalite')"
+              [class.modified]="personalInfoForm.get('nationalite')?.dirty">
+              <option [ngValue]="null">Sélectionnez une nationalité</option>
+              <option *ngFor="let nat of nationalites" [ngValue]="nat.nom">{{ nat.nom }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'nationalite')">
+              {{ getFieldError(personalInfoForm, 'nationalite') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="paysResidence"><span class="material-icons">public</span> Pays de Résidence *</label>
+            <select
+              id="paysResidence"
+              formControlName="paysResidence"
+              [class.error]="isFieldInvalid(personalInfoForm, 'paysResidence')">
+              <option disabled value="">Sélectionnez votre pays de résidence</option>
+              <option *ngFor="let pay of pays" [value]="pay.nom">{{ pay.nom }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'paysResidence')">
+              {{ getFieldError(personalInfoForm, 'paysResidence') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="adresse"><span class="material-icons">home</span> Adresse Complète *</label>
+          <textarea
+            id="adresse"
+            formControlName="adresse"
+            [class.error]="isFieldInvalid(personalInfoForm, 'adresse')"
+            [class.modified]="personalInfoForm.get('adresse')?.dirty"
+            placeholder="Numéro, rue, ville, code postal"
+            rows="3"></textarea>
+          <div class="error-message" *ngIf="isFieldInvalid(personalInfoForm, 'adresse')">
+            {{ getFieldError(personalInfoForm, 'adresse') }}
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Étape 2: Informations Professionnelles -->
+    <div *ngIf="currentStep === 2" class="step-content">
+      <div class="section-header">
+        <h3>Informations Professionnelles</h3>
+        <div class="changes-indicator" *ngIf="hasChanges()">
+          <span class="changes-badge">Modifications détectées</span>
+        </div>
+      </div>
+
+      <form [formGroup]="professionalInfoForm" class="form-grid">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emailProfessionnel"><span class="material-icons">work_email</span> Email Professionnel</label>
+            <input
+              type="email"
+              id="emailProfessionnel"
+              formControlName="emailProfessionnel"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'emailProfessionnel')"
+              placeholder="prenom.nom@entreprise.com">
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'emailProfessionnel')">
+              {{ getFieldError(professionalInfoForm, 'emailProfessionnel') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="numeroSocial"><span class="material-icons">tag</span> Numéro social</label>
+            <input
+              type="text"
+              id="numeroSocial"
+              formControlName="numeroSocial"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'numeroSocial')"
+              placeholder="Entrez le numéro social">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="typePiece"><span class="material-icons">credit_card</span> Type de Pièce d'Identité *</label>
+            <select
+              id="typePiece"
+              formControlName="typePiece"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'typePiece')"
+              [class.modified]="professionalInfoForm.get('typePiece')?.dirty">
+              <option value="">Sélectionnez un type de pièce</option>
+              <option *ngFor="let type of typesPiece" [value]="type">{{ type }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'typePiece')">
+              {{ getFieldError(professionalInfoForm, 'typePiece') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="numeroPiece"><span class="material-icons">confirmation_number</span> Numéro de Pièce *</label>
+            <input
+              type="text"
+              id="numeroPiece"
+              formControlName="numeroPiece"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'numeroPiece')"
+              [class.modified]="professionalInfoForm.get('numeroPiece')?.dirty"
+              placeholder="Numéro de la pièce d'identité">
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'numeroPiece')">
+              {{ getFieldError(professionalInfoForm, 'numeroPiece') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_service"><span class="material-icons">business</span> Service *</label>
+            <select
+              id="id_service"
+              formControlName="id_service"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'id_service')">
+              <option value="">Sélectionnez son service</option>
+              <option *ngFor="let service of services" [value]="service.slug">{{ service.nom }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'id_service')">
+              {{ getFieldError(professionalInfoForm, 'id_service') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="id_fonction"><span class="material-icons">work</span> Fonction *</label>
+            <select
+              id="id_fonction"
+              formControlName="id_fonction"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'id_fonction')">
+              <option value="">Sélectionnez sa fonction</option>
+              <option *ngFor="let fonction of fonctions" [value]="fonction.slug">{{ fonction.nom }}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'id_fonction')">
+              {{ getFieldError(professionalInfoForm, 'id_fonction') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="form-group full-width">
+          <label for="photo"><span class="material-icons">photo_camera</span> Photo de Profil</label>
+          <div class="photo-edit-container">
+            <input
+              type="file"
+              id="photo"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="file-input">
+
+            <div class="photo-preview" *ngIf="photoPreview">
+              <img [src]="photoPreview" alt="Photo employé" class="preview-image">
+              <div class="photo-actions">
+                <button type="button" class="photo-btn remove-btn" (click)="removePhoto()" title="Supprimer la photo">
+                  <span class="material-icons">delete</span>
+                </button>
+                <button
+                  type="button"
+                  class="photo-btn restore-btn"
+                  *ngIf="currentPhotoUrl && photoChanged"
+                  (click)="restoreOriginalPhoto()"
+                  title="Restaurer la photo originale">
+                  <span class="material-icons">restore</span>
+                </button>
+              </div>
+              <div class="photo-status" *ngIf="photoChanged">
+                <span class="status-badge modified">Photo modifiée</span>
+              </div>
+            </div>
+
+            <div class="upload-placeholder" *ngIf="!photoPreview">
+              <div class="upload-icon">
+                <span class="material-icons" style="font-size: 4rem; color: #f59e0b;">add_photo_alternate</span>
+              </div>
+              <p>Cliquez pour sélectionner une nouvelle photo</p>
+              <small>Formats acceptés: JPG, PNG, GIF (Max 5MB)</small>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Résumé des modifications -->
+        <div class="changes-summary" *ngIf="hasChanges()">
+          <h4>Résumé des Modifications</h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <strong><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">badge</span> Nom:</strong>
+              <span>{{ personalInfoForm.get('nom')?.value || 'Non renseigné' }}</span>
+              <span *ngIf="personalInfoForm.get('nom')?.dirty" class="change-indicator">Modifié</span>
+            </div>
+            <div class="summary-item">
+              <strong><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">person</span> Prénom:</strong>
+              <span>{{ personalInfoForm.get('prenom')?.value || 'Non renseigné' }}</span>
+              <span *ngIf="personalInfoForm.get('prenom')?.dirty" class="change-indicator">Modifié</span>
+            </div>
+            <div class="summary-item">
+              <strong><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">email</span> Email:</strong>
+              <span>{{ personalInfoForm.get('emailPersonnel')?.value || 'Non renseigné' }}</span>
+              <span *ngIf="personalInfoForm.get('emailPersonnel')?.dirty" class="change-indicator">Modifié</span>
+            </div>
+            <div class="summary-item">
+              <strong><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">phone</span> Téléphone:</strong>
+              <span>{{ personalInfoForm.get('telephone')?.value || 'Non renseigné' }}</span>
+              <span *ngIf="personalInfoForm.get('telephone')?.dirty" class="change-indicator">Modifié</span>
+            </div>
+            <div class="summary-item" *ngIf="photoChanged">
+              <strong><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">photo_camera</span> Photo:</strong>
+              <span>{{ selectedPhoto ? 'Nouvelle photo ajoutée' : 'Photo supprimée' }}</span>
+              <span class="change-indicator">Modifiée</span>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Navigation du formulaire -->
+  <div class="edit-navigation" *ngIf="!isLoading">
+    <div class="nav-left">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="currentStep === 1"
+        (click)="previousStep()">
+        <span class="material-icons">arrow_back</span> Précédent
+      </button>
+    </div>
+
+    <div class="nav-center">
+        <button type="button" class="btn btn-outline" (click)="goBack()">
+          <span class="material-icons">close</span> Annuler
+        </button>
+    </div>
+
+    <div class="nav-right">
+      <button
+        type="button"
+        class="btn btn-primary"
+        *ngIf="currentStep < totalSteps"
+        (click)="nextStep()">
+        Suivant <span class="material-icons">arrow_forward</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-success"
+        *ngIf="currentStep === totalSteps"
+        [disabled]="!personalInfoForm.valid || !professionalInfoForm.valid || !hasChanges()"
+        (click)="onUpdate()">
+        <span class="material-icons">save</span> Mettre à Jour
+      </button>
+    </div>
+  </div>
+
+</div>

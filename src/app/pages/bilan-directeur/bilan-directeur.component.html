@@ -1,0 +1,462 @@
+<div class="bilan-directeur-container">
+  <!-- Header avec filtres -->
+  <div class="header-section" @fadeInUp>
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">dashboard</mat-icon>
+        <div>
+          <h1 class="main-title">Tableau de Bord - Direction Générale</h1>
+          <p class="subtitle">Suivi des performances et bilans trimestriels</p>
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button mat-raised-button color="primary" (click)="exportToPDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Exporter PDF
+        </button>
+        <button mat-raised-button (click)="exportToExcel()">
+          <mat-icon>table_chart</mat-icon>
+          Exporter Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtres période -->
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Année</mat-label>
+        <mat-select [(ngModel)]="selectedYear" (selectionChange)="onYearChange()">
+          <mat-option *ngFor="let annee of annees" [value]="annee">
+            {{ annee }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Trimestre</mat-label>
+        <mat-select [(ngModel)]="selectedTrimestre" (selectionChange)="onTrimestreChange()">
+          <mat-option *ngFor="let trim of trimestres" [value]="trim.value">
+            {{ trim.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Service</mat-label>
+        <mat-select [(ngModel)]="filterService">
+          <mat-option value="all">Tous les services</mat-option>
+          <mat-option value="external">Prestataires externes</mat-option>
+          <mat-option *ngFor="let service of uniqueServices" [value]="service.slug">
+            {{ service.nom }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Statut</mat-label>
+        <mat-select [(ngModel)]="filterStatut">
+          <mat-option value="all">Tous les statuts</mat-option>
+          <mat-option value="avec_cahier">Avec cahier des charges</mat-option>
+          <mat-option value="sans_cahier">Sans cahier des charges</mat-option>
+          <mat-option value="atteint">Objectifs atteints</mat-option>
+          <mat-option value="partiellement_atteint">Partiellement atteints</mat-option>
+          <mat-option value="non_atteint">Non atteints</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Rechercher</mat-label>
+        <input matInput [(ngModel)]="searchTerm" placeholder="Nom, prénom, service...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container" @fadeInUp>
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadTableauDeBord()">
+      Réessayer
+    </button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!loading && !error && tableauDeBord" class="main-content">
+
+    <!-- Statistiques globales -->
+    <div class="stats-grid" @fadeInUp>
+      <div class="stat-card stat-primary" @scaleIn>
+        <div class="stat-icon-container primary">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.total_bilans }}</h3>
+          <p>Bilans reçus</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-success" @scaleIn>
+        <div class="stat-icon-container success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.objectifs_atteints }}</h3>
+          <p>Objectifs atteints</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-warning" @scaleIn>
+        <div class="stat-icon-container warning">
+          <mat-icon>pending</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.objectifs_partiels }}</h3>
+          <p>Partiellement atteints</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-danger" @scaleIn>
+        <div class="stat-icon-container danger">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.objectifs_non_atteints }}</h3>
+          <p>Non atteints</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-info" @scaleIn>
+        <div class="stat-icon-container info">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.taux_moyen_realisation.toFixed(1) }}%</h3>
+          <p>Taux moyen</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-neutral" @scaleIn>
+        <div class="stat-icon-container neutral">
+          <mat-icon>description</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3>{{ tableauDeBord.statistiques.avec_cahier }}</h3>
+          <p>Avec cahier des charges</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="charts-section" @fadeInUp>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>
+            <mat-icon>bar_chart</mat-icon>
+            Performance par employé
+          </h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="performanceChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>
+            <mat-icon>pie_chart</mat-icon>
+            Répartition des objectifs
+          </h2>
+        </div>
+        <div class="chart-container-doughnut">
+          <canvas id="repartitionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des bilans -->
+    <div class="bilans-section" @fadeInUp>
+      <div class="section-header">
+        <h2>
+          <mat-icon>list</mat-icon>
+          Bilans détaillés ({{ filteredBilans.length }})
+        </h2>
+        <div class="view-toggle">
+          <button mat-icon-button
+                  [class.active]="viewMode === 'grid'"
+                  (click)="viewMode = 'grid'"
+                  matTooltip="Vue grille">
+            <mat-icon>grid_view</mat-icon>
+          </button>
+          <button mat-icon-button
+                  [class.active]="viewMode === 'list'"
+                  (click)="viewMode = 'list'"
+                  matTooltip="Vue liste">
+            <mat-icon>view_list</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Vue grille -->
+      <div *ngIf="viewMode === 'grid'" class="bilans-grid" [@listAnimation]="filteredBilans.length">
+        <div *ngFor="let bilan of filteredBilans; trackBy: trackByBilan"
+             class="bilan-card"
+             (click)="openBilanDetails(bilan)"
+             @scaleIn>
+
+          <div class="bilan-header">
+            <div class="employee-info">
+              <div class="avatar">
+                {{ bilan.employe.prenom.charAt(0) }}{{ bilan.employe.nom.charAt(0) }}
+              </div>
+              <div>
+                <h3>{{ bilan.employe.prenom }} {{ bilan.employe.nom }}</h3>
+                <p class="service-tag">
+                  <mat-icon>business</mat-icon>
+                  {{ bilan?.service?.nom || 'Prestataire externe' }}
+                </p>
+              </div>
+            </div>
+
+            <div *ngIf="bilan.a_cahier_charges && bilan.comparaison"
+                 class="statut-badge"
+                 [style.background]="getStatutColor(bilan.comparaison.statut_global) + '20'"
+                 [style.color]="getStatutColor(bilan.comparaison.statut_global)">
+              <mat-icon>{{ getStatutIcon(bilan.comparaison.statut_global) }}</mat-icon>
+              {{ getStatutLabel(bilan.comparaison.statut_global) }}
+            </div>
+
+            <div *ngIf="!bilan.a_cahier_charges" class="no-cahier-badge">
+              <mat-icon>info</mat-icon>
+              Sans cahier
+            </div>
+          </div>
+
+          <div *ngIf="bilan.a_cahier_charges && bilan.comparaison" class="performance-section">
+            <div class="performance-circle">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" class="circle-bg"></circle>
+                <circle cx="50" cy="50" r="45"
+                        class="circle-progress"
+                        [style.stroke]="getStatutColor(bilan.comparaison.statut_global)"
+                        [style.stroke-dasharray]="(bilan.comparaison.taux_global * 2.827) + ' 282.7'">
+                </circle>
+              </svg>
+              <div class="percentage">
+                {{ bilan.comparaison.taux_global.toFixed(0) }}%
+              </div>
+            </div>
+
+            <div class="indicators-summary">
+              <ng-container *ngFor="let key of ['nombre_articles', 'nombre_reportages', 'nombre_interviews', 'nombre_videos', 'nombre_clients', 'chiffre_affaire']">
+                <div
+                  class="indicator-mini"
+                  *ngIf="bilan?.comparaison?.details?.[key] as detail"
+                >
+                  <mat-icon class="indicator-icon">
+                    {{ getIndicateurIcon(key) }}
+                  </mat-icon>
+
+                  <span class="indicator-value">
+                    {{ detail.realisation }} / {{ detail.objectif }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+
+          </div>
+
+          <div class="bilan-footer">
+            <button mat-stroked-button color="primary" (click)="goToDetails(bilan)">
+              <mat-icon>visibility</mat-icon>
+              Voir Bilan
+            </button> &nbsp;&nbsp;
+            <button mat-stroked-button color="primary" (click)="openBilanDetails(bilan); $event.stopPropagation()">
+              <mat-icon>list_alt</mat-icon>
+              Voir détails
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vue liste -->
+      <div *ngIf="viewMode === 'list'" class="bilans-list" [@listAnimation]="filteredBilans.length">
+        <div *ngFor="let bilan of filteredBilans" class="bilan-list-item" @scaleIn>
+          <div class="list-item-main">
+            <div class="avatar-small">
+              {{ bilan.employe.prenom.charAt(0).toUpperCase() }}{{ bilan.employe.nom.charAt(0).toUpperCase() }}
+            </div>
+            <div class="list-item-info">
+              <h4>{{ bilan.employe.prenom }} {{ bilan.employe.nom }}</h4>
+              <span class="service-label">{{ bilan?.service?.nom || 'Prestataire externe' }}</span>
+            </div>
+          </div>
+
+          <div class="list-item-performance" *ngIf="bilan.a_cahier_charges && bilan.comparaison">
+            <div class="progress-bar-container">
+              <div class="progress-bar"
+                   [style.width.%]="bilan.comparaison.taux_global > 100 ? 100 : bilan.comparaison.taux_global"
+                   [style.background]="getStatutColor(bilan.comparaison.statut_global)">
+              </div>
+            </div>
+            <span class="progress-label">{{ bilan.comparaison.taux_global.toFixed(1) }}%</span>
+          </div>
+
+          <div class="list-item-statut">
+            <span *ngIf="bilan.a_cahier_charges && bilan.comparaison"
+                  class="statut-chip"
+                  [style.background]="getStatutColor(bilan.comparaison.statut_global) + '20'"
+                  [style.color]="getStatutColor(bilan.comparaison.statut_global)">
+              {{ getStatutLabel(bilan.comparaison.statut_global) }}
+            </span>
+            <span *ngIf="!bilan.a_cahier_charges" class="statut-chip no-cahier">
+              Sans cahier
+            </span>
+          </div>
+
+          <div class="list-item-actions">
+            <button mat-icon-button color="primary" (click)="openBilanDetails(bilan)" matTooltip="Voir détails">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message si aucun résultat -->
+      <div *ngIf="filteredBilans.length === 0" class="no-results" @fadeInUp>
+        <mat-icon>search_off</mat-icon>
+        <h3>Aucun bilan trouvé</h3>
+        <p>Essayez de modifier vos filtres de recherche</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal détails bilan -->
+<div *ngIf="selectedBilan" class="modal-overlay" (click)="closeBilanDetails()" @fadeInUp>
+  <div class="modal-content" (click)="$event.stopPropagation()" @scaleIn>
+    <div class="modal-header">
+      <div>
+        <h2>Détails du bilan - {{ selectedBilan.employe.prenom }} {{ selectedBilan.employe.nom }}</h2>
+        <p class="modal-subtitle">
+          {{ selectedBilan?.service?.nom || 'Prestataire externe' }} • T{{ selectedBilan.trimestre }} {{ selectedBilan.annee }}
+        </p>
+      </div>
+      <button mat-icon-button (click)="closeBilanDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Introduction -->
+      <div class="modal-section" *ngIf="selectedBilan.introduction">
+        <h3><mat-icon>description</mat-icon> Introduction</h3>
+        <div [innerHTML]="selectedBilan.introduction" class="content-html"></div>
+      </div>
+
+      <!-- Comparaison avec cahier des charges -->
+      <div class="modal-section" *ngIf="selectedBilan.a_cahier_charges && selectedBilan.comparaison">
+        <h3><mat-icon>assessment</mat-icon> Performance vs Objectifs</h3>
+
+        <div class="performance-overview">
+          <div class="performance-metric">
+            <span class="metric-label">Taux global</span>
+            <span class="metric-value" [style.color]="getStatutColor(selectedBilan.comparaison.statut_global)">
+              {{ selectedBilan.comparaison.taux_global.toFixed(2) }}%
+            </span>
+          </div>
+          <div class="performance-metric">
+            <span class="metric-label">Statut</span>
+            <span class="statut-badge-large"
+              [style.background]="getStatutColor(selectedBilan.comparaison.statut_global) + '20'"
+              [style.color]="getStatutColor(selectedBilan.comparaison.statut_global)">
+              <mat-icon>{{ getStatutIcon(selectedBilan.comparaison.statut_global) }}</mat-icon>
+              {{ getStatutLabel(selectedBilan.comparaison.statut_global) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="indicators-detail">
+          <ng-container *ngFor="let key of indicateurKeys">
+            <div *ngIf="bilanIndicators[selectedBilan.slug]?.[key]" class="indicator-mini">
+              <mat-icon>{{ bilanIndicators[selectedBilan.slug][key].icon }}</mat-icon>
+              <span>
+                {{ bilanIndicators[selectedBilan.slug][key].detail.realisation }} /
+                {{ bilanIndicators[selectedBilan.slug][key].detail.objectif }}
+              </span>
+            </div>
+          </ng-container>
+        </div>
+        <!-- Détails des indicateurs -->
+        <div class="modal-section" *ngIf="selectedBilan.comparaison?.details">
+          <h3><mat-icon>list_alt</mat-icon> Détails des indicateurs</h3>
+
+          <ng-container *ngFor="let key of indicateurKeys">
+            <div class="indicator-card" *ngIf="selectedBilan.comparaison.details[key]">
+              <div class="indicator-header">
+                <span class="indicator-name">{{ key | titlecase }}</span>
+                <span class="indicator-statut-badge"
+                      [style.background]="getStatutColor(selectedBilan.comparaison.details[key].statut) + '20'"
+                      [style.color]="getStatutColor(selectedBilan.comparaison.details[key].statut)">
+                  <mat-icon>{{ getStatutIcon(selectedBilan.comparaison.details[key].statut) }}</mat-icon>
+                  {{ getStatutLabel(selectedBilan.comparaison.details[key].statut) }}
+                </span>
+              </div>
+
+              <div class="indicator-values">
+                <span class="realisation">
+                  <strong>Réalisé:</strong> {{ selectedBilan.comparaison.details[key].realisation }}
+                </span>
+                <span class="objectif">
+                  <strong>Objectif:</strong> {{ selectedBilan.comparaison.details[key].objectif }}
+                </span>
+                <span class="difference" [style.color]="
+                      selectedBilan.comparaison.details[key].difference >= 0 ? 'green' : 'red'">
+                  <strong>Diff:</strong> {{ selectedBilan.comparaison.details[key].difference >=0 ? '+' : '' }}
+                  {{ selectedBilan.comparaison.details[key].difference }}
+                </span>
+                <span class="taux">
+                  <strong>Taux:</strong> {{ selectedBilan.comparaison.details[key].taux_realisation.toFixed(2) }}%
+                </span>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      <!-- Commentaire -->
+      <div class="modal-section" *ngIf="selectedBilan.commentaire">
+        <h3><mat-icon>comment</mat-icon> Commentaire</h3>
+        <div [innerHTML]="selectedBilan.commentaire" class="content-html"></div>
+      </div>
+
+      <!-- Sans cahier des charges -->
+      <div class="modal-section" *ngIf="!selectedBilan.a_cahier_charges">
+        <div class="info-box">
+          <mat-icon>info</mat-icon>
+          <p>Cet employé n'a pas de cahier des charges pour cette période.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button mat-raised-button (click)="closeBilanDetails()">
+        Fermer
+      </button>
+      <button mat-raised-button color="primary">
+        <mat-icon>print</mat-icon>
+        Imprimer
+      </button>
+      <!-- <button mat-raised-button color="primary" (click)="goToDetails(selectedBilan)">
+        <mat-icon aria-hidden="true">visibility</mat-icon>
+        <span>Détails du bilan</span>
+      </button> -->
+    </div>
+  </div>
+</div>

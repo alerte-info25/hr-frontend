@@ -1,0 +1,188 @@
+<!-- src/app/components/projet-list/projet-list.component.html -->
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="projet-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">work</span>
+        Gestion des Projets
+      </h1>
+
+      <button class="btn btn-primary" (click)="retour()">
+        <i class="material-icons me-1">arrow_back</i>
+        Retour
+      </button>
+      <button class="btn btn-primary" (click)="navigateToNew()">
+        <span class="material-icons">add</span>
+        Nouveau Projet
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher un projet..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()">
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <span class="material-icons">filter_list</span>
+        Statut
+      </label>
+      <select [(ngModel)]="selectedStatut" (change)="onStatutChange()">
+        <option *ngFor="let statut of statuts" [value]="statut.value">
+          {{ statut.label }}
+        </option>
+      </select>
+    </div>
+
+    <div class="results-count">
+      {{ filteredProjets.length }} projet(s) trouvé(s)
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des projets...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <span class="material-icons">error_outline</span>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadProjets()">
+      <span class="material-icons">refresh</span>
+      Réessayer
+    </button>
+  </div>
+
+  <!-- Projets Grid -->
+  <div *ngIf="!loading && !error" class="projets-grid">
+    <!-- Empty State -->
+    <div *ngIf="filteredProjets.length === 0" class="empty-state">
+      <span class="material-icons">inbox</span>
+      <h3>Aucun projet trouvé</h3>
+      <p>Commencez par créer votre premier projet</p>
+      <button class="btn btn-primary" (click)="navigateToNew()">
+        <span class="material-icons">add</span>
+        Créer un projet
+      </button>
+    </div>
+
+    <!-- Projet Cards -->
+    <div
+      *ngFor="let projet of filteredProjets"
+      class="projet-card">
+
+      <!-- <div class="card-header">
+        <div class="project-icon">
+          <span class="material-icons">work</span>
+        </div>
+        <span class="badge" [ngClass]="getStatutBadgeClass(projet.statut)">
+          {{ getStatutLabel(projet.statut) }}
+        </span>
+      </div> -->
+      <div class="card-header">
+        <div class="project-icon">
+          <span class="material-icons">work</span>
+        </div>
+
+        <!-- Select pour modifier le statut -->
+        <select
+          class="statut-select"
+          [ngClass]="getStatutBadgeClass(projet.statut)"
+          [(ngModel)]="projet.statut"
+          (change)="onChangerStatut(projet)"
+          [disabled]="updatingSlug === projet.slug"
+          (click)="$event.stopPropagation()">
+          <option value="en_cours">En cours</option>
+          <option value="termine">Terminé</option>
+          <option value="annule">Annulé</option>
+        </select>
+      </div>
+
+      <div class="card-body">
+        <h3>{{ projet.nom }}</h3>
+        <p class="description" *ngIf="projet.description">
+          {{ projet.description }}
+        </p>
+
+        <div class="projet-stats">
+          <div class="stat-item">
+            <span class="material-icons">attach_money</span>
+            <div>
+              <span class="label">Montant Total</span>
+              <span class="value">{{ formatMontant(projet.montant_total) }}</span>
+            </div>
+          </div>
+
+          <div class="stat-item highlight">
+            <span class="material-icons">card_giftcard</span>
+            <div>
+              <span class="label">Prime</span>
+              <span class="value">{{ formatMontant(projet.prime_totale) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="projet-team" *ngIf="projet.employes && projet.employes.length > 0">
+          <span class="material-icons">group</span>
+          <span class="team-count">{{ projet.employes.length }} développeur(s)</span>
+          <div class="avatars">
+            <div
+              class="avatar"
+              *ngFor="let dev of projet.employes.slice(0, 3)"
+              [title]="dev.prenom + ' ' + dev.nom">
+              {{ dev.prenom.charAt(0) }}{{ dev.nom.charAt(0) }}
+            </div>
+            <div class="avatar more" *ngIf="projet.employes.length > 3">
+              +{{ projet.employes.length - 3 }}
+            </div>
+          </div>
+        </div>
+
+        <div class="projet-dates" *ngIf="projet.date_debut || projet.date_fin">
+          <span class="material-icons">schedule</span>
+          <span *ngIf="projet.date_debut">
+            {{ projet.date_debut | date:'dd/MM/yyyy' }}
+          </span>
+          <span *ngIf="projet.date_debut && projet.date_fin"> - </span>
+          <span *ngIf="projet.date_fin">
+            {{ projet.date_fin | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn-icon"
+                (click)="navigateToDetail(projet); $event.stopPropagation()"
+                title="Voir détails">
+          <span class="material-icons">visibility</span>
+        </button>
+
+        <button class="btn-icon danger"
+                (click)="openDeleteModal(projet)"
+                title="Supprimer">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de projet'"
+  [message]="'Voulez-vous vraiment supprimer ce projet  ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

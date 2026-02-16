@@ -1,0 +1,244 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="employees-header">
+  <h1>Gestion des Contrats</h1>
+</div>
+
+<div class="ccontrats-container">
+
+  <!-- Statistiques -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <span class="material-icons">description</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ totalContrats }}</h3>
+          <p>Total Contrats</p>
+        </div>
+      </div>
+
+      <div class="stat-card cdi">
+        <div class="stat-icon">
+          <span class="material-icons">lock</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreCDI }}</h3>
+          <p>CDI</p>
+        </div>
+      </div>
+
+      <div class="stat-card cdd">
+        <div class="stat-icon">
+          <span class="material-icons">schedule</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreCDD }}</h3>
+          <p>CDD</p>
+        </div>
+      </div>
+
+      <div class="stat-card stage">
+        <div class="stat-icon">
+          <span class="material-icons">school</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreStagiaire }}</h3>
+          <p>Stagiaires</p>
+        </div>
+      </div>
+
+      <div class="stat-card interim">
+        <div class="stat-icon">
+          <span class="material-icons">autorenew</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreInterim }}</h3>
+          <p>Intérimaires</p>
+        </div>
+      </div>
+
+      <div class="stat-card freelance">
+        <div class="stat-icon">
+          <span class="material-icons">work</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreFreelance }}</h3>
+          <p>Freelances</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recherche -->
+  <div class="search-section">
+    <div class="search-header">
+      <h2>
+        <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">search</span>
+        Recherche et Filtres
+      </h2>
+    </div>
+
+    <div class="search-filters">
+      <div class="filter-group">
+        <label>Nom de l'employé</label>
+        <input
+          type="text"
+          [(ngModel)]="searchFilters.employeNom"
+          placeholder="Rechercher par nom..."
+          class="search-input"
+          (input)="applyFilters()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Type de contrat</label>
+        <select
+          [(ngModel)]="searchFilters.type"
+          class="search-select"
+          (change)="applyFilters()"
+        >
+          <option value="">Tous les types</option>
+          <option value="CDI">CDI</option>
+          <option value="CDD">CDD</option>
+          <option value="STAGE">Stage</option>
+          <option value="INTERIM">Intérim</option>
+          <option value="FREELANCE">Freelance</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Numéro de contrat</label>
+        <input
+          type="text"
+          [(ngModel)]="searchFilters.numero"
+          placeholder="Numéro..."
+          class="search-input"
+          (input)="applyFilters()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Statut</label>
+        <select
+          [(ngModel)]="searchFilters.statut"
+          class="search-select"
+          (change)="applyFilters()"
+        >
+          <option value="">Tous les statuts</option>
+          <option [value]="1">Actif</option>
+          <option [value]="2">Inactif</option>
+          <option [value]="3">Suspendu</option>
+          <option [value]="4">Terminé</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="clear-btn" (click)="clearFilters()">
+          <span class="material-icons">clear</span>
+          Effacer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="table-section">
+    <div class="table-header">
+      <h2>
+        <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">list_alt</span>
+        Liste des Contrats ({{ contratsFiltered.length }})
+      </h2>
+      <button class="btn-add" (click)="openAddDialog()">
+        <span class="material-icons">add</span>
+        Ajouter un contrat
+      </button>
+    </div>
+
+    <div class="table">
+      <table class="employees-table">
+        <thead>
+          <tr>
+            <th>Numéro</th>
+            <th>Employé</th>
+            <th>Type</th>
+            <th>Début</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let contrat of paginatedContrat; trackBy: trackByContrat" [class.expired]="isContractExpired(contrat)">
+            <td data-label="Numéro">{{ contrat.numero }}</td>
+            <td data-label="Employé">
+              {{ contrat.employe?.nom }} {{contrat.employe?.prenom}} - {{ contrat.employe?.matricule || 'non défini' }}
+              <span *ngIf="isContractExpired(contrat)" class="expired-badge">
+                <span class="material-icons" style="font-size: 0.875rem; vertical-align: middle;">warning</span>
+                Expiré
+              </span>
+            </td>
+            <td data-label="Type">
+              <span [class]="getTypeClass(contrat.type.nom)">{{ contrat.type.nom }}</span>
+            </td>
+            <td data-label="Début">{{ contrat.debut }}</td>
+            <td data-label="Statut">
+              <span [class]="getStatusClass(contrat.statut)">{{getStatuLabel(contrat.statut)}}</span>
+            </td>
+            <td data-label="Actions">
+              <a [routerLink]="['/detail-contrat/', contrat.slug]">
+                <button class="btn btn-sm btn-outline-primary me-1 p-2 border-0" title="Voir" type="button">
+                  <span class="material-icons">visibility</span>
+                </button>
+              </a>
+              <button (click)="openEditDialog(contrat)" class="btn btn-sm btn-outline me-1 p-2 border-0" title="Modifier" type="button">
+                <span class="material-icons">edit</span>
+              </button>
+              <button (click)="openDeleteModal(contrat)" class="btn btn-sm btn-outline-danger me-1 p-2 border-0" title="Supprimer" type="button">
+                <span class="material-icons">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="contratsFiltered.length === 0" class="no-data">
+            <td colspan="6">
+              <div class="no-data-message">
+                <span class="material-icons no-data-icon" style="font-size: 4rem; color: #d1d5db;">inbox</span>
+                <p>Aucun contrat trouvé</p>
+                <small>Essayez de modifier vos critères de recherche</small>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="prevPage()" [disabled]="currentPage === 1">
+          <span class="material-icons">chevron_left</span>
+          Précédent
+        </button>
+
+        <button *ngFor="let page of [].constructor(totalPages); let i = index"
+                (click)="goToPage(i + 1)"
+                [class.active]="currentPage === i + 1">
+          {{ i + 1 }}
+        </button>
+
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">
+          Suivant
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de contrat ?'"
+  [message]="'Voulez-vous vraiment supprimer le contrat de ' + itemToDelete?.employe.nom + ' ' + itemToDelete?.employe.prenom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

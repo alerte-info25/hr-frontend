@@ -1,0 +1,87 @@
+
+  @if(isLoading){
+    <app-loading></app-loading>
+  }
+<div class="container">
+      <div class="header">
+        <h1>Gestion des comptes utilisateurs</h1>
+      </div>
+
+      <div class="table-container">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Employe</th>
+              <th>Rôle</th>
+              <th>Fonction</th>
+              <th>Service</th>
+              <th>Etat</th>
+              <th>Dernière connexion</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users; track   user.id) {
+              <tr class="table-row">
+                <td data-label="Employé">{{ user.employe.nom }} {{ user.employe.prenom }}</td>
+
+                <td data-label="Rôle">
+                  <mat-form-field appearance="outline" class="role-select">
+                    <mat-select
+                      [(value)]="user.id_role"
+                      (selectionChange)="onRoleChange(user.slug, $event.value)"
+                    >
+                      <mat-option *ngFor="let role of roles" [value]="role.slug">
+                        {{ role.libelle }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
+
+                <td data-label="Fonction">{{ user?.employe?.fonction?.nom }}</td>
+
+                <td data-label="Service">{{ user?.employe?.service?.nom }}</td>
+
+                <td data-label="État">
+                  <mat-form-field
+                    appearance="outline"
+                    class="etat-select"
+                    [ngClass]="{'etat-actif': user.is_actif == 1, 'etat-inactif': user.is_actif == 0}">
+                    <mat-select
+                      [(value)]="user.is_actif"
+                      (selectionChange)="onEtatChange(user.slug, $event.value)"
+                    >
+                      <mat-option [value]="1">Actif</mat-option>
+                      <mat-option [value]="0">Inactif</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
+
+                <td data-label="Dernière connexion">{{ dateString(user.last_login) }}</td>
+
+                <td data-label="Actions">
+                  <div class="actions">
+                    <button
+                      class="btn-icon btn-outline-danger"
+                      title="Supprimer"
+                      (click)="openDeleteModal(user)"
+                      type="button">
+                      <i class="fa-regular fa-trash-can" ngSkipHydration></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de compte ?'"
+  [message]="'Voulez-vous vraiment supprimer ce compte ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

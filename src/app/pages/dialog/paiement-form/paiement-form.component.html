@@ -1,0 +1,140 @@
+<!-- src/app/components/paiement-form/paiement-form.component.html -->
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-content">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>
+        <span class="material-icons">payment</span>
+        Enregistrer un Paiement
+      </h2>
+      <button class="btn-close" (click)="onClose()" [disabled]="loading">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+
+      <form (ngSubmit)="onSubmit()">
+
+        <!-- Montant -->
+        <div class="form-group">
+          <label for="montant">
+            Montant du Paiement <span class="required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <span class="material-icons">attach_money</span>
+            <input
+              type="number"
+              id="montant"
+              [(ngModel)]="paiement.montant"
+              name="montant"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              required>
+            <span class="currency">FCFA</span>
+          </div>
+          <button
+            type="button"
+            class="btn-text"
+            (click)="payerSolde()">
+            Payer le solde complet
+          </button>
+        </div>
+
+        <!-- Date de Paiement -->
+        <div class="form-group">
+          <label for="date_paiement">
+            Date de Paiement <span class="required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <span class="material-icons">event</span>
+            <input
+              type="date"
+              id="date_paiement"
+              [(ngModel)]="paiement.date_paiement"
+              name="date_paiement"
+              required>
+          </div>
+        </div>
+
+        <!-- Mode de Paiement -->
+        <div class="form-group">
+          <label>
+            Mode de Paiement <span class="required">*</span>
+          </label>
+          <div class="payment-modes">
+            <label
+              class="payment-mode-option"
+              *ngFor="let mode of modesPaiement"
+              [class.selected]="paiement.mode_paiement === mode.value">
+              <input
+                type="radio"
+                [(ngModel)]="paiement.mode_paiement"
+                [value]="mode.value"
+                name="mode_paiement"
+                required>
+              <div class="mode-content">
+                <span class="material-icons">{{ mode.icon }}</span>
+                <span class="mode-label">{{ mode.label }}</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Référence -->
+        <div class="form-group">
+          <label for="reference">Référence du Paiement</label>
+          <div class="input-with-icon">
+            <span class="material-icons">tag</span>
+            <input
+              type="text"
+              id="reference"
+              [(ngModel)]="paiement.reference"
+              name="reference"
+              placeholder="Ex: VIR20260203001">
+          </div>
+        </div>
+
+        <!-- Commentaire -->
+        <div class="form-group">
+          <label for="commentaire">Commentaire</label>
+          <textarea
+            id="commentaire"
+            [(ngModel)]="paiement.commentaire"
+            name="commentaire"
+            rows="3"
+            placeholder="Ajoutez un commentaire..."></textarea>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" *ngIf="error">
+          <span class="material-icons">error</span>
+          <p>{{ error }}</p>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="onClose()"
+            [disabled]="loading">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!isFormValid() || loading">
+            <span class="material-icons" *ngIf="!loading">save</span>
+            <span class="spinner-small" *ngIf="loading"></span>
+            {{ loading ? 'Enregistrement...' : 'Enregistrer le Paiement' }}
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>

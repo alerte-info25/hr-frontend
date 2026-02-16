@@ -1,0 +1,94 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div
+  *ngIf="conge"
+  @fadeSlide
+  class="card permission-card p-3 mb-3 shadow-sm position-relative"
+>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Détails de la demande</h5>
+    <span class="badge" [ngClass]="getStatutBadge(conge.statut)">
+      {{ getStatutLabel(conge.statut) }}
+    </span>
+  </div>
+
+  <div class="card-body">
+    <p><strong>Employé :</strong> {{ conge.employe.nom }} {{ conge.employe.prenom }}</p>
+    <p><strong>Type :</strong> {{ conge.type.nom }}</p>
+    <p><strong>Date de la demande :</strong> {{ formatDate(conge.date_demande) }}</p>
+    <p><strong>Début :</strong> {{ formatDate(conge.debut) }}</p>
+    <p><strong>Fin :</strong> {{ formatDate(conge.fin) }}</p>
+    <p><strong>Raison :</strong> {{ conge.raison }}</p>
+
+    <p *ngIf="conge.date_reponse"><strong>Date de la réponse :</strong> {{ formatDate(conge.date_reponse) }}</p>
+    <p *ngIf="conge.commentaire_admin"><strong>Commentaire Administrateur :</strong> {{ conge.commentaire_admin }}</p>
+    <p *ngIf="conge.document">
+      <strong>Document :</strong>
+      <a
+        [href]="conge.document"
+        target="_blank"
+        class="btn btn-outline-primary btn-sm ms-2"
+      >
+        <i class="bi bi-file-earmark-pdf"></i> Ouvrir le document
+      </a>
+    </p>
+
+    <!-- === Zone d'action Admin === -->
+    <div class="mt-4 border-top pt-3">
+      <h6>Action administrateur :</h6>
+
+      <!-- Radio boutons -->
+      <div class="form-check">
+        <label>
+          <input type="radio"
+            name="statuDemande"
+            [disabled]="isLocked(conge.debut)"
+            [checked]="conge.statut === 2"
+            name="statut"
+            id="refuser"
+            [(ngModel)]="decision"
+            [value]="2"
+          />
+          Acceptée
+        </label>
+        &nbsp;
+        <label>
+          <input type="radio"
+            name="statuDemande"
+            [disabled]="isLocked(conge.fin)"
+            [checked]="conge.statut === 3"
+            name="statut"
+            id="refuser"
+            [(ngModel)]="decision"
+            [value]="3"
+          />
+          Refusée
+        </label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <!-- Textarea commentaire -->
+      <div class="mt-3">
+        <label for="commentaire" class="form-label">Commentaire</label>
+        <textarea
+          id="commentaire"
+          class="form-control"
+          rows="3"
+          [(ngModel)]="commentaireAdmin"
+        ></textarea>
+      </div>
+      <br><br>
+    </div>
+    <!-- Bouton valider -->
+    <button
+      class="btn btn-success mt-3"
+      (click)="validerDecision(conge.slug)"
+      [disabled]="!decision"
+    >
+      Valider
+    </button>
+
+    <button class="btn btn-sm btn-outline-danger mt-3 ms-2" (click)="closeDetails()">
+      Fermer
+    </button>
+  </div>
+</div>

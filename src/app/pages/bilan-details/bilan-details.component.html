@@ -1,0 +1,501 @@
+<div class="details-container" [@pageAnimation]>
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Chargement du bilan...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" *ngIf="!loading && bilan" [@fadeIn]>
+
+    <!-- Hero Header -->
+    <div class="hero-header">
+      <div class="hero-background" [style.background]="'linear-gradient(135deg, ' + getTrimestreColor(bilan.trimestre) + ' 0%, #1f2937 100%)'">
+        <div class="hero-pattern"></div>
+      </div>
+
+      <div class="hero-content">
+        <button mat-icon-button class="back-button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+
+        <div class="hero-info">
+          <div class="trimestre-badge-large">
+            <mat-icon>calendar_today</mat-icon>
+            <span>{{ getTrimestreShortLabel(bilan.trimestre) }} {{ bilan.annee }}</span>
+          </div>
+
+          <h1 class="hero-title">{{ getTrimestreLabel(bilan.trimestre) }} {{ bilan.annee }}</h1>
+
+          <div class="hero-meta">
+            <div class="meta-item">
+              <mat-icon>schedule</mat-icon>
+              <span>Créé le {{ bilan.created_at | date: 'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="meta-item">
+              <mat-icon>update</mat-icon>
+              <span>Mis à jour le {{ bilan.updated_at | date: 'dd/MM/yyyy à HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-actions" >
+          <button mat-mini-fab color="primary" matTooltip="Imprimer" (click)="printBilan()">
+            <mat-icon>print</mat-icon>
+          </button>
+          <button mat-mini-fab color="primary" matTooltip="Exporter en PDF" (click)="exportPDF()">
+            <mat-icon>picture_as_pdf</mat-icon>
+          </button>
+          <button mat-mini-fab color="primary" matTooltip="Partager" (click)="shareBilan()">
+            <mat-icon>share</mat-icon>
+          </button>
+          <!-- <button mat-mini-fab color="accent" matTooltip="Modifier" (click)="editBilan()">
+            <mat-icon>edit</mat-icon>
+          </button> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-section" [@fadeIn]>
+      <div class="tabs-container">
+        <button class="tab-button"
+                [class.active]="activeTab === 'overview'"
+                (click)="setActiveTab('overview')">
+          <mat-icon>dashboard</mat-icon>
+          <span>Vue d'ensemble</span>
+        </button>
+        <button class="tab-button"
+                [class.active]="activeTab === 'details'"
+                (click)="setActiveTab('details')">
+          <mat-icon>list_alt</mat-icon>
+          <span>Détails complets</span>
+        </button>
+        <button class="tab-button"
+                [class.active]="activeTab === 'timeline'"
+                (click)="setActiveTab('timeline')">
+          <mat-icon>timeline</mat-icon>
+          <span>Chronologie</span>
+        </button>
+      </div>
+      <div class="tab-indicator"
+        [class.tab-1]="activeTab === 'overview'"
+        [class.tab-2]="activeTab === 'details'"
+        [class.tab-3]="activeTab === 'timeline'">
+      </div>
+    </div>
+
+    <!-- Tab Content: Overview -->
+    <div class="tab-content" *ngIf="activeTab === 'overview'" [@sectionAnimation]="bilan.details?.length">
+
+      <!-- Introduction Section -->
+      <div class="content-section intro-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <mat-icon>subject</mat-icon>
+          </div>
+          <div class="section-title-group">
+            <h2 class="section-title">Introduction</h2>
+            <p class="section-subtitle">Aperçu général du trimestre</p>
+          </div>
+        </div>
+        <div class="section-content">
+          <div class="rich-text-content" [innerHTML]="sanitize(bilan.introduction)"></div>
+        </div>
+      </div>
+
+      <!-- Quick Overview Cards -->
+      <div class="overview-grid"
+      >
+        <div class="overview-card"
+            *ngFor="let detail of detailClean; let i = index"
+            (mouseenter)="onCardHover(i)"
+            (mouseleave)="onCardLeave()"
+            [@cardHover]="hoveredCard === i ? 'hovered' : 'normal'"
+
+            >
+
+          <!-- Header -->
+          <div class="overview-card-header" >
+            <div class="overview-icon"
+              [style.background]="'linear-gradient(135deg, ' + getTrimestreColor(bilan.trimestre) + ' 0%, rgba(102, 126, 234, 0.7) 100%)'">
+              <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
+            </div>
+            <h3>{{ getDetailLabel(detail.cle) }}</h3>
+          </div>
+
+          <!-- Content -->
+          <div class="overview-card-content">
+
+            <!-- Articles / médias -->
+            <div *ngIf="isArticlesDetail(detail)" class="quick-stat">
+              <span class="quick-number">{{ detail.valeur.length }}</span>
+              <span class="quick-label">élément(s) produit(s)</span>
+            </div>
+
+            <!-- Affichage des liens articles / vidéos -->
+            <div *ngIf="isArticlesDetail(detail)" class="links-section">
+              <div *ngFor="let item of detail.valeur; let idx = index" class="link-card">
+                <a [href]="item.lien" target="_blank">
+                  <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
+                  <span>{{ item.type | titlecase }}</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Projets details -->
+            <div *ngIf="isProjetsDetail(detail.valeur)" class="quick-stat">
+              <span class="quick-number">{{ detail.valeur.length }}</span>
+              <span class="quick-label">projet(s)</span>
+            </div>
+
+            <!-- Autres détails simples (nombre / texte) -->
+            <div *ngIf="isSimpleDetail(detail)" class="quick-stat">
+              <span class="quick-number">{{ detail.valeur }}</span>
+              <span class="quick-label">{{ getDetailLabel(detail.cle) }}</span>
+            </div>
+
+            <!-- Fallback -->
+            <div *ngIf="!isArticlesDetail(detail) && !isProjetsDetail(detail.valeur) && !isSimpleDetail(detail)" class="quick-stat">
+              <span class="quick-label">Voir les détails</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Commentaire Section -->
+      <div class="content-section comment-section" *ngIf="bilan.commentaire">
+        <div class="section-header">
+          <div class="section-icon">
+            <mat-icon>comment</mat-icon>
+          </div>
+          <div class="section-title-group">
+            <h2 class="section-title">Commentaire final</h2>
+            <p class="section-subtitle">Conclusion et perspectives</p>
+          </div>
+        </div>
+        <div class="section-content">
+          <div class="rich-text-content" [innerHTML]="sanitize(bilan.commentaire)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Details -->
+    <!-- <div class="tab-content" *ngIf="activeTab === 'details'" [@sectionAnimation]="bilan.details?.length">
+
+      <div class="details-grid">
+        <div class="detail-section" *ngFor="let detail of bilan.details">
+          <div class="detail-header-modern">
+            <div class="detail-icon-modern">
+              <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
+            </div>
+            <h3 class="detail-title-modern">{{ getDetailLabel(detail.cle) }}</h3>
+          </div>
+
+          <div class="detail-body-modern">
+            <div class="detail-body-modern"> -->
+              <!-- Articles / médias -->
+              <!-- <div *ngIf="isArticlesDetail(detail)" class="journalist-content">
+
+                <div class="count-badge">
+                  <mat-icon>numbers</mat-icon>
+                  <span><strong>{{ detail.valeur.length }}</strong> lien(s)</span>
+                </div>
+
+                <div class="links-section">
+                  <h4 class="subsection-title">
+                    <mat-icon>link</mat-icon>
+                    Liens des éléménts produits
+                  </h4>
+
+                  <div class="links-grid">
+                    <a *ngFor="let item of detail.valeur; let i = index"
+                      [href]="item.lien"
+                      target="_blank"
+                      class="link-card">
+                      <div class="link-number">{{ i + 1 }}</div>
+                      <div class="link-content">
+                        <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
+                        <span>{{ item.type | titlecase }}</span>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div> -->
+
+              <!-- Autres détails simples -->
+              <!-- <div *ngIf="isSimpleDetail(detail)" class="simple-detail">
+                <span class="detail-label">{{ getDetailLabel(detail.cle) }}</span>
+                <span class="detail-value">{{ detail.valeur }}</span>
+              </div> -->
+
+            <!-- </div> -->
+
+            <!-- Développeur: projets -->
+            <!-- <div *ngIf="isProjetsDetail(detail.valeur)" class="projects-content">
+              <div class="projects-timeline">
+                <div class="project-card" *ngFor="let projet of detail.valeur; let last = last">
+                  <div class="project-header-modern">
+                    <div class="project-icon">
+                      <mat-icon>code</mat-icon>
+                    </div>
+                    <div class="project-info">
+                      <h4 class="project-name">{{ projet.nom }}</h4>
+                      <span class="project-status"
+                            [class.status-completed]="projet.statut === 'termine'"
+                            [class.status-ongoing]="projet.statut === 'en_cours'">
+                        <mat-icon>{{ projet.statut === 'termine' ? 'check_circle' : 'pending' }}</mat-icon>
+                        {{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="project-tasks" *ngIf="projet.taches?.length > 0">
+                    <h5 class="tasks-title">
+                      <mat-icon>task_alt</mat-icon>
+                      Tâches réalisées
+                    </h5>
+                    <ul class="tasks-list">
+                      <li *ngFor="let tache of projet.taches" class="task-item">
+                        <mat-icon class="task-check">check</mat-icon>
+                        <span>{{ tache }}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="timeline-connector" *ngIf="!last"></div>
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Coursiers
+            <div *ngIf="isCourierDetail(detail)" class="courier-content">
+              <h3>Courses du trimestre</h3> -->
+
+              <!-- Statistique rapide -->
+              <!-- <p><strong>Nombre de jours travaillés:</strong> {{ getCourierStats(detail).totalDays }}</p> -->
+
+              <!-- <table class="courier-table mat-elevation-z2">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Heure arrivée</th>
+                    <th>Heure départ</th>
+                    <th>Tâches effectuées</th>
+                    <th>Lieu</th>
+                    <th>Observation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let course of detail.valeur">
+                    <td>{{ course.date | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ course.heure_arrive }}</td>
+                    <td>{{ course.heure_depart }}</td>
+                    <td>{{ course.tache_effectuer }}</td>
+                    <td>{{ course.lieu }}</td>
+                    <td>{{ course.observation }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div> -->
+            <!-- HTML Content -->
+            <!-- <div *ngIf="isHtmlString(detail.valeur)" class="html-content">
+              <div class="rich-text-content" [innerHTML]="sanitize(detail.valeur)"></div>
+            </div> -->
+
+            <!-- Number -->
+            <!-- <div *ngIf="isNumber(detail.valeur)" class="number-content">
+              <span class="big-number">{{ detail.valeur }}</span>
+            </div> -->
+
+            <!-- Simple text -->
+            <!-- <div *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur)" class="text-content">
+              <p>{{ detail.valeur }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    <!-- Tab Content: Details -->
+    <div class="tab-content" *ngIf="activeTab === 'details'">
+      <div class="details-grid">
+        <div class="detail-section" *ngFor="let detail of bilan.details; let i = index">
+          <div class="detail-header-modern" (click)="toggleDetailExpansion(detail.slug)" style="cursor: pointer;">
+            <div class="detail-icon-modern">
+              <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
+            </div>
+            <h3 class="detail-title-modern">{{ getDetailLabel(detail.cle) }}</h3>
+
+            <mat-icon class="expand-icon" style="margin-left: auto;">
+              {{ isDetailExpanded(detail.slug) ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
+
+          <!-- ⬇️ LE PROBLÈME EST PROBABLEMENT ICI -->
+          <div class="detail-body-modern" *ngIf="isDetailExpanded(detail.slug)">
+
+            <!-- Articles / médias -->
+            <div *ngIf="isArticlesDetail(detail)" class="journalist-content">
+              <div class="count-badge">
+                <mat-icon>numbers</mat-icon>
+                <span><strong>{{ detail.valeur.length }}</strong> lien(s)</span>
+              </div>
+
+              <div class="links-section">
+                <h4 class="subsection-title">
+                  <mat-icon>link</mat-icon>
+                  Liens des éléments produits
+                </h4>
+
+                <div class="links-grid">
+                  <a *ngFor="let item of detail.valeur; let idx = index"
+                    [href]="item.lien"
+                    target="_blank"
+                    class="link-card">
+                    <div class="link-number">{{ idx + 1 }}</div>
+                    <div class="link-content">
+                      <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
+                      <span>{{ item.type | titlecase }}</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Projets -->
+            <div *ngIf="isProjetsDetail(detail.valeur)" class="projects-content">
+              <div class="projects-timeline">
+                <div class="project-card" *ngFor="let projet of detail.valeur; let last = last">
+                  <div class="project-header-modern">
+                    <div class="project-icon">
+                      <mat-icon>code</mat-icon>
+                    </div>
+                    <div class="project-info">
+                      <h4 class="project-name">{{ projet.nom }}</h4>
+                      <span class="project-status"
+                            [class.status-completed]="projet.statut === 'termine'"
+                            [class.status-ongoing]="projet.statut === 'en_cours'">
+                        <mat-icon>{{ projet.statut === 'termine' ? 'check_circle' : 'pending' }}</mat-icon>
+                        {{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="project-tasks" *ngIf="projet.taches?.length > 0">
+                    <h5 class="tasks-title">
+                      <mat-icon>task_alt</mat-icon>
+                      Tâches réalisées
+                    </h5>
+                    <ul class="tasks-list">
+                      <li *ngFor="let tache of projet.taches" class="task-item">
+                        <mat-icon class="task-check">check</mat-icon>
+                        <span>{{ tache }}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="timeline-connector" *ngIf="!last"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coursiers -->
+            <div *ngIf="isCourierDetail(detail)" class="courier-content">
+              <h3>Courses du trimestre</h3>
+
+              <p><strong>Nombre de jours travaillés:</strong> {{ getCourierStats(detail).totalDays }}</p>
+
+              <table class="courier-table mat-elevation-z2">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Heure arrivée</th>
+                    <th>Heure départ</th>
+                    <th>Tâches effectuées</th>
+                    <th>Lieu</th>
+                    <th>Observation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let course of detail.valeur">
+                    <td>{{ course.date | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ course.heure_arrive }}</td>
+                    <td>{{ course.heure_depart }}</td>
+                    <td>{{ course.tache_effectuer }}</td>
+                    <td>{{ course.lieu }}</td>
+                    <td>{{ course.observation }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- HTML Content - ⬇️ C'EST PROBABLEMENT ICI LE PROBLÈME -->
+            <div *ngIf="isHtmlString(detail.valeur)" class="html-content">
+              <!-- AVANT (avec erreur i) -->
+              <!-- <div class="rich-text-content" [innerHTML]="getSanitizedContent(detail, i)"></div> -->
+
+              <!-- APRÈS (corrigé) -->
+              <button
+                *ngIf="!isDetailExpanded(detail.slug)"
+                mat-raised-button
+                color="primary"
+                (click)="loadHtmlContent(detail)">
+                <mat-icon>visibility</mat-icon>
+                Afficher le contenu HTML
+              </button>
+
+              <div
+                *ngIf="isDetailExpanded(detail.slug)"
+                class="rich-text-content"
+                [innerHTML]="getSanitizedContent(detail)">
+              </div>
+            </div>
+
+            <!-- Number -->
+            <div *ngIf="isNumber(detail.valeur)" class="number-content">
+              <span class="big-number">{{ detail.valeur }}</span>
+            </div>
+
+            <!-- Simple text -->
+            <div *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur)" class="text-content">
+              <p>{{ detail.valeur }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Timeline -->
+    <div class="tab-content" *ngIf="activeTab === 'timeline'" [@fadeIn]>
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <h2>Historique du bilan</h2>
+          <p>Suivez l'évolution et les modifications</p>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot timeline-dot-primary"></div>
+            <div class="timeline-content">
+              <div class="timeline-time">{{ bilan.updated_at | date: 'dd/MM/yyyy à HH:mm' }}</div>
+              <h4>Dernière mise à jour</h4>
+              <p>Le bilan a été modifié et enregistré</p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot timeline-dot-success"></div>
+            <div class="timeline-content">
+              <div class="timeline-time">{{ bilan.created_at | date: 'dd/MM/yyyy à HH:mm' }}</div>
+              <h4>Création du bilan</h4>
+              <p>Le bilan trimestriel a été initialisé</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

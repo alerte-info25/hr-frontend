@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>Créer un contrat</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form-grid">
+
+    <mat-form-field appearance="outline">
+      <mat-label>Numéro du contrat</mat-label>
+      <input matInput formControlName="numero" placeholder="Ex : CT2025-001" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Employé</mat-label>
+      <mat-select formControlName="id_employe">
+        <mat-option *ngFor="let emp of employes" [value]="emp.slug">
+          {{ emp.prenom }} {{ emp.nom }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Type de contrat</mat-label>
+      <mat-select formControlName="id_type" (selectionChange)="onTypeChange($event.value)">
+        <mat-option *ngFor="let type of typesContrat" [value]="type.slug">
+          {{ type.nom }} ({{ type.duree }} mois)
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Date de début</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="debut" (dateChange)="updateFin()" />
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <!-- <mat-form-field appearance="outline">
+      <mat-label>Date de fin</mat-label>
+      <input matInput [value]="dateFin | date:'dd/MM/yyyy'" disabled />
+    </mat-form-field> -->
+    <mat-form-field appearance="outline">
+      <mat-label>Date de fin</mat-label>
+      <input
+        matInput
+        [value]="dateFin ? (dateFin | date:'dd/MM/yyyy') : 'Indéterminée'"
+        disabled
+      />
+    </mat-form-field>
+
+
+    <mat-form-field appearance="outline">
+      <mat-label>Salaire</mat-label>
+      <input matInput type="number" formControlName="salaire" placeholder="Ex : 250000" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Heures / jour</mat-label>
+      <input matInput type="number" formControlName="nbheure" placeholder="Ex : 08" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" *ngIf="data">
+      <mat-label>Statut</mat-label>
+      <mat-select formControlName="statut">
+        <mat-option [value]="'1'">Actif</mat-option>
+        <mat-option [value]="'2'">Inactif</mat-option>
+        <mat-option [value]="'3'">Suspendu</mat-option>
+        <mat-option [value]="'4'">Terminé</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Annuler</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Enregistrer</button>
+</mat-dialog-actions>

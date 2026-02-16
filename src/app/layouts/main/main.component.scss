@@ -1,0 +1,92 @@
+.page__body-wrapper {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .page__body-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    background: #fff;
+    transition: transform 0.3s ease;
+    transform: translateX(-100%);
+
+    &.sidebar-open {
+      transform: translateX(0);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .body-overlay.show {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    display: block;
+  }
+}
+
+
+.main-layout {
+  height: 100vh;
+}
+
+.sidebar {
+  width: 240px; // largeur sidebar quand ouvert
+}
+
+.navbar {
+  transition: all 0.3s ease;
+
+  &.expanded {
+    width: 100%; // navbar prend toute la largeur quand sidebar fermé
+  }
+}
+
+.page-content {
+  padding: 16px;
+}
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.btn-home {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.3s ease;
+  margin-left: 5px;
+}
+
+.btn-home:hover {
+  background-color: #2c3e91;
+}
+
+.current-route {
+  font-weight: 500;
+  color: #000;
+  text-transform: capitalize;
+}
+.main-content {
+  transition: margin-left 0.3s ease;
+}
+.page__body-wrapper {
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}

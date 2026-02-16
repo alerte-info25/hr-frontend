@@ -1,0 +1,150 @@
+<div class="cahier-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="title">Cahiers de Charges</h1>
+      <p class="subtitle">Consultez et gérez vos cahiers de charges par période</p>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section" *ngIf="!loading && !error">
+    <div class="filters-grid">
+      <!-- Search Bar -->
+      <div class="filter-item search-container">
+        <div class="search-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </div>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Rechercher par service ou créateur..."
+          (input)="onSearchChange($any($event.target).value)"
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <!-- Year Filter -->
+      <div class="filter-item">
+        <select
+          class="filter-select"
+          (change)="onYearChange($any($event.target).value)"
+          [(ngModel)]="selectedYear"
+        >
+          <option value="all">Toutes les années</option>
+          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+
+      <!-- Trimestre Filter -->
+      <div class="filter-item">
+        <select
+          class="filter-select"
+          (change)="onTrimestreChange($any($event.target).value)"
+          [(ngModel)]="selectedTrimestre"
+        >
+          <option value="all">Tous les trimestres</option>
+          <option *ngFor="let t of trimestres" [value]="t">Trimestre {{ t }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="results-count" *ngIf="filteredCahiers.length > 0">
+      <span>{{ filteredCahiers.length }} cahier(s) trouvé(s)</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p class="loading-text">Chargement des cahiers de charges...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <div class="error-icon">⚠️</div>
+    <h3 class="error-title">Erreur de chargement</h3>
+    <p class="error-message">Impossible de charger les cahiers de charges.</p>
+    <button class="retry-button" (click)="loadCahiers()">Réessayer</button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && !error && filteredCahiers.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3 class="empty-title">Aucun cahier de charges</h3>
+    <p class="empty-message">Aucun cahier de charges ne correspond à vos critères de recherche.</p>
+  </div>
+
+  <!-- Cahiers List -->
+  <div class="cahiers-grid" *ngIf="!loading && !error && filteredCahiers.length > 0">
+    <div
+      class="cahier-card"
+      *ngFor="let cahier of filteredCahiers"
+      [class.selected]="selectedCahier?.id === cahier.id"
+      (click)="selectCahier(cahier)"
+    >
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="period-badge" [style.background-color]="getTrimestreColor(cahier.trimestre)">
+          <span class="period-text">{{ getTrimestreLabel(cahier.trimestre) }} {{ cahier.annee }}</span>
+        </div>
+        <div class="expand-icon" [class.rotated]="selectedCahier?.id === cahier.id">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Card Content -->
+      <div class="card-content">
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">Service</span>
+            <span class="info-value">{{ cahier.service.nom }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">Créé par</span>
+            <span class="info-value">{{ cahier.createur.prenom }} {{ cahier.createur.nom }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date</span>
+            <span class="info-value">{{ formatDate(cahier.created_at) }}</span>
+          </div>
+        </div>
+
+        <div class="details-count">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span>{{ cahier.details.length }} élément(s)</span>
+        </div>
+      </div>
+
+      <!-- Expanded Details -->
+      <div class="card-details" *ngIf="selectedCahier?.id === cahier.id">
+        <div class="details-container">
+          <div
+            class="detail-category"
+            *ngFor="let category of getDetailsByCategory(cahier.details) | keyvalue"
+          >
+            <h4 class="category-title">{{ getCategoryTitle(category.key) }}</h4>
+            <div class="detail-items">
+              <div class="detail-item" *ngFor="let detail of category.value">
+                <div class="detail-key">{{ detail.cle }}</div>
+                <div class="detail-value">{{ detail.valeur }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

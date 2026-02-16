@@ -1,0 +1,39 @@
+@if (isLoading) {
+<app-loading ></app-loading>
+}
+<div class="roles-header">
+  <h1>Gestion des fonctions</h1>
+  <button class="btn-add" (click)="openAddDialog()">
+    <i class="fas fa-plus"></i> Ajouter une fonction
+  </button>
+</div>
+<div class="roles-list">
+  @for (fonction of fonctions; track fonction.id) {
+    <div class="role-item">
+      <div class="role-info">
+        <h4>{{ fonction.nom }}</h4>
+        <p>{{ fonction.description }}</p>
+      </div>
+      <div class="role-actions">
+        <button class="btn-edit" (click)="openEditDialog(fonction)">Modifier</button>
+        <button class="btn-delete" (click)="openDeleteModal(fonction)">Supprimer</button>
+      </div>
+    </div>
+  } @empty {
+    <div class="empty-state" align="center">
+      <h3 class="empty-title">Aucune fonction disponible</h3>
+      <p class="empty-description">Il n'y a actuellement aucune fonction définie dans le système.</p>
+      <button class="btn btn-primary mt-3" (click)="openAddDialog()">
+        <i class="fas fa-plus me-2"></i>
+        Ajouter une fonction
+      </button>
+    </div>
+  }
+</div>
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de fonction '"
+  [message]="'Voulez-vous vraiment supprimer la fonction ' + itemToDelete?.nom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

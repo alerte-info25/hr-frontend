@@ -1,0 +1,423 @@
+<div class="mes-primes-container">
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner">
+      <mat-icon class="spin">autorenew</mat-icon>
+    </div>
+    <p>Chargement de vos données...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Oups ! Une erreur est survenue</h3>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="loadMesPrimes()">
+      <mat-icon>refresh</mat-icon>
+      Réessayer
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" *ngIf="data && !loading">
+
+    <!-- Header -->
+    <div class="page-header fade-in">
+      <div class="header-content">
+        <div class="welcome-section">
+          <h1>Bonjour, {{ data.developpeur.nom_complet.split(' ')[1] }} 👋</h1>
+          <p class="subtitle">Voici un aperçu de vos primes et paiements</p>
+        </div>
+        <div class="user-badge">
+          <div class="avatar">
+            <span>{{ data.developpeur.nom_complet.charAt(0) }}</span>
+          </div>
+          <div class="user-info">
+            <h4>{{ data.developpeur.nom_complet }}</h4>
+            <p>{{ data.developpeur.service }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+
+      <!-- Total Primes -->
+      <div class="stat-card card-gradient-1 slide-up" [class.animated]="statsAnimated">
+        <div class="stat-icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total des primes</p>
+          <h2 class="stat-value">{{ formatCurrency(data.statistiques.total_primes_attribuees) }}</h2>
+          <div class="stat-badge">
+            <mat-icon>trending_up</mat-icon>
+            {{ data.statistiques.nombre_projets }} projets
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Payé -->
+      <div class="stat-card card-gradient-2 slide-up delay-1" [class.animated]="statsAnimated">
+        <div class="stat-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total payé</p>
+          <h2 class="stat-value">{{ formatCurrency(data.statistiques.total_paye) }}</h2>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="data.statistiques.pourcentage_paye"></div>
+          </div>
+          <p class="progress-label">{{ data.statistiques.pourcentage_paye }}% versé</p>
+        </div>
+      </div>
+
+      <!-- Total Restant -->
+      <div class="stat-card card-gradient-3 slide-up delay-2" [class.animated]="statsAnimated">
+        <div class="stat-icon">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">En attente</p>
+          <h2 class="stat-value">{{ formatCurrency(data.statistiques.total_restant) }}</h2>
+          <div class="stat-badge warning">
+            <mat-icon>info</mat-icon>
+            {{ 100 - data.statistiques.pourcentage_paye | number:'1.0-0' }}% restant
+          </div>
+        </div>
+      </div>
+
+      <!-- Projets Stats -->
+      <div class="stat-card card-gradient-4 slide-up delay-3" [class.animated]="statsAnimated">
+        <div class="stat-icon">
+          <mat-icon>work</mat-icon>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Projets actifs</p>
+          <h2 class="stat-value">{{ data.statistiques.nombre_projets_en_cours }}</h2>
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ data.statistiques.nombre_projets_termines }} terminés</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'projets'"
+          (click)="onTabChange('projets')">
+          <mat-icon>folder</mat-icon>
+          Mes Projets
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'paiements'"
+          (click)="onTabChange('paiements')">
+          <mat-icon>receipt_long</mat-icon>
+          Historique
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'statistiques'"
+          (click)="onTabChange('statistiques')">
+          <mat-icon>bar_chart</mat-icon>
+          Statistiques
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+
+      <!-- PROJETS TAB -->
+      <div class="projets-tab" *ngIf="selectedTab === 'projets'">
+
+        <!-- Search Bar -->
+        <div class="search-section">
+          <div class="search-box">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              placeholder="Rechercher un projet..."
+              [(ngModel)]="searchTerm">
+          </div>
+        </div>
+
+        <!-- Projects List -->
+        <div class="projects-grid">
+          <div class="project-card" *ngFor="let projet of paginatedProjets">
+
+            <div class="project-header">
+              <div class="project-title-section">
+                <h3>{{ projet.projet.nom }}</h3>
+                <span class="status-badge" [ngClass]="getStatutClass(projet.projet.statut)">
+                  <mat-icon>{{ getStatutIcon(projet.projet.statut) }}</mat-icon>
+                  {{ getStatutLabel(projet.projet.statut) }}
+                </span>
+              </div>
+              <div class="project-dates">
+                <mat-icon>calendar_today</mat-icon>
+                <span>{{ formatDate(projet.projet.date_debut) }} - {{ formatDate(projet.projet.date_fin) }}</span>
+              </div>
+            </div>
+
+            <p class="project-description">{{ projet.projet.description || 'Aucune description disponible' }}</p>
+
+            <div class="project-stats">
+              <div class="project-stat">
+                <mat-icon>attach_money</mat-icon>
+                <div>
+                  <p class="stat-label">Budget projet</p>
+                  <p class="stat-value">{{ formatCurrency(projet.projet.montant_total) }}</p>
+                </div>
+              </div>
+              <div class="project-stat">
+                <mat-icon>card_giftcard</mat-icon>
+                <div>
+                  <p class="stat-label">Prime totale</p>
+                  <p class="stat-value">{{ formatCurrency(projet.projet.prime_totale) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="attribution-section">
+              <div class="attribution-header">
+                <h4>Votre attribution</h4>
+                <span class="percentage-badge">{{ projet.attribution.pourcentage_prime }}%</span>
+              </div>
+
+              <div class="attribution-details">
+                <div class="detail-row">
+                  <span class="label">Montant attribué</span>
+                  <span class="value primary">{{ formatCurrency(projet.attribution.montant_prime) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Montant payé</span>
+                  <span class="text-success fw-bold fs-30">{{ formatCurrency(projet.attribution.montant_paye) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Reste à payer</span>
+                  <span class="value warning">{{ formatCurrency(projet.attribution.montant_restant) }}</span>
+                </div>
+              </div>
+
+              <div class="payment-progress">
+                <div class="progress-header">
+                  <span>Progression du paiement</span>
+                  <span class="percentage">{{ projet.attribution.pourcentage_paye }}%</span>
+                </div>
+                <div class="progress-bar-large">
+                  <div
+                    class="progress-fill-large"
+                    [style.width.%]="projet.attribution.pourcentage_paye">
+                  </div>
+                </div>
+              </div>
+
+              <div class="paiements-list" *ngIf="projet.nombre_paiements > 0">
+                <h5>
+                  <mat-icon>receipt</mat-icon>
+                  Paiements reçus ({{ projet.nombre_paiements }})
+                </h5>
+                <div class="paiement-item" *ngFor="let paiement of projet.paiements.slice(0, 3)">
+                  <div class="paiement-icon">
+                    <mat-icon>{{ getModeIcon(paiement.mode_paiement) }}</mat-icon>
+                  </div>
+                  <div class="paiement-info">
+                    <p class="paiement-amount">{{ formatCurrency(paiement.montant) }}</p>
+                    <p class="paiement-date">{{ formatDate(paiement.date_paiement) }}</p>
+                  </div>
+                  <span class="paiement-mode">{{ getModeLabel(paiement.mode_paiement) }}</span>
+                </div>
+                <button class="btn-link" *ngIf="projet.nombre_paiements > 3">
+                  Voir tous les paiements ({{ projet.nombre_paiements }})
+                </button>
+              </div>
+
+              <div class="no-paiements" *ngIf="projet.nombre_paiements === 0">
+                <mat-icon>info_outline</mat-icon>
+                <p>Aucun paiement reçu pour l'instant</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+          <button
+            class="pagination-btn"
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <div class="page-numbers">
+            <button
+              class="page-number"
+              *ngFor="let page of [].constructor(totalPages); let i = index"
+              [class.active]="currentPage === i + 1"
+              (click)="changePage(i + 1)">
+              {{ i + 1 }}
+            </button>
+          </div>
+          <button
+            class="pagination-btn"
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- PAIEMENTS TAB -->
+      <div class="paiements-tab" *ngIf="selectedTab === 'paiements'">
+
+        <div class="section-header">
+          <h2>
+            <mat-icon>receipt_long</mat-icon>
+            Historique complet des paiements
+          </h2>
+          <p>{{ data.historique_paiements.length }} paiements au total</p>
+        </div>
+
+        <div class="paiements-timeline">
+          <div class="timeline-item" *ngFor="let paiement of data.historique_paiements">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  <mat-icon class="mode-icon">{{ getModeIcon(paiement.mode_paiement) }}</mat-icon>
+                  <div>
+                    <h4>{{ formatCurrency(paiement.montant) }}</h4>
+                    <p>{{ paiement.projet.nom }}</p>
+                  </div>
+                </div>
+                <div class="timeline-date">
+                  <mat-icon>event</mat-icon>
+                  <span>{{ formatDate(paiement.date_paiement) }}</span>
+                </div>
+              </div>
+              <div class="timeline-details">
+                <div class="detail-chip">
+                  <mat-icon>payment</mat-icon>
+                  {{ getModeLabel(paiement.mode_paiement) }}
+                </div>
+                <div class="detail-chip" *ngIf="paiement.reference">
+                  <mat-icon>tag</mat-icon>
+                  {{ paiement.reference }}
+                </div>
+              </div>
+              <p class="timeline-comment" *ngIf="paiement.commentaire">
+                <mat-icon>comment</mat-icon>
+                {{ paiement.commentaire }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-data" *ngIf="data.historique_paiements.length === 0">
+          <mat-icon>inbox</mat-icon>
+          <h3>Aucun paiement enregistré</h3>
+          <p>Vous n'avez pas encore reçu de paiement</p>
+        </div>
+
+      </div>
+
+      <!-- STATISTIQUES TAB -->
+      <div class="statistiques-tab" *ngIf="selectedTab === 'statistiques'">
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+
+          <!-- Evolution Chart -->
+          <div class="chart-card full-width">
+            <div class="chart-header">
+              <div>
+                <h3>Évolution des paiements</h3>
+                <p>12 derniers mois</p>
+              </div>
+              <mat-icon>show_chart</mat-icon>
+            </div>
+            <div class="chart-container">
+              <canvas id="evolutionChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Statut Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>Répartition par statut</h3>
+                <p>Nombre de projets</p>
+              </div>
+              <mat-icon>donut_small</mat-icon>
+            </div>
+            <div class="chart-container">
+              <canvas id="statutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Mode Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>Paiements par mode</h3>
+                <p>Montant total par méthode</p>
+              </div>
+              <mat-icon>bar_chart</mat-icon>
+            </div>
+            <div class="chart-container">
+              <canvas id="modeChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Paiements Attendus -->
+        <div class="section" *ngIf="data.paiements_attendus.length > 0">
+          <div class="section-header">
+            <h2>
+              <mat-icon>schedule_send</mat-icon>
+              Paiements en attente
+            </h2>
+          </div>
+
+          <div class="attendus-grid">
+            <div class="attendu-card" *ngFor="let attendu of data.paiements_attendus">
+              <div class="attendu-icon">
+                <mat-icon>pending_actions</mat-icon>
+              </div>
+              <div class="attendu-content">
+                <h4>{{ attendu.projet.nom }}</h4>
+                <p class="attendu-amount">{{ formatCurrency(attendu.montant_restant) }}</p>
+                <div class="attendu-progress">
+                  <div class="mini-progress">
+                    <div class="mini-progress-fill" [style.width.%]="attendu.pourcentage_restant"></div>
+                  </div>
+                  <span class="mini-progress-label">{{ attendu.pourcentage_restant }}% restant</span>
+                </div>
+              </div>
+              <span class="status-badge" [ngClass]="getStatutClass(attendu.projet.statut)">
+                {{ getStatutLabel(attendu.projet.statut) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

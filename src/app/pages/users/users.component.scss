@@ -1,0 +1,553 @@
+/* ================================================
+   GESTION DES UTILISATEURS - DESIGN MODERNE
+   ================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ================================================
+   CONTAINER & LAYOUT
+   ================================================ */
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================================
+   HEADER
+   ================================================ */
+
+.header {
+  margin-bottom: 3rem;
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb 0%, #06b6d4 100%);
+  border-radius: 2px;
+  animation: slideIn 0.8s ease-out 0.3s both;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 80px;
+    opacity: 1;
+  }
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  animation: slideDown 0.6s ease-out 0.1s both;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================================
+   TABLE CONTAINER
+   ================================================ */
+
+.table-container {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 10px 25px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  animation: scaleIn 0.6s ease-out 0.2s both;
+  transition: box-shadow 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 20px 40px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ================================================
+   TABLE STYLES
+   ================================================ */
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.user-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.user-table thead tr {
+  animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.user-table th {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  font-size: 0.813rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.user-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInRow 0.5s ease-out both;
+  animation-delay: calc(0.4s + var(--row-index, 0) * 0.05s);
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.user-table tbody tr:hover {
+  background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+  transform: translateX(4px);
+  box-shadow: -4px 0 0 0 #2563eb;
+}
+
+.user-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.user-table td {
+  padding: 1.25rem 1.5rem;
+  font-size: 0.938rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.user-table td[data-label="Employé"] {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.user-table td[data-label="Fonction"],
+.user-table td[data-label="Service"] {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.user-table td[data-label="Dernière connexion"] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.813rem;
+  color: #64748b;
+}
+
+/* ================================================
+   FORM FIELDS - MATERIAL DESIGN
+   ================================================ */
+
+::ng-deep .mat-mdc-form-field {
+  width: 100%;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+::ng-deep .role-select .mat-mdc-form-field-infix,
+::ng-deep .etat-select .mat-mdc-form-field-infix {
+  min-height: 45px;
+  padding: 0.5rem 0;
+}
+
+::ng-deep .role-select .mdc-text-field--outlined,
+::ng-deep .etat-select .mdc-text-field--outlined {
+  border-radius: 10px !important;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .role-select .mdc-text-field--outlined:hover,
+::ng-deep .etat-select .mdc-text-field--outlined:hover {
+  background: #f1f5f9;
+}
+
+::ng-deep .role-select .mdc-notched-outline__leading,
+::ng-deep .role-select .mdc-notched-outline__notch,
+::ng-deep .role-select .mdc-notched-outline__trailing,
+::ng-deep .etat-select .mdc-notched-outline__leading,
+::ng-deep .etat-select .mdc-notched-outline__notch,
+::ng-deep .etat-select .mdc-notched-outline__trailing {
+  border-color: #e2e8f0 !important;
+  transition: border-color 0.3s ease;
+}
+
+::ng-deep .role-select .mdc-text-field--focused .mdc-notched-outline__leading,
+::ng-deep .role-select .mdc-text-field--focused .mdc-notched-outline__notch,
+::ng-deep .role-select .mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: #2563eb !important;
+  border-width: 2px !important;
+}
+
+::ng-deep .mat-mdc-select-value-text,
+::ng-deep .mat-mdc-select-arrow {
+  color: #1e293b !important;
+}
+
+/* État Actif/Inactif Styles */
+::ng-deep .etat-actif .mdc-text-field--outlined {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+::ng-deep .etat-actif .mdc-notched-outline__leading,
+::ng-deep .etat-actif .mdc-notched-outline__notch,
+::ng-deep .etat-actif .mdc-notched-outline__trailing {
+  border-color: #86efac !important;
+}
+
+::ng-deep .etat-actif .mat-mdc-select-value-text {
+  color: #16a34a !important;
+  font-weight: 500;
+}
+
+::ng-deep .etat-inactif .mdc-text-field--outlined {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+::ng-deep .etat-inactif .mdc-notched-outline__leading,
+::ng-deep .etat-inactif .mdc-notched-outline__notch,
+::ng-deep .etat-inactif .mdc-notched-outline__trailing {
+  border-color: #fca5a5 !important;
+}
+
+::ng-deep .etat-inactif .mat-mdc-select-value-text {
+  color: #dc2626 !important;
+  font-weight: 500;
+}
+
+::ng-deep .etat-select .mdc-text-field--focused .mdc-notched-outline__leading,
+::ng-deep .etat-select .mdc-text-field--focused .mdc-notched-outline__notch,
+::ng-deep .etat-select .mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-width: 2px !important;
+}
+
+/* ================================================
+   ACTIONS BUTTONS
+   ================================================ */
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 10px;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+}
+
+.btn-icon i {
+  position: relative;
+  z-index: 1;
+  font-size: 1.125rem;
+}
+
+.btn-outline-danger {
+  color: #ef4444;
+  border: 1.5px solid #fecaca;
+  background: #fef2f2;
+}
+
+.btn-outline-danger:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ================================================
+   RESPONSIVE DESIGN
+   ================================================ */
+
+@media (max-width: 1200px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
+  .table-container {
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Table responsive en mode mobile */
+  .user-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .user-table thead {
+    display: table-header-group;
+  }
+
+  .user-table tbody {
+    display: table-row-group;
+  }
+
+  .user-table tr {
+    display: table-row;
+  }
+
+  .user-table th,
+  .user-table td {
+    display: table-cell;
+    padding: 0.875rem;
+    font-size: 0.813rem;
+  }
+
+  .user-table th {
+    font-size: 0.75rem;
+  }
+
+  ::ng-deep .role-select .mat-mdc-form-field-infix,
+  ::ng-deep .etat-select .mat-mdc-form-field-infix {
+    min-height: 40px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-icon i {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header::after {
+    width: 60px;
+  }
+
+  .table-container {
+    border-radius: 10px;
+    margin: 0 -0.75rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .user-table th {
+    font-size: 0.688rem;
+  }
+}
+
+/* ================================================
+   LOADING STATE
+   ================================================ */
+
+app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* ================================================
+   UTILITY ANIMATIONS
+   ================================================ */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.table-row {
+  --row-index: 0;
+}
+
+/* Ajouter des indices pour l'animation échelonnée */
+.table-row:nth-child(1) { --row-index: 0; }
+.table-row:nth-child(2) { --row-index: 1; }
+.table-row:nth-child(3) { --row-index: 2; }
+.table-row:nth-child(4) { --row-index: 3; }
+.table-row:nth-child(5) { --row-index: 4; }
+.table-row:nth-child(6) { --row-index: 5; }
+.table-row:nth-child(7) { --row-index: 6; }
+.table-row:nth-child(8) { --row-index: 7; }
+.table-row:nth-child(9) { --row-index: 8; }
+.table-row:nth-child(10) { --row-index: 9; }
+
+/* ================================================
+   SCROLLBAR STYLING
+   ================================================ */
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================================================
+   PRINT STYLES
+   ================================================ */
+
+@media print {
+  .actions {
+    display: none;
+  }
+
+  .table-container {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
+
+  .user-table tbody tr:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}

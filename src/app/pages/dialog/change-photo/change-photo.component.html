@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Modifier le profil</h2>
+
+<mat-dialog-content>
+  <div class="photo-section">
+    <img [src]="preview || user?.employe?.photo_url || 'assets/images/avatar/avatar.png'" alt="Photo de profil" class="profile-photo">
+    <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden #fileInput>
+    <button mat-stroked-button color="primary" (click)="fileInput.click()">Changer ma photo</button>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Annuler</button>
+  <button mat-raised-button color="primary" (click)="submit()">Enregistrer</button>
+</mat-dialog-actions>

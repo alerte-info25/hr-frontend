@@ -1,0 +1,37 @@
+<div
+  *ngIf="conge"
+  @fadeSlide
+  class="card permission-card p-3 mb-3 shadow-sm position-relative"
+>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Détails de la demande</h5>
+    <span class="badge" [ngClass]="getStatutBadge(conge.statut)">
+      {{ getStatutLabel(conge.statut) }}
+    </span>
+  </div>
+
+  <div class="card-body">
+    <p><strong>Employé :</strong> {{ conge.employe.nom }} {{ conge.employe.prenom }}</p>
+    <p><strong>Type :</strong> {{conge.type.nom }}</p>
+    <p><strong>Date de la demande :</strong> {{ formatDate(conge.date_demande) }}</p>
+    <p><strong>Début :</strong> {{ formatDate(conge.debut) }}</p>
+    <p><strong>Fin :</strong> {{ formatDate(conge.fin) }}</p>
+    <p><strong>Raison :</strong> {{ conge.raison }}</p>
+    <p *ngIf="conge.date_reponse"><strong>Date de la reponse :</strong> {{ conge.date_reponse }}</p>
+    <p *ngIf="conge.commentaire_admin"><strong>Commentaire Administrateur :</strong> {{ conge.commentaire_admin }}</p>
+    <p *ngIf="conge.document">
+      <strong>Document :</strong>
+      <a
+        [href]="conge.document"
+        target="_blank"
+        class="btn btn-outline-primary btn-sm ms-2"
+      >
+        <i class="bi bi-file-earmark-pdf"></i> Ouvrir le document
+      </a>
+    </p>
+
+    <button class="btn btn-sm btn-outline-danger mt-2" (click)="closeDetails()">
+      Fermer
+    </button>
+  </div>
+</div>

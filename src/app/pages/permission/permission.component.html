@@ -1,0 +1,97 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div
+  *ngIf="permission"
+  @fadeSlide
+  class="card permission-card p-3 mb-3 shadow-sm position-relative"
+>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Détails de la demande</h5>
+    <span class="badge" [ngClass]="getStatutBadge(permission.statut)">
+      {{ getStatutLabel(permission.statut) }}
+    </span>
+  </div>
+
+  <div class="card-body">
+    <p><strong>Employé :</strong> {{ permission.employe.nom }} {{ permission.employe.prenom }}</p>
+    <p><strong>Type :</strong> {{ permission.type.nom }}</p>
+    <p><strong>Date de la demande :</strong> {{ formatDate(permission.date_demande) }}</p>
+    <p><strong>Date de depart :</strong> {{ formatDate(permission.debut) }}</p>
+    <p><strong>Date de retour :</strong> {{ formatDate(permission.fin) }}</p>
+    <p><strong>Raison :</strong> {{ permission.raison }}</p>
+    <p *ngIf="permission.document">
+      <strong>Document :</strong>
+      <a
+        [href]="permission.document"
+        target="_blank"
+        class="btn btn-outline-primary btn-sm ms-2"
+      >
+        <i class="bi bi-file-earmark-pdf"></i> Ouvrir le document
+      </a>
+    </p>
+
+    <p *ngIf="permission.date_reponse"><strong>Date de la réponse :</strong> {{ formatDate(permission.date_reponse) }}</p>
+    <p *ngIf="permission.commentaire_admin"><strong>Commentaire Administrateur :</strong> {{ permission.commentaire_admin }}</p>
+
+    <!-- === Zone d'action Admin === -->
+    <form #formDecision="ngForm" (ngSubmit)="validerDecision(permission.slug)">
+      <div class="mt-4 border-top pt-3">
+        <h6>Action administrateur :</h6>
+
+        <!-- Radio boutons -->
+        <div class="form-check form-check-inline">
+          <input
+            type="radio"
+            name="statuDemande"
+            id="accepter"
+            [(ngModel)]="decision"
+            [value]="2"
+            required
+          />
+          <label class="form-check-label" for="accepter">Acceptée</label>
+        </div>
+
+        <div class="form-check form-check-inline">
+          <input
+            type="radio"
+            name="statuDemande"
+            id="refuser"
+            [(ngModel)]="decision"
+            [value]="3"
+            required
+          />
+          <label class="form-check-label" for="refuser">Refusée</label>
+        </div>
+
+        <!-- Textarea commentaire -->
+        <div class="mt-3">
+          <label for="commentaire" class="form-label">Commentaire</label>
+          <textarea
+            id="commentaire"
+            class="form-control"
+            rows="3"
+            [(ngModel)]="commentaireAdmin"
+            name="commentaire"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Bouton valider -->
+      <button
+        class="btn btn-success mt-3"
+        type="submit"
+        [disabled]="formDecision.invalid  || load"
+      >
+      <span *ngIf="!load">Valider</span>
+      <span *ngIf="load" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <span *ngIf="load"> En cours...</span>
+      </button>
+    </form>
+
+
+    <!-- <button class="btn btn-sm btn-outline-danger mt-3 ms-2" (click)="closeDetails()">
+      Fermer
+    </button> -->
+  </div>
+</div>

@@ -1,0 +1,354 @@
+<div class="details-container">
+  <!-- Header avec bouton retour -->
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="icon-arrow-left"></i>
+      Retour
+    </button>
+    <h1>Détails de la demande</h1>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des détails...</p>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!loading && demande" class="content-wrapper">
+
+    <!-- Carte principale de la demande -->
+    <div class="demande-card">
+      <!-- En-tête de la carte -->
+      <div class="card-header">
+        <div class="header-left">
+          <div class="avatar">
+            {{ getInitiales(demande.employe) }}
+          </div>
+          <div class="user-info">
+            <h2>{{ demande.employe?.prenom }} {{ demande.employe?.nom }}</h2>
+            <p class="email">{{ demande.employe?.email }}</p>
+            <p class="meta-info" *ngIf="demande.employe?.matricule">
+              Matricule: {{ demande.employe.matricule }}
+            </p>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-badge" [ngClass]="statusConfig.color">
+            <i [class]="'icon-' + statusConfig.icon"></i>
+            {{ statusConfig.label }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Corps de la carte -->
+      <div class="card-body">
+        <!-- Objet de la demande -->
+        <div class="info-section">
+          <h3>
+            <i class="icon-tag"></i>
+            Objet de la demande
+          </h3>
+          <div class="info-content">
+            <p class="objet-libelle">{{ demande.objet?.libelle }}</p>
+            <p class="objet-description" *ngIf="demande.objet?.description">
+              {{ demande.objet.description }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Description de la demande -->
+        <div class="info-section">
+          <h3>
+            <i class="icon-file-text"></i>
+            Description
+          </h3>
+          <div class="info-content">
+            <p class="description-text">{{ demande.description }}</p>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="info-section">
+          <h3>
+            <i class="icon-calendar"></i>
+            Informations temporelles
+          </h3>
+          <div class="info-content date-info">
+            <div class="date-item">
+              <span class="date-label">Date de création:</span>
+              <span class="date-value">{{ formatDate(demande.created_at) }}</span>
+            </div>
+            <div class="date-item">
+              <span class="date-label">Dernière mise à jour:</span>
+              <span class="date-value">{{ formatDate(demande.updated_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Réponse -->
+    <div class="reponse-section" *ngIf="demande.reponse">
+      <h2 class="section-title">
+        <i class="icon-message-square"></i>
+        Réponse fournie
+      </h2>
+
+      <div class="reponse-card">
+        <!-- En-tête de la réponse -->
+        <div class="reponse-header">
+          <div class="reponse-author">
+            <div class="avatar avatar-sm">
+              {{ getInitiales(demande.reponse.employe) }}
+            </div>
+            <div class="author-info">
+              <p class="author-name">
+                {{ demande.reponse.employe?.prenom }} {{ demande.reponse.employe?.nom }}
+              </p>
+              <p class="reponse-date">{{ formatDate(demande.reponse.created_at) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenu de la réponse -->
+        <div class="reponse-body">
+          <p class="reponse-text">{{ demande.reponse.reponse }}</p>
+        </div>
+
+        <!-- Pièces jointes -->
+        <div class="attachments" *ngIf="demande.reponse.pieces && demande.reponse.pieces.length > 0">
+          <h4 class="attachments-title">
+            <i class="icon-paperclip"></i>
+            Pièces jointes ({{ demande.reponse.pieces.length }})
+          </h4>
+          <div class="attachments-grid">
+            <div
+              class="attachment-item"
+              *ngFor="let piece of demande.reponse.pieces"
+              (click)="openFile(piece)">
+              <div class="attachment-icon">
+                <i [class]="'icon-file-' + piece.extension"></i>
+              </div>
+              <div class="attachment-info">
+                <p class="attachment-name" [title]="piece.nom_fichier">
+                  {{ piece.nom_fichier }}
+                </p>
+                <p class="attachment-meta">
+                  {{ piece.extension.toUpperCase() }} • {{ formatFileSize(piece.taille) }}
+                </p>
+              </div>
+              <div class="attachment-download">
+                <i class="icon-download"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Sanction -->
+    <div class="sanction-section" *ngIf="demande.sanction">
+      <h2 class="section-title sanction-title">
+        <i class="icon-alert-octagon"></i>
+        Sanction disciplinaire
+      </h2>
+
+      <div class="sanction-card">
+        <div class="sanction-header">
+          <span class="sanction-badge sanction-{{ demande.sanction.type }}">
+            {{ getTypeSanctionText(demande?.sanction?.type) }}
+          </span>
+          <span class="sanction-date">
+            {{ formatDate(demande.sanction.date_sanction) }}
+          </span>
+        </div>
+
+        <div class="sanction-body">
+          <h4>Motif</h4>
+          <p class="sanction-motif">
+            {{ demande.sanction.motif }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section sans réponse -->
+    <div class="no-reponse-section" *ngIf="!demande.reponse">
+      <div class="empty-state">
+        <i class="icon-message-circle"></i>
+        <h3>Aucune réponse pour le moment</h3>
+        <p>Cette demande n'a pas encore reçu de réponse.</p>
+        <button
+          class="btn-primary"
+          *ngIf="isEmploye()"
+          (click)="openReponseModal()">
+          <i class="icon-send"></i>
+          Répondre à la demande
+        </button>
+      </div>
+    </div>
+
+    <!-- Bouton d'action pour répondre (si déjà une réponse mais besoin de modifier) -->
+    <div class="action-buttons" *ngIf="demande.reponse && isEmploye() && !demande.sanction">
+      <button class="btn-secondary" (click)="openReponseModal()">
+        <i class="icon-edit"></i>
+        Modifier la réponse
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="!loading && !demande" class="error-container">
+    <i class="icon-alert-triangle"></i>
+    <h3>Demande introuvable</h3>
+    <p>La demande que vous recherchez n'existe pas ou a été supprimée.</p>
+    <button class="btn-primary" (click)="goBack()">
+      Retour à la liste
+    </button>
+  </div>
+</div>
+
+<!-- Modal de réponse -->
+<div class="modal-overlay" *ngIf="showReponseModal" (click)="closeReponseModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Répondre à la demande</h2>
+      <button class="btn-close" (click)="closeReponseModal()">
+        <i class="icon-x"></i>
+      </button>
+    </div>
+
+    <form [formGroup]="reponseForm" (ngSubmit)="submitReponse()">
+      <div class="modal-body">
+        <!-- Résumé de la demande -->
+        <div class="demande-summary">
+          <p><strong>Employé:</strong> {{ demande?.employe?.prenom }} {{ demande?.employe?.nom }}</p>
+          <p><strong>Objet:</strong> {{ demande?.objet?.libelle }}</p>
+        </div>
+
+        <!-- Champ de réponse -->
+        <div class="form-group">
+          <label for="reponse">Votre réponse *</label>
+          <textarea
+            id="reponse"
+            formControlName="reponse"
+            rows="6"
+            placeholder="Saisissez votre réponse ici (minimum 10 caractères)..."
+            [class.error]="reponseForm.get('reponse')?.invalid && reponseForm.get('reponse')?.touched">
+          </textarea>
+          <div
+            class="error-message"
+            *ngIf="reponseForm.get('reponse')?.invalid && reponseForm.get('reponse')?.touched">
+            <i class="icon-alert-circle"></i>
+            La réponse doit contenir au moins 10 caractères
+          </div>
+        </div>
+
+        <!-- Upload de fichiers -->
+         <label
+          for="files"
+          class="file-upload-label"
+          [class.disabled]="!canUploadMoreFiles()">
+
+          <i class="icon-upload"></i>
+
+          <span *ngIf="!canUploadMoreFiles()">
+            Limite de 3 fichiers atteinte
+          </span>
+
+          <span *ngIf="canUploadMoreFiles() && selectedFiles.length === 0">
+            Cliquez pour sélectionner des fichiers
+          </span>
+
+          <span *ngIf="canUploadMoreFiles() && selectedFiles.length > 0">
+            {{ selectedFiles.length }} fichier(s) sélectionné(s)
+          </span>
+
+        </label>
+
+        <div class="form-group">
+          <label for="files">Pièces jointes (optionnel)</label>
+          <div class="file-upload-area">
+            <input
+              type="file"
+              id="files"
+              multiple
+              (change)="onFilesSelected($event)"
+              [disabled]="!canUploadMoreFiles()"
+              #fileInput>
+            <label for="files" class="file-upload-label">
+              <i class="icon-upload"></i>
+              <span *ngIf="selectedFiles.length === 0">
+                Cliquez pour sélectionner des fichiers
+              </span>
+              <span *ngIf="selectedFiles.length > 0">
+                {{ selectedFiles.length }} fichier(s) sélectionné(s)
+              </span>
+            </label>
+          </div>
+
+          <!-- Liste des fichiers sélectionnés -->
+          <div class="selected-files" *ngIf="selectedFiles.length > 0">
+            <div class="file-item" *ngFor="let file of selectedFiles; let i = index">
+              <i class="icon-file"></i>
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-size">{{ formatFileSize(file.size) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pièces jointes existantes -->
+        <div
+          class="form-group"
+          *ngIf="demande?.reponse?.pieces?.length">
+
+          <label>Pièces jointes existantes</label>
+
+          <div class="selected-files">
+            <div
+              class="file-item"
+              *ngFor="let piece of demande.reponse.pieces; let i = index">
+
+              <i class="icon-file"></i>
+
+              <a
+                [href]="piece.chemin"
+                target="_blank"
+                class="file-name">
+                {{ piece.nom_fichier }}
+              </a>
+
+              <span class="file-size">
+                {{ formatFileSize(piece.taille) }}
+              </span>
+
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="deletePiece(piece.slug, i)">
+                <i class="icon-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeReponseModal()">
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="reponseForm.invalid">
+          <i class="icon-send"></i>
+          Envoyer la réponse
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+

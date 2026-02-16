@@ -1,0 +1,27 @@
+<div class="prime-container">
+
+  <div class="header">
+    <h1>Suivi des primes</h1>
+    <p>Gérez, analysez et suivez les primes en toute simplicité</p>
+  </div>
+
+  <div class="cards-grid">
+    <div
+      class="prime-card"
+      *ngFor="let module of modules"
+      (click)="goTo(module.route)"
+    >
+      <div class="icon-wrapper">
+        <mat-icon>{{ module.icon }}</mat-icon>
+      </div>
+
+      <h3>{{ module.title }}</h3>
+      <p>{{ module.description }}</p>
+
+      <span class="arrow">
+        <mat-icon>arrow_forward</mat-icon>
+      </span>
+    </div>
+  </div>
+
+</div>

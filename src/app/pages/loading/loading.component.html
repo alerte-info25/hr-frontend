@@ -1,0 +1,63 @@
+<div class="loading-overlay" [class.visible]="isVisible">
+      <div class="loading-container">
+        <!-- Fond animé avec particules -->
+        <div class="background-animation">
+          <div class="particle" *ngFor="let particle of particles"
+               [style.left.px]="particle.x"
+               [style.top.px]="particle.y"
+               [style.animation-delay.s]="particle.delay"></div>
+        </div>
+
+        <!-- Logo ou icône principale -->
+        <div class="logo-container">
+          <div class="logo-pulse">
+            <svg width="80" height="80" viewBox="0 0 80 80" class="logo-icon">
+              <defs>
+                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#667eea"/>
+                  <stop offset="100%" style="stop-color:#764ba2"/>
+                </linearGradient>
+              </defs>
+              <circle cx="40" cy="40" r="35" fill="url(#logoGradient)" opacity="0.1"/>
+              <path d="M25 40 L35 50 L55 30" stroke="url(#logoGradient)" stroke-width="4"
+                    fill="none" stroke-linecap="round" stroke-linejoin="round" class="check-path"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Spinner principal avec effet glassmorphism -->
+        <div class="spinner-container">
+          <div class="spinner-outer">
+            <div class="spinner-inner"></div>
+          </div>
+        </div>
+
+        <!-- Texte de chargement avec animation typewriter -->
+        <div class="loading-text">
+          <h2 class="main-title">{{ loadingTitle }}</h2>
+          <p class="sub-title">{{ loadingSubtitle }}</p>
+
+          <!-- Barre de progression sophistiquée -->
+          <!-- <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="progress"></div>
+              <div class="progress-glow"></div>
+            </div>
+            <span class="progress-text">{{ progress }}%</span>
+          </div> -->
+        </div>
+
+        <!-- Indicateurs de statut -->
+        <!-- <div class="status-indicators">
+          <div class="status-dot" [class.active]="currentStep >= 1">
+            <span>Connexion</span>
+          </div>
+          <div class="status-dot" [class.active]="currentStep >= 2">
+            <span>Authentification</span>
+          </div>
+          <div class="status-dot" [class.active]="currentStep >= 3">
+            <span>Chargement</span>
+          </div>
+        </div> -->
+      </div>
+    </div>

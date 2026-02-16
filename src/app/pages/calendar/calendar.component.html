@@ -1,0 +1,69 @@
+<app-loading *ngIf="isLoading"></app-loading>
+
+<div class="calendar-wrapper" *ngIf="!isLoading" [@fadeIn]>
+  <!-- Header avec titre et actions -->
+  <div class="calendar-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">event_note</mat-icon>
+        <h1 class="calendar-title">Calendrier des Congés</h1>
+      </div>
+
+      <div class="header-actions">
+        <button mat-raised-button color="primary" class="btn-print" (click)="printProgram()">
+          <mat-icon>print</mat-icon>
+          <span>Imprimer</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres et légende -->
+  <div class="controls-section" [@slideDown]>
+    <div class="filter-card" *ngIf="isAdmin()">
+      <mat-icon class="filter-icon">filter_list</mat-icon>
+      <mat-form-field appearance="outline" class="employee-filter">
+        <mat-label>Filtrer par employé</mat-label>
+        <mat-select [(ngModel)]="selectedEmployee" (selectionChange)="refreshCalendar()">
+          <mat-option value="">
+            <mat-icon>group</mat-icon>
+            Tous les employés
+          </mat-option>
+          <mat-option *ngFor="let emp of employees" [value]="emp.slug">
+            <mat-icon>person</mat-icon>
+            {{ emp.nom }} {{ emp.prenom }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Légende des statuts -->
+    <div class="legend-card">
+      <div class="legend-title">
+        <mat-icon>info</mat-icon>
+        <span>Légende</span>
+      </div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-dot approved"></span>
+          <span>Jour(s) étant en congé</span>
+        </div>
+        <!-- <div class="legend-item">
+          <span class="legend-dot rejected"></span>
+          <span>Refusé</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot pending"></span>
+          <span>En attente</span>
+        </div> -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendrier principal -->
+  <div class="calendar-container" [@scaleIn]>
+    <div class="calendar-inner">
+      <full-calendar [options]="calendarOptions"></full-calendar>
+    </div>
+  </div>
+</div>

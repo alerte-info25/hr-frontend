@@ -1,0 +1,112 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="employees-header">
+  <h1>Liste des employés</h1>
+  <a routerLink="/ajout-employe">
+    <button class="btn-add">
+      <i class="fas fa-plus"></i> Ajouter un employé
+    </button>
+  </a>
+</div>
+
+<div class="employees-controls">
+  <input
+    class="w-50"
+    type="text"
+    placeholder="🔍 Rechercher un employé..."
+    [(ngModel)]="searchText"
+    (input)="filterEmployees()">
+
+  <select [(ngModel)]="selectedFonction" (change)="filterEmployees()">
+    <option value="">Toutes les fonctions</option>
+    <option *ngFor="let fonction of fonctions" [value]="fonction.slug">{{ fonction.nom }}</option>
+  </select>
+
+  <select [(ngModel)]="sortField" (change)="sortEmployees()">
+    <option value="">Trier par</option>
+    <option value="nom">Nom</option>
+    <option value="emailPersonnel">Email</option>
+  </select>
+
+  <button class="btn-sort" (click)="toggleSortDirection()" [title]="sortDirection === 'asc' ? 'Croissant' : 'Décroissant'">
+    <i class="fas" [ngClass]="sortDirection === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down'"></i>
+  </button>
+</div>
+
+<div class="employees-grid">
+  <div class="employee-card" *ngFor="let emp of paginatedEmployees">
+    <div class="employee-avatar">
+      <img *ngIf="emp.photo_url" [src]="emp.photo_url" alt="{{ emp.nom }} {{ emp.prenom }}">
+      <div *ngIf="!emp.photo_url" class="avatar-placeholder">
+        {{ getInitials(emp.nom, emp.prenom) }}
+      </div>
+
+      <button *ngIf="!emp.utilisateur"
+              style="margin-top: 300px;"
+              class="btn-create-account"
+              (click)="creerCompte(emp)"
+              title="Créer un compte utilisateur">
+        <i class="fa-solid fa-user-plus"></i> Créer le compte
+      </button>
+    </div>
+
+    <div class="employee-info">
+      <h3>{{ emp?.nom }} {{ emp?.prenom }}</h3>
+      <p class="fonction" *ngIf="emp?.emailPersonnel">
+        <i class="fas fa-envelope"></i> {{ emp?.emailPersonnel }}
+      </p>
+      <p class="matricule" *ngIf="emp?.matricule">
+        <i class="fas fa-id-badge"></i> {{ emp?.matricule }}
+      </p>
+      <p class="fonction" *ngIf="emp?.fonction?.nom">
+        <i class="fas fa-briefcase"></i> {{ emp?.fonction?.nom }}
+      </p>
+    </div>
+
+    <div class="employee-actions">
+      <a [routerLink]="['/detail-employe/', emp.slug]" title="Voir les détails">
+        <i class="far fa-eye"></i>
+      </a>
+      <a [routerLink]="['/edit-employe/', emp.slug]" title="Modifier">
+        <i class="fa-regular fa-pen-to-square"></i>
+      </a>
+      <button (click)="openDeleteModal(emp)" title="Supprimer">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Message si aucun employé -->
+<div *ngIf="paginatedEmployees.length === 0 && !isLoading" class="empty-state">
+  <i class="fas fa-users-slash"></i>
+  <h3>Aucun employé trouvé</h3>
+  <p>Essayez de modifier vos critères de recherche ou ajoutez un nouvel employé.</p>
+</div>
+
+<!-- Pagination -->
+<div class="pagination" *ngIf="totalPages > 1">
+  <button (click)="prevPage()" [disabled]="currentPage === 1">
+    <i class="fas fa-chevron-left"></i> Précédent
+  </button>
+
+  <button *ngFor="let page of [].constructor(totalPages); let i = index"
+          (click)="goToPage(i + 1)"
+          [class.active]="currentPage === i + 1">
+    {{ i + 1 }}
+  </button>
+
+  <button (click)="nextPage()" [disabled]="currentPage === totalPages">
+    Suivant <i class="fas fa-chevron-right"></i>
+  </button>
+</div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression d\'employé ?'"
+  [message]="'Voulez-vous vraiment supprimer ' + itemToDelete?.nom + ' ' + itemToDelete?.prenom +' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

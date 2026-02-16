@@ -1,0 +1,71 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="documents-container">
+  <!-- En-tête avec titre et bouton actualiser -->
+  <div class="header">
+    <div class="title-section">
+      <h1 [attr.data-count]="listeEmploye.length">Dossiers Employés</h1>
+      <p class="subtitle">Accédez aux documents de chaque employé</p>
+    </div>
+
+    <button class="btn-refresh" (click)="refresh()" [disabled]="isLoading" title="Actualiser la liste">
+      <span class="icon">
+        <span class="material-icons">refresh</span>
+      </span>
+      <span>Actualiser</span>
+    </button>
+  </div>
+
+  <!-- Grille des employés -->
+  <div class="employees-grid" *ngIf="!isLoading && listeEmploye.length > 0">
+    <div class="employee-card" *ngFor="let employe of listeEmploye; let i = index"
+         tabindex="0"
+         (keyup.enter)="openEmployeeFolder(employe)">
+
+      <!-- Icône du dossier -->
+      <div class="card-icon">
+        <span class="material-icons">folder</span>
+      </div>
+
+      <!-- Contenu de la carte -->
+      <div class="card-content">
+        <h3 class="employee-name">{{ employe?.nom }} {{ employe?.prenom }}</h3>
+
+        <p class="employee-info" *ngIf="employe?.fonction?.nom">
+          {{ employe?.fonction?.nom }}
+        </p>
+
+        <p class="employee-info" *ngIf="employe?.emailProfessionnel">
+          {{ employe?.emailProfessionnel }}
+        </p>
+
+        <p class="employee-info" *ngIf="!employe?.emailProfessionnel && employe?.emailPersonnel">
+          {{ employe?.emailPersonnel }}
+        </p>
+      </div>
+
+      <!-- Bouton d'accès -->
+      <button class="btn-access" (click)="openEmployeeFolder(employe)">
+        <span class="material-icons">folder_open</span>
+        <span>Ouvrir le dossier</span>
+        <span class="arrow">
+          <span class="material-icons">arrow_forward</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'état vide -->
+  <div class="empty-state" *ngIf="!isLoading && listeEmploye.length === 0">
+    <span class="material-icons empty-icon" style="font-size: 6rem; color: #d1d5db; margin-bottom: 2rem; display: block;">
+      folder_off
+    </span>
+    <h2>Aucun dossier disponible</h2>
+    <p>Il n'y a actuellement aucun dossier d'employé à afficher.<br>Vérifiez que des employés ont été ajoutés au système.</p>
+    <button class="btn-primary" (click)="refresh()">
+      Actualiser
+    </button>
+  </div>
+</div>

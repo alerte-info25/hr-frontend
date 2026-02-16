@@ -1,0 +1,27 @@
+.register-codes {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.card {
+  border-radius: 12px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+  min-width: 200px;
+}
+
+@media (max-width: 576px) {
+  .card h5 {
+    font-size: 1.1rem;
+  }
+  .btn-primary {
+    width: 100%;
+  }
+}

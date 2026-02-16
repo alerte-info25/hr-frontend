@@ -1,0 +1,162 @@
+.modules-switches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+
+  .switch-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* Switch style type Bootstrap */
+.form-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+
+    &.round {
+      border-radius: 34px;
+    }
+  }
+
+  .switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .switch-slider {
+    background-color: #28a745; /* vert */
+  }
+
+  input:checked + .switch-slider:before {
+    transform: translateX(24px);
+  }
+}
+
+.switch-label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+
+.modules-switches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+
+  .switch-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .form-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+
+      input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 22px;
+
+        &::before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: 0.4s;
+          border-radius: 50%;
+        }
+      }
+
+      input:checked + .switch-slider {
+        background-color: #4caf50;
+      }
+
+      input:checked + .switch-slider::before {
+        transform: translateX(18px);
+      }
+    }
+
+    .switch-label {
+      font-size: 14px;
+    }
+  }
+}
+
+
+/* Style général pour les switches */
+.form-check-input {
+  width: 2.5em;
+  height: 1.2em;
+  margin-top: 0.3em;
+  cursor: pointer;
+  background-color: #e9ecef;
+  border-radius: 1em;
+  border: 1px solid #ccc;
+  transition: background-color 0.3s, border 0.3s;
+}
+
+.form-check-input:checked {
+  background-color: #1e90ff; // bleu comme les modules
+  border-color: #1e90ff;
+}
+
+.form-check-label {
+  margin-left: 0.5em;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Pour que tous les switches aient la même hauteur et alignement */
+.form-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}

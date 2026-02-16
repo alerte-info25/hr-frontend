@@ -1,0 +1,145 @@
+.user-portfolio-btn {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.user-portfolio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-portfolio-thumb img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-content h5 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.user-content span {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+/* Personnalisation du menu */
+.mat-menu-panel.user-dropdown {
+  padding: 0.5rem 0;
+  min-width: 180px;
+}
+
+.mat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.mat-menu-item svg {
+  width: 16px;
+  height: 16px;
+  fill: #7a7a7a;
+}
+
+
+.app-header-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px; // hauteur de la navbar
+  background-color: #fff; // tu peux changer
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+  // transition si tu modifies margin-left dynamiquement
+  transition: margin-left 0.3s ease;
+
+  .app-header-inner {
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between; // gauche <-> droite
+    align-items: center;
+  }
+
+  .app-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px; // espacement entre bouton menu et titre
+  }
+
+  .header-toggle-container {
+    cursor: pointer;
+    .bar-icon-2 {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background-color: #333;
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .app-header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 50px;
+  }
+
+  .user-portfolio-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    .user-portfolio {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .user-portfolio-thumb img {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .user-content {
+        h5 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .user-status {
+          font-size: 12px;
+          color: #7a7a7a;
+        }
+      }
+    }
+  }
+}
+
+// Pour éviter que le contenu passe sous la navbar
+body {
+  padding-top: 70px; // même valeur que la hauteur de .app-header-area
+}

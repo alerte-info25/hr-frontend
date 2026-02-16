@@ -1,0 +1,26 @@
+.permission-card {
+  border-radius: 10px;
+}
+
+.permission-card .card-header {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.permission-card .badge {
+  font-size: 0.9rem;
+  padding: 0.4em 0.8em;
+  border-radius: 12px;
+}
+.card-body strong{
+  font-size: 20px;
+  font-weight: bold;
+}
+.card-body p{
+  font-size: 16px;
+  // font-weight: bold;
+}
+// input[type="radio"].form-check-input:checked {
+//   accent-color: #6f42c1; /* violet bootstrap */
+//   transform: scale(1.2);
+// }

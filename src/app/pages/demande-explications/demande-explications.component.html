@@ -1,0 +1,425 @@
+<!-- demandes-explication.component.html -->
+@if(isLoading) {
+  <app-loading></app-loading>
+}
+<div class="demandes-container">
+  <div class="content-wrapper">
+
+    <!-- Header -->
+    <div class="page-header">
+      <h1 class="page-title">Demandes d'Explication</h1>
+      <p class="page-subtitle">Gérez et suivez les demandes d'explication envoyées aux employés</p>
+    </div>
+
+    <!-- Barre d'actions -->
+    <div class="actions-bar" *ngIf="isDRHOrDG()">
+      <div class="search-filters">
+        <!-- Recherche -->
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input
+            type="text"
+            placeholder="Rechercher par employé ou objet..."
+            [(ngModel)]="searchTerm"
+            class="search-input"
+          />
+        </div>
+
+        <!-- Filtre statut -->
+        <div class="filter-wrapper">
+          <svg class="filter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <select [(ngModel)]="filterStatus" class="filter-select">
+            <option value="all">Tous les statuts</option>
+            <option value=1>En attente</option>
+            <option value=2>Répondu</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bouton nouvelle demande -->
+      <button *ngIf="isDRHOrDG()" (click)="openNewDemande()" class="btn-new-demande">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nouvelle demande
+      </button>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="stats-grid" *ngIf="isDRHOrDG()">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ totalDemandes }}</p>
+          <p class="stat-label">Total demandes</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-amber">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ demandesEnAttente }}</p>
+          <p class="stat-label">En attente</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ demandesRepondues }}</p>
+          <p class="stat-label">Répondues</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div class="demandes-list">
+      <ng-container *ngIf="filteredDemandes.length > 0; else noDemandes">
+        <div *ngFor="let demande of filteredDemandes" class="demande-card">
+
+          <!-- En-tête de la demande -->
+          <div class="demande-header">
+            <div class="demande-info">
+              <div class="avatar">
+                {{ getInitiales(demande.employe) }}
+              </div>
+              <div class="employee-details">
+                <h3 class="employee-name">
+                  {{ demande.employe.prenom }} {{ demande.employe.nom }}
+                </h3>
+                <div class="demande-meta">
+                  <span class="objet-badge">{{ demande.objet.libelle }}</span>
+                  <span class="date-text">{{ formatDate(demande.created_at) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-badge" [ngClass]="getStatusConfig(demande.statut).color">
+              <svg *ngIf="getStatusConfig(demande.statut).icon === 'clock'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <svg *ngIf="getStatusConfig(demande.statut).icon === 'check-circle'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              {{ getStatusConfig(demande.statut).label }}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="demande-description">
+            <p>{{ demande.description }}</p>
+          </div>
+
+          <!-- Réponse si existante -->
+          <div *ngIf="demande.reponse" class="demande-reponse">
+            <div class="reponse-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span class="reponse-label">Réponse de l'employé</span>
+              <span class="reponse-date">{{ formatDate(demande.reponse.created_at) }}</span>
+            </div>
+            <p class="reponse-text">{{ demande.reponse.reponse }}</p>
+          </div>
+
+          <!-- Actions employé -->
+           <br>
+           <!-- <button
+              class="btn-details"
+              (click)="openDetailsDemande(demande)"
+            >
+
+            </button> -->
+          <div
+            class="demande-actions"
+          >
+            <button
+              class="btn-repondre"
+              (click)="openReponseModal(demande)"
+            >
+              Voir les détails
+            </button>
+            <button
+              *ngIf="isDG() && canBeSanctioned(demande)"
+              class="btn-sanctionner"
+              (click)="openSanctionModal(demande)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Sanctionner
+            </button>
+            <!-- Badge si ona deja sanctionner -->
+            <span *ngIf="demande.sanction" class="badge-sanctionne">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Sanctionné
+            </span>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <ng-template #noDemandes>
+        <div class="no-demandes">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <h3>Aucune demande trouvée</h3>
+          <p>Essayez de modifier vos filtres de recherche</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Modal nouvelle demande -->
+    <div *ngIf="showNewDemande" class="modal-overlay" (click)="closeNewDemande()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Nouvelle demande d'explication</h2>
+          <button (click)="closeNewDemande()" class="btn-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <form [formGroup]="demandeForm" (ngSubmit)="submitNewDemande()">
+
+            <!-- Employé -->
+            <div class="form-group">
+              <label class="form-label">Employé concerné</label>
+              <select class="form-select" formControlName="id_employe">
+                <option value="" selected disabled>Sélectionner un employé</option>
+
+                @for (emp of employes; track emp.id) {
+                  <option [value]="emp.slug">
+                    {{ emp.nom }} {{ emp.prenom }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- Objet -->
+            <div class="form-group">
+              <label class="form-label">Objet de la demande</label>
+              <select class="form-select" formControlName="id_objet">
+                <option value="" selected disabled>Sélectionner un objet</option>
+
+                @for (objet of objets; track objet.id) {
+                  <option [value]="objet.slug">
+                    {{ objet.libelle }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+              <label class="form-label">Description détaillée</label>
+              <textarea
+                rows="6"
+                class="form-textarea"
+                formControlName="description"
+                placeholder="Décrivez la situation..."
+              ></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+              <button type="button" (click)="closeNewDemande()" class="btn-cancel">
+                Annuler
+              </button>
+
+              <button type="submit" class="btn-submit" [disabled]="demandeForm.invalid">
+                Envoyer la demande
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de réponse -->
+    <div *ngIf="showReponseModal" class="modal-overlay" (click)="closeReponseModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Répondre à la demande</h2>
+          <button (click)="closeReponseModal()" class="btn-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            <strong>Objet :</strong> {{ selectedDemande?.objet.libelle }}
+          </p>
+          <p>
+            <strong>Description :</strong> {{ selectedDemande?.description }}
+          </p>
+
+          <form [formGroup]="reponseForm" (ngSubmit)="submitReponse()">
+            <div class="form-group">
+              <label for="reponse">Votre réponse</label>
+              <textarea id="reponse" rows="6" class="form-textarea" formControlName="reponse" placeholder="Tapez votre réponse ici..."></textarea>
+            </div>
+
+            <!-- Pièces jointes -->
+            <div class="form-group">
+              <label class="form-label">Pièces jointes (PDF)</label>
+
+              <input
+                type="file"
+                class="form-file"
+                accept="application/pdf"
+                multiple
+                (change)="onFilesSelected($event)"
+              />
+
+              <!-- Aperçu des fichiers -->
+              <ul class="files-preview" *ngIf="selectedFiles.length > 0">
+                <li *ngFor="let file of selectedFiles">
+                  📄 {{ file.name }} ({{ file.size / 1024 | number:'1.0-0' }} KB)
+                </li>
+              </ul>
+            </div>
+
+
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel" (click)="closeReponseModal()">Annuler</button>
+              <button type="submit" class="btn-submit" [disabled]="reponseForm.invalid">Envoyer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de sanction (DG uniquement) -->
+<div *ngIf="showSanctionModal" class="modal-overlay" (click)="closeSanctionModal()">
+  <div class="modal-content modal-sanction" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Appliquer une sanction
+      </h2>
+      <button (click)="closeSanctionModal()" class="btn-close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Info sur l'employé concerné -->
+      <div class="sanction-employee-info">
+        <div class="avatar">
+          {{ getInitiales(selectedDemandeForSanction?.employe) }}
+        </div>
+        <div>
+          <p class="employee-name-sanction">
+            {{ selectedDemandeForSanction?.employe?.prenom }}
+            {{ selectedDemandeForSanction?.employe?.nom }}
+          </p>
+          <p class="sanction-demande-ref">
+            <strong>Objet :</strong> {{ selectedDemandeForSanction?.objet?.libelle }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Formulaire de sanction -->
+      <form [formGroup]="sanctionForm" (ngSubmit)="submitSanction()">
+
+        <!-- Type de sanction -->
+        <div class="form-group">
+          <label class="form-label">Type de sanction *</label>
+          <select class="form-select" formControlName="type">
+            <option value="" disabled selected>Sélectionner un type de sanction</option>
+            <option *ngFor="let type of typesSanctions" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Motif -->
+        <div class="form-group">
+          <label class="form-label">Motif de la sanction *</label>
+          <textarea
+            rows="5"
+            class="form-textarea"
+            formControlName="motif"
+            placeholder="Décrivez les raisons de cette sanction..."
+          ></textarea>
+        </div>
+        <!-- Avertissement -->
+        <div class="sanction-warning">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>Vous êtes sur le point de sanctionner l'employé. Vous pourrez voir la sanction dans le menu <span class="lien-sanction"><a routerLink="/sanctions">Sanction</a></span></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button type="button" (click)="closeSanctionModal()" class="btn-cancel">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn-sanction"
+            [disabled]="sanctionForm.invalid"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Appliquer la sanction
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

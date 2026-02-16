@@ -1,0 +1,215 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="container">
+  <!-- Header Section -->
+  <div class="header" @fadeIn>
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">assignment</mat-icon>
+        <div>
+          <h1>Cahiers de charges</h1>
+          <p class="subtitle">Gestion des objectifs trimestriels</p>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" class="btn-create" (click)="openForm()">
+        <mat-icon>add</mat-icon>
+        Nouveau cahier
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section" @fadeIn>
+    <mat-card class="filters-card">
+      <div class="filters-grid">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Rechercher un employé</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" placeholder="Nom ou prénom">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Service</mat-label>
+          <mat-select [(ngModel)]="selectedService" (ngModelChange)="applyFilters()">
+            <mat-option value="">Tous les services</mat-option>
+            <mat-option *ngFor="let service of services" [value]="service.slug">
+              {{service.nom}}
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>business</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Année</mat-label>
+          <mat-select [(ngModel)]="selectedYear" (ngModelChange)="applyFilters()">
+            <mat-option *ngFor="let year of years" [value]="year">{{year}}</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Trimestre</mat-label>
+          <mat-select [(ngModel)]="selectedTrimestre" (ngModelChange)="applyFilters()">
+            <mat-option value="">Tous les trimestres</mat-option>
+            <mat-option *ngFor="let trim of trimestres" [value]="trim">T{{trim}}</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>date_range</mat-icon>
+        </mat-form-field>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Cahiers List -->
+  <div class="cahiers-list" *ngIf="!showForm" @listAnimation>
+    <div *ngIf="filteredCahiers.length === 0" class="empty-state" @fadeIn>
+      <mat-icon class="empty-icon">folder_open</mat-icon>
+      <h3>Aucun cahier de charges trouvé</h3>
+      <p>Créez votre premier cahier de charges pour commencer <br> ou <br> modifier vos critères de recherches</p>
+    </div>
+
+    <mat-card class="cahier-card" *ngFor="let cahier of filteredCahiers">
+      <div class="cahier-header">
+        <div class="cahier-info">
+          <div class="employee-badge">
+            <mat-icon>person</mat-icon>
+            <span class="employee-name">{{cahier.employe?.prenom}} {{cahier.employe?.nom}}</span>
+          </div>
+          <div class="meta-info">
+            <mat-chip class="service-chip">
+              <mat-icon>business</mat-icon>
+              {{cahier.service?.nom}}
+            </mat-chip>
+            <mat-chip class="period-chip">
+              <mat-icon>calendar_today</mat-icon>
+              {{cahier.annee}} - T{{cahier.trimestre}}
+            </mat-chip>
+          </div>
+        </div>
+        <div class="actions">
+          <button mat-icon-button color="primary" (click)="editCahier(cahier)" matTooltip="Modifier">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="openDeleteModal(cahier)" matTooltip="Supprimer">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <mat-card-content class="objectives-section">
+        <h4 class="objectives-title">
+          <mat-icon>flag</mat-icon>
+          Objectifs à atteindre
+        </h4>
+        <div class="objectives-grid">
+          <div class="objective-item" *ngFor="let detail of cahier.details">
+            <div class="objective-label">{{getFieldLabel(detail.cle)}}</div>
+            <div class="objective-value">{{formatValue(detail.cle, detail.valeur)}}</div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <div class="card-footer">
+        <span class="created-date">
+          <mat-icon>access_time</mat-icon>
+          Créé le {{cahier.created_at | date:'dd/MM/yyyy'}}
+        </span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section" *ngIf="showForm" @slideIn>
+    <mat-card class="form-card">
+      <div class="form-header">
+        <h2>
+          <mat-icon>{{isEditing ? 'edit' : 'add'}}</mat-icon>
+          {{isEditing ? 'Modifier' : 'Créer'}} un cahier de charges
+        </h2>
+        <button mat-icon-button (click)="closeForm()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="cahierForm" (ngSubmit)="submitForm()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Service</mat-label>
+            <mat-select formControlName="service_id" required >
+              <mat-option *ngFor="let service of services" [value]="service.slug">
+                {{service.nom}}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-error>Le service est requis</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Employé</mat-label>
+            <mat-select formControlName="employe_id" required>
+              <mat-option *ngFor="let emp of employes" [value]="emp.slug">
+                {{emp.prenom}} {{emp.nom}}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error>L'employé est requis</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Année</mat-label>
+            <mat-select formControlName="annee" required>
+              <mat-option *ngFor="let year of years" [value]="year">{{year}}</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <mat-error>L'année est requise</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Trimestre</mat-label>
+            <mat-select formControlName="trimestre" required>
+              <mat-option *ngFor="let trim of trimestres" [value]="trim">T{{trim}}</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>date_range</mat-icon>
+            <mat-error>Le trimestre est requis</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="objectives-form" *ngIf="detailsArray.length > 0">
+          <h3 class="section-title">
+            <mat-icon>flag</mat-icon>
+            Objectifs à définir
+          </h3>
+          <div class="objectives-inputs" formArrayName="details">
+            <div *ngFor="let detail of detailsArray.controls; let i = index" [formGroupName]="i" class="objective-input-item">
+              <mat-form-field appearance="outline">
+                <mat-label>{{detail.get('label')?.value}}</mat-label>
+                <input matInput type="number" formControlName="valeur" min="0" required>
+                <mat-icon matPrefix>{{detail.get('cle')?.value === 'chiffre_affaires' ? 'attach_money' : 'trending_up'}}</mat-icon>
+                <mat-error>Valeur requise (minimum 0)</mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="closeForm()">
+            <mat-icon>close</mat-icon>
+            Annuler
+          </button>
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>{{isEditing ? 'save' : 'add'}}</mat-icon>
+            {{isEditing ? 'Enregistrer' : 'Créer'}}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </div>
+</div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de cahier des charges '"
+  [message]="'Voulez-vous vraiment supprimer ce cahier ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

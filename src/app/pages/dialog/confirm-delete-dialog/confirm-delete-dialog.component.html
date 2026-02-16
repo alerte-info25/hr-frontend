@@ -1,0 +1,10 @@
+<div class="modal-backdrop">
+  <div class="modal-container">
+    <h4>{{ title }}</h4>
+    <p>{{ message }}</p>
+    <div class="modal-actions">
+      <button (click)="onCancel()" class="btn cancel">{{ cancelText }}</button>
+      <button (click)="onConfirm()" class="btn confirm">{{ confirmText }}</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="roles-header">
+  <h1>Gestion des droits</h1>
+  <button class="btn-add" (click)="openDroitDialog()">
+    <i class="fas fa-plus"></i> Ajouter un droit
+  </button>
+</div>
+
+<div class="roles-list">
+  <div class="role-item" *ngFor="let droit of droits">
+    <div class="role-info">
+      <h4>{{ droit.role.libelle || 'Rôle inconnu' }}</h4>
+
+      <!-- Affichage des modules en badges -->
+      <div class="modules-badges">
+        <span class="module-badge" *ngFor="let mod of droit.libelle.split('-')">
+          {{ mod }}
+        </span>
+      </div>
+    </div>
+    <div class="role-actions">
+      <button class="btn-edit" (click)="openDroitDialog(droit)">Modifier</button>
+      <button class="btn-delete" (click)="openDeleteModal(droit)">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+@if(!droits || droits.length===0){
+  <h4>Aucun droit trouvé</h4>
+}
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression des droits ?'"
+  [message]="'Voulez-vous vraiment supprimer les droit de ' + itemToDelete?.role.libelle + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

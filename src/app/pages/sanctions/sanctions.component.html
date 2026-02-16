@@ -1,0 +1,412 @@
+@if(isLoading) {
+  <app-loading></app-loading>
+}
+
+<div class="sanctions-container">
+  <div class="content-wrapper">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <h1 class="page-title">Registre des Sanctions</h1>
+          <p class="page-subtitle">Consultation et gestion des sanctions disciplinaires</p>
+        </div>
+        <button *ngIf="isDRHOrDG()" (click)="exportToCSV()" class="btn-export">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Exporter CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="stats-grid">
+      <div class="stat-card stat-card-primary">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ totalSanctions }}</p>
+          <p class="stat-label">Total sanctions</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card-warning">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ employesWithSanctions }}</p>
+          <p class="stat-label">Employés concernés</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card-danger">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ sanctionsByType['licenciement'] || 0 }}</p>
+          <p class="stat-label">Licenciements</p>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card-info">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-value">{{ sanctionsByType['avertissement'] || 0 }}</p>
+          <p class="stat-label">Avertissements</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barre de filtres -->
+    <div class="filters-bar">
+      <div class="filters-group">
+        <!-- Recherche -->
+        <div class="search-wrapper">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input
+            type="text"
+            placeholder="Rechercher par employé, type, motif..."
+            [(ngModel)]="searchTerm"
+            class="search-input"
+          />
+        </div>
+
+        <!-- Filtre par type -->
+        <div class="filter-wrapper">
+          <svg class="filter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <select [(ngModel)]="filterType" class="filter-select">
+            <option value="all">Tous les types</option>
+            <option *ngFor="let type of typesSanctions" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Filtre par employé -->
+        <div class="filter-wrapper">
+          <svg class="filter-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <select [(ngModel)]="filterEmploye" class="filter-select">
+            <option value="all">Tous les employés</option>
+            <option *ngFor="let emp of employes" [value]="emp.slug">
+              {{ emp.prenom }} {{ emp.nom }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bouton reset -->
+      <button
+        *ngIf="filterType !== 'all' || filterEmploye !== 'all' || searchTerm !== ''"
+        (click)="resetFilters()"
+        class="btn-reset"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+
+    <!-- Liste des sanctions -->
+    <div class="sanctions-list">
+      <ng-container *ngIf="filteredSanctions.length > 0; else noSanctions">
+        <div *ngFor="let sanction of filteredSanctions" class="sanction-card">
+
+          <!-- Header -->
+          <div class="sanction-header">
+            <div class="sanction-employee-info">
+              <div class="avatar">
+                {{ getInitiales(sanction.employe) }}
+              </div>
+              <div class="employee-details">
+                <h3 class="employee-name">
+                  {{ sanction.employe?.prenom }} {{ sanction.employe?.nom }}
+                </h3>
+                <div class="sanction-meta">
+                  <span class="date-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {{ formatDate(sanction.date_sanction) }}
+                  </span>
+                  <span class="objet-text">{{ sanction.demande?.objet?.libelle }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="type-badge" [ngClass]="getTypeConfig(sanction.type).color">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              {{ getTypeConfig(sanction.type).label }}
+            </div>
+          </div>
+
+          <!-- Motif -->
+          <div class="sanction-motif">
+            <div class="motif-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <strong>Motif :</strong>
+            </div>
+            <p>{{ sanction.motif }}</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="sanction-actions">
+            <button class="btn-view-details" (click)="openDetailsModal(sanction)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Détails
+            </button>
+
+            <button class="btn-view-demande" (click)="voirDemande(sanction.demande.slug)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Voir demande
+            </button>
+
+            <button
+              *ngIf="canDeleteSanction()"
+              class="btn-delete"
+              (click)="openDeleteModal(sanction)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Supprimer
+            </button>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- État vide -->
+      <ng-template #noSanctions>
+        <div class="no-sanctions">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <h3>Aucune sanction trouvée</h3>
+          <p>Aucune sanction ne correspond à vos critères de recherche</p>
+        </div>
+      </ng-template>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal détails -->
+<div *ngIf="showDetailsModal && selectedSanction" class="modal-overlay" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Détails de la sanction</h2>
+      <button (click)="closeDetailsModal()" class="btn-close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Employé -->
+      <div class="detail-section">
+        <h3 class="detail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Employé concerné
+        </h3>
+        <div class="detail-employee">
+          <div class="avatar-large">
+            {{ getInitiales(selectedSanction.employe) }}
+          </div>
+          <div>
+            <p class="employee-name-large">
+              {{ selectedSanction.employe?.prenom }} {{ selectedSanction.employe?.nom }}
+            </p>
+            <button class="link-button" (click)="voirEmploye(selectedSanction.employe.slug)">
+              Voir le profil →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type et date -->
+      <div class="detail-section">
+        <h3 class="detail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          Type de sanction
+        </h3>
+        <div class="type-badge-large" [ngClass]="getTypeConfig(selectedSanction.type).color">
+          {{ getTypeConfig(selectedSanction.type).label }}
+        </div>
+        <p class="detail-date">Date : {{ formatDate(selectedSanction.date_sanction) }}</p>
+      </div>
+
+      <!-- Motif -->
+      <div class="detail-section">
+        <h3 class="detail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          Motif de la sanction
+        </h3>
+        <p class="detail-text">{{ selectedSanction.motif }}</p>
+      </div>
+
+      <!-- Demande associée -->
+      <div class="detail-section">
+        <h3 class="detail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Demande d'explication associée
+        </h3>
+        <div class="detail-demande">
+          <p><strong>Objet :</strong> {{ selectedSanction.demande?.objet?.libelle }}</p>
+          <p><strong>Description :</strong> {{ selectedSanction.demande?.description }}</p>
+          <button class="btn-primary-sm" (click)="voirDemande(selectedSanction.demande.slug)">
+            Voir la demande complète →
+          </button>
+        </div>
+      </div>
+
+      <!-- Réponse de l'employé -->
+      <div class="detail-section">
+        <h3 class="detail-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          Réponse de l'employé
+        </h3>
+        <p class="detail-text">{{ selectedSanction.reponse?.reponse }}</p>
+      </div>
+
+      <!-- Horodatage -->
+      <div class="detail-footer">
+        <p class="detail-timestamp">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Enregistré le {{ formatDateTime(selectedSanction.created_at) }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal suppression -->
+<div *ngIf="showDeleteModal && sanctionToDelete" class="modal-overlay" (click)="closeDeleteModal()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h2 class="modal-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Confirmer la suppression
+      </h2>
+      <button (click)="closeDeleteModal()" class="btn-close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="delete-warning">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <h3>Êtes-vous sûr de vouloir supprimer cette sanction ?</h3>
+        <p class="delete-info">
+          <strong>Employé :</strong> {{ sanctionToDelete.employe?.prenom }} {{ sanctionToDelete.employe?.nom }}<br>
+          <strong>Type :</strong> {{ getTypeConfig(sanctionToDelete.type).label }}<br>
+          <strong>Date :</strong> {{ formatDate(sanctionToDelete.date_sanction) }}
+        </p>
+        <p class="delete-warning-text">
+          ⚠️ Cette action est irréversible et supprimera définitivement l'enregistrement de cette sanction.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeDeleteModal()">
+          Annuler
+        </button>
+        <button class="btn-delete-confirm" (click)="confirmDelete()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Supprimer définitivement
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,124 @@
+<div class="app-menu">
+  <!-- Employés -->
+  <button class="menu-btn" *ngIf="hasRight('employes')" (click)="goTo('/employes')">
+    <i class="fas fa-users"></i>
+    Employés
+  </button>
+
+  <!-- Services -->
+  <button class="menu-btn" *ngIf="hasRight('services')" (click)="goTo('/services')">
+    <i class="fas fa-briefcase"></i>
+    Services
+  </button>
+
+  <!-- Fonctions -->
+  <button class="menu-btn" *ngIf="hasRight('fonction')" (click)="goTo('/fonctions')">
+    <i class="fas fa-user-tag"></i>
+    Fonctions
+  </button>
+  <button class="menu-btn" *ngIf="hasRight('type_contrat')" (click)="goTo('/types-contrats')">
+    <i class="fas fa-file-signature"></i>
+    Types contrats
+  </button>
+
+  <!-- Contrats -->
+  <button class="menu-btn" *ngIf="hasRight('contrats')" (click)="goTo('/contrats')">
+    <i class="fa-solid fa-handshake"></i>
+    Contrats
+  </button>
+
+  <!-- Permissions -->
+  <button class="menu-btn" *ngIf="hasRight('permissions')" (click)="goToPermissions()">
+    <i class="fa-solid fa-person-walking-arrow-right"></i>
+    Permissions
+  </button>
+
+  <!-- Types de permissions -->
+  <button class="menu-btn" *ngIf="hasRight('type_permissions')" (click)="goTo('/type-permissions')">
+    <i class="fas fa-key"></i>
+    Types de permissions
+  </button>
+
+  <!-- Congés -->
+  <button class="menu-btn" *ngIf="hasRight('conges')" (click)="goToConges()">
+    <i class="fas fa-calendar-alt"></i>
+    Congés
+  </button>
+
+  <!-- Types de congés -->
+  <button class="menu-btn" *ngIf="hasRight('type_conges')" (click)="goTo('/type-conges')">
+    <i class="fas fa-calendar-check"></i>
+    Types de congés
+  </button>
+
+  <!-- Bureaux -->
+  <!-- <button class="menu-btn" *ngIf="hasRight('employe')" (click)="goTo('/bureaux')">
+    <i class="fas fa-building"></i>
+    Bureaux
+  </button> -->
+
+  <!-- Tâches -->
+  <!-- <button class="menu-btn" *ngIf="hasRight('taches')" (click)="goTo('/taches')">
+    <i class="fas fa-tasks"></i>
+    Tâches
+  </button> -->
+ <!-- Dossiers -->
+<button class="menu-btn" *ngIf="hasRight('dossiers')" (click)="goToDossiers()">
+  <i class="fas fa-folder-open"></i>
+  Dossiers
+</button>
+
+<!-- Cahiers des charges -->
+<button class="menu-btn" (click)="gotoCahierChares()">
+  <i class="fa-solid fa-clipboard-list"></i>
+  Cahiers des charges
+</button>
+
+
+<!-- Codes -->
+<button class="menu-btn" *ngIf="hasRight('codes')" (click)="goTo('/codes')">
+  <i class="fa-solid fa-person-chalkboard"></i>
+  Codes
+</button>
+
+<!-- Demande d'explication -->
+<button class="menu-btn" (click)="goTo('/demande-explication')">
+  <i class="fa-solid fa-circle-question"></i>
+  Demande d'explication
+</button>
+
+<!-- Liste des objets de demandes d'explication -->
+<button class="menu-btn" *ngIf="hasRight('objets')"
+        (click)="goTo('/objet-demande-explication')">
+  <i class="fa-solid fa-list-check"></i>
+  Objets des demandes
+</button>
+
+<!-- Rapports trimestriels -->
+<button class="menu-btn"
+  (click)="goToRapport()">
+  <i class="fas fa-chart-line"></i>
+  Bilan trimestriels
+</button>
+
+<!-- Liste des sanctions -->
+<button class="menu-btn" *ngIf="hasRight('sanctions')"
+        (click)="goTo('/sanctions')">
+  <i class="fa-solid fa-gavel"></i>
+  Sanctions disciplinaires
+</button>
+
+<!-- Suivi des primes -->
+<button class="menu-btn" *ngIf="isDevOrDir()"
+        (click)="goToPrime()">
+  <i class="fa-solid fa-coins"></i>
+  Suivi des primes
+</button>
+
+<!-- Permissions -->
+<!-- <button class="menu-btn" *ngIf="hasRight('employe')" (click)="goTo('/droits')">
+  <i class="fas fa-shield-alt"></i>
+  Droits
+</button> -->
+
+</div>

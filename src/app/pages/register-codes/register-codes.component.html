@@ -1,0 +1,35 @@
+<div class="register-registerCodes container py-3">
+
+  <h3 class="mb-4 text-center">registerCodes d'enregistrement</h3>
+
+  <div class="d-flex justify-content-center mb-3">
+    <button class="btn btn-primary btn-lg"
+            (click)="generateCode()"
+            [disabled]="!canGenerate || isLoading">
+      <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+      {{ isLoading ? 'Génération...' : 'Générer code' }}
+    </button>
+  </div>
+
+  <div *ngIf="registerCodes.length === 0" class="text-center text-muted">
+    Aucun code disponible pour aujourd'hui.
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3"
+         *ngFor="let code of registerCodes">
+      <div class="card text-center shadow-sm p-3 animate__animated animate__fadeIn">
+        <div class="card-body">
+          <h5 class="card-title fw-bold">{{ code.code }}</h5>
+          <p class="card-text text-muted mb-0">
+            Expire le {{ code.expires_at | date:'shortTime' }}
+          </p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" (click)="copyCode(code.code)">
+          Copier
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

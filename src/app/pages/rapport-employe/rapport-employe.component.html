@@ -1,0 +1,344 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+<div class="rapports-container" @fadeIn>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">description</mat-icon>
+          Rapports Trimestriels
+        </h1>
+        <p class="page-subtitle">Gérez vos rapports de performance trimestriels</p>
+      </div>
+      <button class="btn-primary" (click)="openModal()">
+        <mat-icon>add</mat-icon>
+        <span>Nouveau Rapport</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        placeholder="Rechercher un rapport..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilters()"
+        class="search-input"
+      >
+    </div>
+
+    <div class="filter-group">
+      <select [(ngModel)]="filterYear" (ngModelChange)="applyFilters()" class="filter-select">
+        <option [ngValue]="null">Toutes les années</option>
+        <option *ngFor="let year of years" [ngValue]="year">{{ year }}</option>
+      </select>
+
+      <select [(ngModel)]="filterTrimestre" (ngModelChange)="applyFilters()" class="filter-select">
+        <option [ngValue]="null">Tous les trimestres</option>
+        <option *ngFor="let trim of trimestres" [ngValue]="trim">Trimestre {{ trim }}</option>
+      </select>
+
+      <button class="btn-clear" (click)="clearFilters()" *ngIf="searchTerm || filterYear || filterTrimestre">
+        <mat-icon>clear</mat-icon>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <mat-icon>folder</mat-icon>
+      </div>
+      <div class="stat-content">
+        <p class="stat-value">{{ rapports.length }}</p>
+        <p class="stat-label">Total Rapports</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <mat-icon>public</mat-icon>
+      </div>
+      <div class="stat-content">
+        <p class="stat-value">{{ getRapportPublique }}</p>
+        <p class="stat-label">Publics</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <mat-icon>lock</mat-icon>
+      </div>
+      <div class="stat-content">
+        <p class="stat-value">{{ getRapportPrive }}</p>
+        <p class="stat-label">Privés</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rapports List -->
+  <div class="rapports-grid" @listAnimation>
+    <div class="rapport-card" *ngFor="let rapport of filteredRapports">
+      <div class="card-header">
+        <div class="card-title-section">
+          <mat-icon class="doc-icon">picture_as_pdf</mat-icon>
+          <div>
+            <h3 class="card-title">Rapport {{ getTrimestreLabel(rapport.trimestre) }} {{ rapport.annee }}</h3>
+            <p class="card-date">{{ rapport.created_at | date: 'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+        <div class="status-badge" [class.public]="rapport.statut === 1" [class.prive]="rapport.statut === 0">
+          <mat-icon>{{ rapport.statut === 1 ? 'public' : 'lock' }}</mat-icon>
+          <span>{{ rapport.statut === 1 ? 'Public' : 'Privé' }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <p class="card-comment" *ngIf="rapport.commentaire">
+          {{ rapport.commentaire }}
+        </p>
+        <p class="card-comment empty" *ngIf="!rapport.commentaire">
+          Aucun commentaire
+        </p>
+      </div>
+
+      <div class="card-footer">
+        <div class="action-buttons">
+          <button
+            class="action-btn view"
+            (click)="viewDetails(rapport)"
+            matTooltip="Voir les détails"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <button
+            class="action-btn download"
+            (click)="downloadPDF(rapport)"
+            matTooltip="Télécharger PDF"
+          >
+            <mat-icon>download</mat-icon>
+          </button>
+
+          <button
+            class="action-btn toggle"
+            (click)="toggleStatut(rapport)"
+            [matTooltip]="rapport.statut === 0 ? 'Rendre public' : 'Rendre privé'">
+
+            <mat-icon>{{ rapport.statut === 0 ? 'public' : 'lock' }}</mat-icon>
+
+          </button>
+
+
+          <button
+            class="action-btn edit"
+            (click)="openModal(rapport)"
+            matTooltip="Modifier"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            class="action-btn delete"
+            (click)="openDeleteModal(rapport)"
+            matTooltip="Supprimer"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredRapports.length === 0">
+      <mat-icon class="empty-icon">description</mat-icon>
+      <h3>Aucun rapport trouvé</h3>
+      <p>Commencez par créer votre premier rapport trimestriel</p>
+      <button class="btn-primary" (click)="openModal()">
+        <mat-icon>add</mat-icon>
+        Créer un rapport
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Ajout/Modification -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()" @modalAnimation>
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Modifier le rapport' : 'Nouveau rapport' }}</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="rapportForm" (ngSubmit)="submitForm()">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Année *</label>
+              <select formControlName="annee" class="form-control">
+                <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Trimestre *</label>
+              <select formControlName="trimestre" class="form-control">
+                <option *ngFor="let trim of trimestres" [value]="trim">Trimestre {{ trim }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- <div class="form-group">
+            <label>Statut *</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" formControlName="statut" value="prive">
+                <span class="radio-custom"></span>
+                <mat-icon>lock</mat-icon>
+                Privé
+              </label>
+              <label class="radio-label">
+                <input type="radio" formControlName="statut" value="public">
+                <span class="radio-custom"></span>
+                <mat-icon>public</mat-icon>
+                Public
+              </label>
+            </div>
+          </div> -->
+
+          <div class="form-group">
+            <label>Document PDF {{ isEditMode ? '(optionnel)' : '*' }}</label>
+            <div class="file-upload">
+              <input
+                type="file"
+                id="file-input"
+                accept=".pdf"
+                (change)="onFileSelected($event)"
+                class="file-input"
+              >
+              <label for="file-input" class="file-label">
+                <mat-icon>upload_file</mat-icon>
+                <span *ngIf="!selectedFile">Choisir un fichier PDF</span>
+                <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- <div class="form-group">
+            <label>Commentaire</label>
+            <textarea
+              formControlName="commentaire"
+              class="form-control textarea"
+              rows="4"
+              placeholder="Ajoutez un commentaire sur ce rapport..."
+            ></textarea>
+          </div> -->
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="!rapportForm.valid || (!selectedFile && !isEditMode)"
+          >
+            <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+            {{ isEditMode ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Détails -->
+  <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()" @modalAnimation>
+    <div class="modal-content detail-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Détails du rapport</h2>
+        <button class="close-btn" (click)="closeDetailModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-body detail-body" *ngIf="selectedRapport">
+        <div class="detail-section">
+          <div class="detail-icon-wrapper blue">
+            <mat-icon>picture_as_pdf</mat-icon>
+          </div>
+          <h3>Rapport {{ getTrimestreLabel(selectedRapport.trimestre) }} {{ selectedRapport.annee }}</h3>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <mat-icon class="detail-item-icon">calendar_today</mat-icon>
+            <div>
+              <p class="detail-label">Période</p>
+              <p class="detail-value">Trimestre {{ selectedRapport.trimestre }} - {{ selectedRapport.annee }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <mat-icon class="detail-item-icon">{{ selectedRapport.statut === 'public' ? 'public' : 'lock' }}</mat-icon>
+            <div>
+              <p class="detail-label">Statut</p>
+              <p class="detail-value">{{ selectedRapport.statut === 'public' ? 'Public' : 'Privé' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <mat-icon class="detail-item-icon">insert_drive_file</mat-icon>
+            <div>
+              <p class="detail-label">Document</p>
+              <p class="detail-value" *ngIf="selectedRapport.document !== null">Trimestre{{ selectedRapport.trimestre }}_{{selectedRapport.annee }}.pdf</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <mat-icon class="detail-item-icon">event</mat-icon>
+            <div>
+              <p class="detail-label">Date de création</p>
+              <p class="detail-value">{{ selectedRapport.created_at | date: 'dd/MM/yyyy à HH:mm' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-comment" *ngIf="selectedRapport.commentaire">
+          <h4>
+            <mat-icon>comment</mat-icon>
+            Commentaire du DG
+          </h4>
+          <p>{{ selectedRapport.commentaire }}</p>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn-secondary" (click)="downloadPDF(selectedRapport)">
+            <mat-icon>download</mat-icon>
+            Télécharger PDF
+          </button>
+          <button class="btn-primary" (click)="openModal(selectedRapport); closeDetailModal()">
+            <mat-icon>edit</mat-icon>
+            Modifier
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de rapport '"
+  [message]="'Voulez-vous vraiment supprimer le rapport ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteModal()"
+></app-confirm-delete-dialog>

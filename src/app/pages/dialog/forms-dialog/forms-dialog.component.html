@@ -1,0 +1,190 @@
+<h2 mat-dialog-title>
+  {{ isEditMode ? 'Modifier' : 'Ajouter'}}
+  {{ data?.title || '' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" enctype="multipart/form-data" novalidate>
+  <mat-dialog-content class="d-flex flex-column gap-3">
+
+    <ng-container *ngFor="let field of data.fields">
+    <div *ngIf="isFieldVisible(field)">
+      <!-- TEXT -->
+      <mat-form-field *ngIf="field.type === 'text'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type" />
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.' }}
+        </mat-error>
+      </mat-form-field>
+      <!-- TEL -->
+      <mat-form-field *ngIf="field.type === 'tel'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type" />
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+      <!-- EMAIL -->
+      <mat-form-field *ngIf="field.type === 'email'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label  }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type" />
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- DATE -->
+      <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label  }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type" [readonly]="!!field.autoCalculate"/>
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- SELECT 3 -->
+       <mat-form-field *ngIf="field.type === 'select3'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <mat-select [formControlName]="field.name">
+          <mat-option *ngFor="let option of field.options" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label }} est requis.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- NUMBER -->
+      <mat-form-field *ngIf="field.type === 'number'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type" />
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- TEXTAREA -->
+      <mat-form-field *ngIf="field.type === 'textarea'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <textarea matInput [formControlName]="field.name" rows="4"></textarea>
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- SELECT -->
+      <mat-form-field *ngIf="field.type === 'select'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <mat-select [formControlName]="field.name">
+          <mat-option *ngFor="let option of field.options" [value]="option">{{ option }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- SELECT 2 -->
+
+      <mat-form-field *ngIf="field.type === 'select2'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <mat-select [formControlName]="field.name">
+          <mat-option *ngIf="field.placeholder" [value]="null" disabled>
+            {{ field.placeholder }}
+          </mat-option>
+
+          <mat-option
+            *ngFor="let option of (field.options || [])"
+            [value]="option.value || option">
+            {{ option.label || option }}
+          </mat-option>
+        </mat-select>
+
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- DATE -->
+      <mat-form-field *ngIf="field.type === 'datePic'" appearance="outline" class="w-100">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [matDatepicker]="picker" [formControlName]="field.name">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+          {{ field.label + 'est requis.'}}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- FILE -->
+      <div *ngIf="field.type === 'file'" class="w-100">
+        <label>{{ field.label }}</label><br />
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+        <div *ngIf="imagePreview" style="margin-top:10px; max-width: 150px;">
+          <img [src]="imagePreview" alt="Prévisualisation image" style="width: 100%; border-radius: 8px;" />
+        </div>
+      </div>
+      <!-- DATETIME -->
+        <mat-form-field *ngIf="field.type === 'datetime-local'" appearance="outline" class="w-100">
+          <mat-label>{{ field.label }}</mat-label>
+          <input
+            matInput
+            [formControlName]="field.name"
+            type="datetime-local"
+            [readonly]="!!field.autoCalculate"
+          />
+          <mat-error *ngIf="form.get(field.name)?.hasError('required')">
+            {{ field.label + ' est requis.' }}
+          </mat-error>
+        </mat-form-field>
+
+      <!-- FILE 2 -->
+      <div *ngIf="field.type === 'file2'" class="w-100">
+        <label>{{ field.label }}</label><br />
+        <input
+          type="file"
+          (change)="onFilePdfSelected($event)"
+          accept="application/pdf"
+        />
+        <!-- CHECKBOX -->
+        <div *ngIf="field.type === 'checkbox'" class="checkbox-wrapper w-100">
+          <mat-checkbox
+            [formControlName]="field.name"
+            color="primary"
+            class="custom-checkbox">
+            {{ field.label }}
+          </mat-checkbox>
+        </div>
+
+        <!-- Affiche le nom du fichier sélectionné -->
+        <!-- <div *ngIf="selectedFile" style="margin-top:10px; font-style: italic;">
+          Fichier sélectionné : {{ selectedFile }}
+        </div> -->
+      </div>
+
+      <div *ngIf="field.type === 'file3'" class="w-100">
+        <label >{{field.label}}</label>
+        <input
+  type="file"
+  (change)="onMultiplePdfSelected($event)"
+  accept="application/pdf"
+  multiple
+/>
+
+      </div>
+
+
+
+
+    </div>
+    </ng-container>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">{{'ANNULER'}}</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+      {{ isEditMode ? 'Modifier' : 'Ajouter' }}
+    </button>
+  </mat-dialog-actions>
+</form>

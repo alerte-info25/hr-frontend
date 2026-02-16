@@ -1,0 +1,302 @@
+<div class="bilan-container">
+  <!-- Header -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon class="header-icon">assessment</mat-icon>
+        <div>
+          <h1>Mes Bilans Trimestriels</h1>
+          <p class="subtitle">Consultez et gérez vos rapports d'activité</p>
+        </div>
+      </div>
+      <button (click)="goToAdd()" mat-raised-button color="primary" class="add-button">
+        <mat-icon>add</mat-icon>
+        Nouveau Bilan
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Chargement des bilans...</p>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section" *ngIf="!loading">
+    <mat-form-field appearance="outline">
+      <mat-label>Année</mat-label>
+      <mat-select [(value)]="selectedYear" (selectionChange)="applyFilters()">
+        <mat-option *ngFor="let year of availableYears" [value]="year">{{ year }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Trimestre</mat-label>
+      <mat-select [(value)]="selectedTrimestre" (selectionChange)="applyFilters()">
+        <mat-option value="">Tous</mat-option>
+        <mat-option *ngFor="let t of [1,2,3,4]" [value]="t">{{ getTrimestreLabel(t) }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button color="primary" (click)="resetFilters()">
+      <mat-icon>refresh</mat-icon>
+      Réinitialiser
+    </button>
+  </div>
+
+
+  <!-- Bilans List -->
+  <div class="bilans-grid" *ngIf="!loading" [@listAnimation]="bilans.length">
+    <div class="bilan-card" *ngFor="let bilan of filteredBilans" [class.expanded]="bilan.expanded">
+      <!-- Card Header -->
+      <div class="card-header" [class]="getStatusClass(bilan)">
+        <div class="header-left">
+          <div class="trimestre-badge" [class]="'badge-' + getTrimestreColor(bilan.trimestre)">
+            <mat-icon>calendar_today</mat-icon>
+            <span>{{ getTrimestreLabel(bilan.trimestre) }} {{ bilan.annee }}</span>
+          </div>
+          <div class="date-info">
+            <mat-icon class="small-icon">schedule</mat-icon>
+            <span>Mise à jour: {{ bilan.updated_at | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button mat-icon-button [matMenuTriggerFor]="menu" class="menu-button">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="editBilan(bilan)">
+              <mat-icon>edit</mat-icon>
+              <span>Modifier</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <!-- Introduction -->
+        <div class="introduction-section">
+          <div class="section-label">
+            <mat-icon>subject</mat-icon>
+            <span>Introduction</span>
+          </div>
+          <div class="commentaire-content" [innerHTML]="sanitize(bilan.introduction)"></div>
+        </div>
+
+        <!-- Details Preview -->
+        <div class="details-preview">
+          <div class="detail-chip" *ngFor="let detail of bilan.previewDetails">
+            <mat-icon class="chip-icon">{{ getDetailIcon(detail.cle) }}</mat-icon>
+            <span class="chip-label">{{ getDetailLabel(detail.cle) }}</span>
+            <span class="chip-value">{{ formatValeur(detail.valeur) }}</span>
+          </div>
+          <div class="more-indicator" *ngIf="bilan.details.length > 3">
+            +{{ bilan.details.length - 3 }} autre(s)
+          </div>
+        </div>
+
+        <!-- Expand Button -->
+        <button mat-stroked-button class="expand-button" (click)="toggleExpand(bilan)">
+          <span>{{ bilan.expanded ? 'Voir moins' : 'Voir plus de détails' }}</span>
+          <mat-icon class="expand-icon" [class.rotated]="bilan.expanded">expand_more</mat-icon>
+        </button>
+
+        <!-- Expanded Details -->
+        <div class="expanded-content" *ngIf="bilan.expanded" [@expandAnimation]>
+          <div class="divider"></div>
+
+          <!-- All Details -->
+          <div class="all-details">
+            <div class="introduction-section">
+              <div class="section-label">
+                <mat-icon>subject</mat-icon>
+                <span>Introduction</span>
+              </div>
+              <div class="commentaire-content" [innerHTML]="sanitize(bilan.introduction)"></div>
+            </div>
+
+            <h3 class="details-title">
+              <mat-icon>list</mat-icon>
+              Détails complets
+            </h3>
+
+            <div class="detail-item" *ngFor="let detail of bilan.details">
+              <div class="detail-header">
+                <mat-icon class="detail-icon">{{ getDetailIcon(detail.cle) }}</mat-icon>
+                <span class="detail-name">{{ getDetailLabel(detail.cle) }}</span>
+              </div>
+
+              <div class="detail-content">
+                <!-- Pour les journalistes: objets avec nombre et liens -->
+                <div *ngIf="detail.cle === 'articles' && detail.valeur?.length > 0">
+                  <p class="number-display">
+                    <strong>{{ detail.valeur.length }}</strong> élément(s)
+                  </p>
+
+                  <div class="links-list">
+                    <p class="links-label">Liens de référence :</p>
+
+                    <a *ngFor="let item of detail.valeur"
+                      [href]="item.lien"
+                      target="_blank"
+                      class="reference-link">
+                      <mat-icon>link</mat-icon>
+                      {{ item.type | titlecase }} : {{ item.lien }}
+                    </a>
+                  </div>
+                </div>
+                <!-- Pour les développeurs: tableaux de projets -->
+                <div *ngIf="isProjetsDetail(detail.valeur)" class="projects-list">
+                  <div class="project-item" *ngFor="let projet of detail.valeur">
+                    <div class="project-header">
+                      <h4>{{ projet.nom }}</h4>
+                      <span class="status-badge"
+                            [class.status-termine]="projet.statut === 'termine'"
+                            [class.status-encours]="projet.statut === 'en_cours'">
+                        {{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}
+                      </span>
+                    </div>
+                    <div class="tasks-list" *ngIf="projet.taches?.length > 0">
+                      <p class="tasks-label">Tâches réalisées:</p>
+                      <ul>
+                        <li *ngFor="let tache of projet.taches">{{ tache }}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pour les coursiers : tableau des courses -->
+                <div *ngIf="detail.cle === 'courses' && isArray(detail.valeur)"
+                    class="courses-table-container">
+
+                  <table mat-table [dataSource]="detail.valeur" class="mat-elevation-z2 full-width">
+
+                    <!-- Date -->
+                    <ng-container matColumnDef="date">
+                      <th mat-header-cell *matHeaderCellDef>Date</th>
+                      <td mat-cell *matCellDef="let row">
+                        {{ row.date | date:'dd/MM/yyyy' }}
+                      </td>
+                    </ng-container>
+
+                    <!-- Heure départ -->
+                    <ng-container matColumnDef="heure_depart">
+                      <th mat-header-cell *matHeaderCellDef>Départ</th>
+                      <td mat-cell *matCellDef="let row">{{ row.heure_depart }}</td>
+                    </ng-container>
+
+                    <!-- Heure arrivée -->
+                    <ng-container matColumnDef="heure_arrive">
+                      <th mat-header-cell *matHeaderCellDef>Arrivée</th>
+                      <td mat-cell *matCellDef="let row">{{ row.heure_arrive }}</td>
+                    </ng-container>
+
+                    <!-- Lieu -->
+                    <ng-container matColumnDef="lieu">
+                      <th mat-header-cell *matHeaderCellDef>Lieu</th>
+                      <td mat-cell *matCellDef="let row">{{ row.lieu }}</td>
+                    </ng-container>
+
+                    <!-- Tâche -->
+                    <ng-container matColumnDef="tache_effectuer">
+                      <th mat-header-cell *matHeaderCellDef>Tâche effectuée</th>
+                      <td mat-cell *matCellDef="let row">{{ row.tache_effectuer }}</td>
+                    </ng-container>
+
+                    <!-- Observation -->
+                    <ng-container matColumnDef="observation">
+                      <th mat-header-cell *matHeaderCellDef>Observation</th>
+                      <td mat-cell *matCellDef="let row">
+                        <span class="observation"
+                              [class.warn]="row.observation?.toLowerCase().includes('décharg')">
+                          {{ row.observation }}
+                        </span>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="courseDisplayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: courseDisplayedColumns"></tr>
+                  </table>
+                </div>
+
+
+                <!-- Pour les nombres simples (ex: chiffre d'affaires) -->
+                <p *ngIf="isNumber(detail.valeur)" class="simple-number">
+                  {{ detail.valeur }}
+                </p>
+
+                <!-- Pour le contenu HTML formaté (ex: prospection, résultats) -->
+                <!-- <div *ngIf="isHtmlString(detail.valeur)"
+                     [innerHTML]="sanitize(detail.valeur)"
+                     class="formatted-content">
+                </div> -->
+                <div *ngIf="isHtmlString(detail.valeur)">
+                  <div [innerHTML]="sanitize(detail.valeur)" class="formatted-content"></div>
+                </div>
+
+                <!-- Pour le texte simple -->
+                <p *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur)"
+                   class="simple-text">
+
+                  {{ detail }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commentaire -->
+          <div class="commentaire-section" *ngIf="bilan.commentaire">
+            <h3 class="details-title">
+              <mat-icon>comment</mat-icon>
+              Commentaire final
+            </h3>
+            <div class="commentaire-content" [innerHTML]="sanitize(bilan.commentaire)"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button mat-raised-button color="primary" (click)="editBilan(bilan)">
+              <mat-icon>edit</mat-icon>
+              Modifier ce bilan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && bilans.length === 0" [@fadeIn]>
+    <mat-icon class="empty-icon">description</mat-icon>
+    <h2>Aucun bilan disponible</h2>
+    <p>Commencez par créer votre premier bilan trimestriel</p>
+    <button mat-raised-button color="primary" (click)="goToAdd()" class="empty-action">
+      <mat-icon>add</mat-icon>
+      Créer un bilan
+    </button>
+  </div>
+
+  <div class="empty-state filter-empty"
+     *ngIf="!loading && bilans.length > 0 && filteredBilans.length === 0"
+     [@fadeIn]>
+
+    <mat-icon class="empty-icon">filter_alt_off</mat-icon>
+    <h2>Aucun résultat</h2>
+    <p>
+      Aucun bilan ne correspond
+      <strong *ngIf="selectedYear"> à l’année {{ selectedYear }}</strong>
+      <span *ngIf="selectedYear && selectedTrimestre"> et </span>
+      <strong *ngIf="selectedTrimestre"> au trimstre {{ getTrimestreLabel(selectedTrimestre) }}</strong>
+    </p>
+
+    <button mat-stroked-button color="primary" (click)="resetFilters()">
+      <mat-icon>refresh</mat-icon>
+      Réinitialiser les filtres
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,715 @@
+<div class="bilan-detail-container">
+  <!-- Loader -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des détails du bilan...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage && !isLoading" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon color="warn">error_outline</mat-icon>
+          <p>{{ errorMessage }}</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="retour()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour à la liste
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="bilanData && !isLoading" class="content-wrapper">
+    <!-- En-tête avec informations principales -->
+    <mat-card class="header-card">
+      <mat-card-content>
+        <div class="header-top">
+          <div class="header-info">
+            <div class="title-section">
+              <mat-icon [class]="'service-icon ' + getServiceType()">
+                {{ getServiceIcon() }}
+              </mat-icon>
+              <div class="title-text">
+                <h1>{{ getTrimestreLabel(bilanData.bilan.trimestre) }} {{ bilanData.bilan.annee }}</h1>
+                <p class="subtitle">{{ getMoisTrimestre(bilanData.bilan.trimestre) }}</p>
+              </div>
+            </div>
+
+            <div class="header-actions">
+              <button mat-icon-button color="primary" (click)="retour()" matTooltip="Retour">
+                <mat-icon>arrow_back</mat-icon>
+              </button>
+              <!-- <button mat-raised-button color="primary" (click)="exportPDF()">
+                <mat-icon>picture_as_pdf</mat-icon>
+                Générer PDF
+              </button> -->
+              <button mat-icon-button color="primary" (click)="imprimer()" matTooltip="Imprimer">
+                <mat-icon>print</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="employee-info">
+            <div class="employee-details">
+              <mat-icon>person</mat-icon>
+              <div class="employee-text">
+                <h3>{{ bilanData.employe.prenom }} {{ bilanData.employe.nom }}</h3>
+                <p>{{ bilanData.employe.matricule }} • {{ bilanData.employe.email }}</p>
+              </div>
+            </div>
+
+            <mat-chip-set>
+              <mat-chip highlighted *ngIf="bilanData.service">
+                <mat-icon>business</mat-icon>
+                {{ bilanData.service.nom }}
+              </mat-chip>
+              <mat-chip highlighted *ngIf="!bilanData.service">
+                <mat-icon>person</mat-icon>
+                Prestataire Externe
+              </mat-chip>
+              <mat-chip *ngIf="bilanData.statistiques && bilanData.statistiques.nombre_total_modifications > 0"
+                        [matBadge]="bilanData.statistiques.nombre_total_modifications"
+                        matBadgeColor="warn"
+                        matBadgeSize="small">
+                <mat-icon>history</mat-icon>
+                Modifications
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Dates de création et modification -->
+    <div class="dates-info">
+      <div class="date-item">
+        <mat-icon>add_circle_outline</mat-icon>
+        <span>Créé le {{ formatDate(bilanData.bilan.created_at) }}</span>
+      </div>
+      <div class="date-item" *ngIf="bilanData.bilan.updated_at !== bilanData.bilan.created_at">
+        <mat-icon>update</mat-icon>
+        <span>Modifié le {{ formatDate(bilanData.bilan.updated_at) }}</span>
+      </div>
+    </div>
+
+    <!-- Onglets de contenu -->
+    <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="content-tabs">
+
+      <!-- Onglet Contenu du Bilan -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">description</mat-icon>
+          Contenu du Bilan
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Introduction -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>notes</mat-icon>
+              <mat-card-title>Introduction</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="html-content" [innerHTML]="bilanData.bilan.introduction"></div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Détails selon le service -->
+          <!-- JOURNALISTES -->
+          <div *ngIf="getServiceType() === 'journ'">
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>bar_chart</mat-icon>
+                <mat-card-title>Production du Trimestre</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="stats-grid">
+                  <div class="stat-item" *ngIf="hasDetail('nombre_articles')">
+                    <mat-icon>article</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.nombre_articles }}</span>
+                      <span class="stat-label">Articles</span>
+                    </div>
+                  </div>
+                  <div class="stat-item" *ngIf="hasDetail('nombre_interviews')">
+                    <mat-icon>mic</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.nombre_interviews }}</span>
+                      <span class="stat-label">Interviews</span>
+                    </div>
+                  </div>
+                  <div class="stat-item" *ngIf="hasDetail('nombre_reportages')">
+                    <mat-icon>camera</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.nombre_reportages }}</span>
+                      <span class="stat-label">Reportages</span>
+                    </div>
+                  </div>
+                  <div class="stat-item" *ngIf="hasDetail('nombre_videos')">
+                    <mat-icon>videocam</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.nombre_videos }}</span>
+                      <span class="stat-label">Vidéos</span>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Articles (format JSON moderne) -->
+            <mat-card class="section-card" *ngIf="hasDetail('articles') && isArray(bilanData.details.articles)">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>article</mat-icon>
+                <mat-card-title>Liens des productions ({{ bilanData.details.articles.length }})</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="links-list">
+                  <div class="link-item" *ngFor="let article of bilanData.details.articles; let i = index">
+                    <mat-chip selected [color]="article.type === 'article' ? 'primary' : article.type === 'interview' ? 'accent' : 'warn'">
+                      {{ article.type | titlecase }}
+                    </mat-chip>
+                    <a [href]="article.lien" target="_blank" class="link-url">
+                      {{ article.lien }}
+                      <mat-icon>open_in_new</mat-icon>
+                    </a>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- COMMERCIAUX -->
+          <div *ngIf="getServiceType() === 'com'">
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>trending_up</mat-icon>
+                <mat-card-title>Résultats Commerciaux</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="stats-grid">
+                  <div class="stat-item" *ngIf="hasDetail('nombre_clients')">
+                    <mat-icon>people</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.nombre_clients }}</span>
+                      <span class="stat-label">Nouveaux Clients</span>
+                    </div>
+                  </div>
+                  <div class="stat-item" *ngIf="hasDetail('chiffre_affaire')">
+                    <mat-icon>attach_money</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ bilanData.details.chiffre_affaire }} FCFA</span>
+                      <span class="stat-label">Chiffre d'Affaires</span>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section-card" *ngIf="hasDetail('prospections')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>search</mat-icon>
+                <mat-card-title>Prospections</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.prospections"></div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section-card" *ngIf="hasDetail('suivis_dossiers')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>track_changes</mat-icon>
+                <mat-card-title>Suivis de Dossiers</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.suivis_dossiers"></div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section-card" *ngIf="hasDetail('recouvrements')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>receipt_long</mat-icon>
+                <mat-card-title>Recouvrements</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.recouvrements"></div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section-card" *ngIf="hasDetail('resultats_perspectives')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>insights</mat-icon>
+                <mat-card-title>Résultats et Perspectives</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.resultats_perspectives"></div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- DÉVELOPPEURS -->
+          <div *ngIf="getServiceType() === 'dev'">
+            <mat-card class="section-card" *ngIf="hasDetail('projets') && isArray(bilanData.details.projets)">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>folder_special</mat-icon>
+                <mat-card-title>Projets ({{ bilanData.details.projets.length }})</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-accordion class="projects-accordion">
+                  <mat-expansion-panel *ngFor="let projet of bilanData.details.projets; let i = index">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>code</mat-icon>
+                        <span>{{ projet.nom || 'Projet ' + (i + 1) }}</span>
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        <mat-chip [class]="projet.statut === 'termine' ? 'status-complete' : 'status-progress'">
+                          {{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}
+                        </mat-chip>
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+
+                    <div class="project-details">
+                      <div class="project-info-item">
+                        <strong>Nom du projet :</strong>
+                        <span>{{ projet.nom }}</span>
+                      </div>
+                      <div class="project-info-item">
+                        <strong>Statut :</strong>
+                        <span>{{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}</span>
+                      </div>
+
+                      <mat-divider></mat-divider>
+
+                      <div class="tasks-section" *ngIf="projet.taches && isArray(projet.taches)">
+                        <h4><mat-icon>assignment_turned_in</mat-icon> Tâches réalisées ({{ projet.taches.length }})</h4>
+                        <div class="tasks-list">
+                          <div class="task-item" *ngFor="let tache of projet.taches; let j = index">
+                            <mat-icon>check_circle</mat-icon>
+                            <span>{{ tache }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                </mat-accordion>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- COMPTABLES -->
+          <div *ngIf="getServiceType() === 'compta'">
+            <mat-card class="section-card" *ngIf="hasDetail('activites_mensuelles')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>calendar_month</mat-icon>
+                <mat-card-title>Activités Mensuelles</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-accordion class="months-accordion">
+                  <mat-expansion-panel *ngFor="let mois of getObjectKeys(bilanData.details.activites_mensuelles)">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>event</mat-icon>
+                        <span>{{ mois }}</span>
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+
+                    <div class="html-content" [innerHTML]="bilanData.details.activites_mensuelles[mois]"></div>
+                  </mat-expansion-panel>
+                </mat-accordion>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- COURSIERS -->
+          <div *ngIf="getServiceType() === 'coursier'">
+            <mat-card class="section-card"
+                      *ngIf="hasDetail('courses') && isArray(bilanData.details.courses)">
+
+              <mat-card-header>
+                <mat-icon mat-card-avatar>two_wheeler</mat-icon>
+                <mat-card-title>
+                  Courses effectuées ({{ bilanData.details.courses.length }})
+                </mat-card-title>
+              </mat-card-header>
+
+              <mat-card-content>
+
+                <table mat-table
+                      [dataSource]="bilanData.details.courses"
+                      class="mat-elevation-z1 full-width-table">
+
+                  <!-- # -->
+                  <ng-container matColumnDef="index">
+                    <th mat-header-cell *matHeaderCellDef>#</th>
+                    <td mat-cell *matCellDef="let row; let i = index">
+                      {{ i + 1 }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Date -->
+                  <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef>Date</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.date ? formatCourseDate(row.date) : '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Heure arrivée -->
+                  <ng-container matColumnDef="heure_arrive">
+                    <th mat-header-cell *matHeaderCellDef>Arrivée</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.heure_arrive || '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Heure départ -->
+                  <ng-container matColumnDef="heure_depart">
+                    <th mat-header-cell *matHeaderCellDef>Départ</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.heure_depart || '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Tâche -->
+                  <ng-container matColumnDef="tache">
+                    <th mat-header-cell *matHeaderCellDef>Tâche effectuée</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.tache_effectuer || '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Lieu -->
+                  <ng-container matColumnDef="lieu">
+                    <th mat-header-cell *matHeaderCellDef>Lieu</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.lieu || '-' }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Observation -->
+                  <ng-container matColumnDef="observation">
+                    <th mat-header-cell *matHeaderCellDef>Observation</th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ row.observation || '-' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsCoursier"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsCoursier"></tr>
+
+                </table>
+
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Commentaire -->
+          <mat-card class="section-card" *ngIf="bilanData.bilan.commentaire">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>comment</mat-icon>
+              <mat-card-title>Commentaire Final</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="html-content" [innerHTML]="bilanData.bilan.commentaire"></div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Onglet Historique des Modifications -->
+      <mat-tab *ngIf="bilanData.historique && bilanData.historique.length > 0">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">history</mat-icon>
+          Historique
+          <span class="tab-badge">{{ bilanData.historique?.length || 0 }}</span>
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Statistiques -->
+          <mat-card class="section-card stats-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>analytics</mat-icon>
+              <mat-card-title>Statistiques de Modification</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <mat-icon>edit</mat-icon>
+                  <div class="stat-info">
+                    <span class="stat-number">{{ bilanData.statistiques?.nombre_total_modifications || 0 }}</span>
+                    <span class="stat-label">Modifications</span>
+                  </div>
+                </div>
+                <div class="stat-item" *ngIf="bilanData.statistiques?.derniere_modification">
+                  <mat-icon>update</mat-icon>
+                  <div class="stat-info">
+                    <span class="stat-number small">{{ bilanData.statistiques.derniere_modification }}</span>
+                    <span class="stat-label">Dernière modification</span>
+                  </div>
+                </div>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="fields-modified" *ngIf="bilanData.statistiques?.champs_modifies && bilanData.statistiques.champs_modifies.length > 0">
+                <h4>Champs modifiés</h4>
+                <mat-chip-set>
+                  <mat-chip *ngFor="let champ of bilanData.statistiques.champs_modifies">
+                    {{ champ }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Timeline des modifications -->
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>timeline</mat-icon>
+              <mat-card-title>Timeline des Modifications</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="timeline">
+                <div class="timeline-item" *ngFor="let modif of bilanData.historique; let i = index">
+                  <div class="timeline-marker">
+                    <mat-icon [color]="getModificationColor(modif.type_modification)">
+                      {{ getModificationIcon(modif.type_modification) }}
+                    </mat-icon>
+                  </div>
+                  <div class="timeline-content">
+                    <mat-card class="modification-card">
+                      <mat-card-header>
+                        <div class="modification-header">
+                          <div class="modification-info">
+                            <h4>{{ modif.champ_modifie }}</h4>
+                            <p class="modification-meta">
+                              <mat-icon>person</mat-icon>
+                              {{ modif.employe.prenom }} {{ modif.employe.nom }}
+                              <mat-icon>schedule</mat-icon>
+                              {{ modif.date_modification_human }}
+                            </p>
+                          </div>
+                          <mat-chip selected [color]="getModificationColor(modif.type_modification)">
+                            {{ getFrenchTextForType(modif.type_modification) }}
+                          </mat-chip>
+                        </div>
+                      </mat-card-header>
+                      <mat-card-content>
+                        <div class="modification-details">
+                          <!-- Modification HTML -->
+                          <div *ngIf="modif.is_html" class="html-modification">
+                            <div class="value-comparison">
+                              <div class="old-value" *ngIf="modif.ancienne_valeur">
+                                <strong>Ancienne valeur :</strong>
+                                <div class="html-content preview" [innerHTML]="modif.ancienne_valeur"></div>
+                              </div>
+                              <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                              <div class="new-value" *ngIf="modif.nouvelle_valeur">
+                                <strong>Nouvelle valeur :</strong>
+                                <div class="html-content preview" [innerHTML]="modif.nouvelle_valeur"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Modification JSON - CRÉATION (ancienne_valeur null) -->
+                          <div *ngIf="modif.is_json && modif.detail_cle !== 'courses' && !modif.is_html && !modif.ancienne_valeur"
+                               class="projects-creation-wrapper">
+
+                            <mat-card class="diff-card new">
+                              <mat-card-header>
+                                <mat-icon>add_circle</mat-icon>
+                                <mat-card-title>Valeurs créées</mat-card-title>
+                              </mat-card-header>
+
+                              <table mat-table [dataSource]="modif.nouvelle_valeur" class="full-width-table">
+
+                                <ng-container matColumnDef="nom">
+                                  <th mat-header-cell *matHeaderCellDef>Projet</th>
+                                  <td mat-cell *matCellDef="let row">{{ row.nom }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="statut">
+                                  <th mat-header-cell *matHeaderCellDef>Statut</th>
+                                  <td mat-cell *matCellDef="let row">
+                                    <mat-chip [color]="row.statut === 'termine' ? 'primary' : 'accent'" selected>
+                                      {{ row.statut | titlecase }}
+                                    </mat-chip>
+                                  </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="taches">
+                                  <th mat-header-cell *matHeaderCellDef>Tâches</th>
+                                  <td mat-cell *matCellDef="let row">
+                                    <ul class="task-list">
+                                      <li *ngFor="let t of row.taches">
+                                        <span class="bullet">•</span>
+                                        <span>{{ t }}</span>
+                                      </li>
+                                    </ul>
+                                  </td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="projectCols"></tr>
+                                <tr mat-row *matRowDef="let row; columns: projectCols"></tr>
+                              </table>
+                            </mat-card>
+
+                          </div>
+
+                          <!-- Modification JSON - MODIFICATION (ancienne_valeur existe) -->
+                          <div *ngIf="modif.is_json && modif.detail_cle !== 'courses' && !modif.is_html && modif.ancienne_valeur"
+                               class="projects-diff-wrapper">
+
+                            <div class="projects-diff-grid">
+
+                              <!-- ANCIENNES VALEURS -->
+                              <mat-card class="diff-card old">
+                                <mat-card-header>
+                                  <mat-icon>history</mat-icon>
+                                  <mat-card-title>Anciennes valeurs</mat-card-title>
+                                </mat-card-header>
+
+                                <table mat-table [dataSource]="modif.ancienne_valeur" class="full-width-table">
+
+                                  <ng-container matColumnDef="nom">
+                                    <th mat-header-cell *matHeaderCellDef>Projet</th>
+                                    <td mat-cell *matCellDef="let row">{{ row.nom }}</td>
+                                  </ng-container>
+
+                                  <ng-container matColumnDef="statut">
+                                    <th mat-header-cell *matHeaderCellDef>Statut</th>
+                                    <td mat-cell *matCellDef="let row">
+                                      <mat-chip [color]="row.statut === 'termine' ? 'primary' : 'accent'" selected>
+                                        {{ row.statut | titlecase }}
+                                      </mat-chip>
+                                    </td>
+                                  </ng-container>
+
+                                  <ng-container matColumnDef="taches">
+                                    <th mat-header-cell *matHeaderCellDef>Tâches</th>
+                                    <td mat-cell *matCellDef="let row">
+                                      <ul class="task-list">
+                                        <li *ngFor="let t of row.taches">
+                                          <span class="bullet">•</span>
+                                          <span>{{ t }}</span>
+                                        </li>
+                                      </ul>
+                                    </td>
+                                  </ng-container>
+
+                                  <tr mat-header-row *matHeaderRowDef="projectCols"></tr>
+                                  <tr mat-row *matRowDef="let row; columns: projectCols"></tr>
+                                </table>
+                              </mat-card>
+
+                              <!-- FLÈCHE -->
+                              <div class="diff-arrow">
+                                <mat-icon>arrow_forward</mat-icon>
+                              </div>
+
+                              <!-- NOUVELLES VALEURS -->
+                              <mat-card class="diff-card new">
+                                <mat-card-header>
+                                  <mat-icon>check_circle</mat-icon>
+                                  <mat-card-title>Nouvelles valeurs</mat-card-title>
+                                </mat-card-header>
+
+                                <table mat-table [dataSource]="modif.nouvelle_valeur" class="full-width-table">
+
+                                  <ng-container matColumnDef="nom">
+                                    <th mat-header-cell *matHeaderCellDef>Projet</th>
+                                    <td mat-cell *matCellDef="let row; let i = index"
+                                        [class.changed]="row.nom !== modif.ancienne_valeur[i]?.nom">
+                                      {{ row.nom }}
+                                    </td>
+                                  </ng-container>
+
+                                  <ng-container matColumnDef="statut">
+                                    <th mat-header-cell *matHeaderCellDef>Statut</th>
+                                    <td mat-cell *matCellDef="let row; let i = index"
+                                        [class.changed]="row.statut !== modif.ancienne_valeur[i]?.statut">
+                                      <mat-chip [color]="row.statut === 'termine' ? 'primary' : 'accent'" selected>
+                                        {{ row.statut | titlecase }}
+                                      </mat-chip>
+                                    </td>
+                                  </ng-container>
+
+                                  <ng-container matColumnDef="taches">
+                                    <th mat-header-cell *matHeaderCellDef>Tâches</th>
+                                    <td mat-cell *matCellDef="let row">
+                                      <ul class="task-list">
+                                        <li *ngFor="let t of row.taches">
+                                          <span class="bullet">•</span>
+                                          <span>{{ t }}</span>
+                                        </li>
+                                      </ul>
+                                    </td>
+                                  </ng-container>
+
+                                  <tr mat-header-row *matHeaderRowDef="projectCols"></tr>
+                                  <tr mat-row *matRowDef="let row; columns: projectCols"></tr>
+                                </table>
+                              </mat-card>
+
+                            </div>
+                          </div>
+
+                          <!-- Modification texte simple -->
+                          <div *ngIf="!modif.is_html && !modif.is_json" class="text-modification">
+                            <div class="value-comparison">
+                              <div class="old-value" *ngIf="modif.ancienne_valeur">
+                                <strong>Ancienne valeur :</strong>
+                                <p>{{ modif.ancienne_valeur }}</p>
+                              </div>
+                              <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                              <div class="new-value" *ngIf="modif.nouvelle_valeur">
+                                <strong>Nouvelle valeur :</strong>
+                                <p>{{ modif.nouvelle_valeur }}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Métadonnées supplémentaires -->
+                          <div *ngIf="modif.metadata" class="metadata">
+                            <mat-divider></mat-divider>
+                            <details>
+                              <summary>Métadonnées</summary>
+                              <pre>{{ modif.metadata | json }}</pre>
+                            </details>
+                          </div>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Message si pas d'historique -->
+      <mat-tab *ngIf="!bilanData.historique || bilanData.historique.length === 0">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">history</mat-icon>
+          Historique
+        </ng-template>
+
+        <div class="tab-content">
+          <mat-card class="section-card empty-state">
+            <mat-card-content>
+              <mat-icon>history_toggle_off</mat-icon>
+              <h3>Aucune modification</h3>
+              <p>Ce bilan n'a pas encore été modifié depuis sa création.</p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

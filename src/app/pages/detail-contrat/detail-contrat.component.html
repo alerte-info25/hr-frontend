@@ -1,0 +1,119 @@
+<div class="container-fluid py-4">
+  <div class="detail-wrapper" *ngIf="theConrat">
+    <!-- Header Section -->
+    <div class="detail-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <h1 class="contract-title">Contrat #{{ theConrat.numero }}</h1>
+          <div class="header-badges">
+            <span [class]="getTypeClass(theConrat.type.nom)">{{ theConrat.type.nom }}</span>
+            <span [class]="getStatusClass(theConrat.statut)">{{ getStatuLabel(theConrat.statut) }}</span>
+            <span class="badge rounded-pill bg-danger" *ngIf="isContractExpired(theConrat)">
+              <i class="fas fa-exclamation-triangle"></i> Expiré
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action btn-edit" (click)="openEditDialog(theConrat)">
+          <i class="fas fa-edit"></i>
+          <span>Modifier</span>
+        </button>
+        <button class="btn-action btn-delete" (click)="openDeleteModal(theConrat)">
+          <i class="fas fa-trash-alt"></i>
+          <span>Supprimer</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Employee Card -->
+    <div class="info-card employee-card">
+      <div class="card-icon">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="card-content">
+        <p class="card-label">Employé</p>
+        <h3 class="card-value">{{ theConrat.employe.nom }} {{ theConrat.employe.prenom }}</h3>
+        <p class="employee-matricule" *ngIf="theConrat.employe.matricule">
+          <i class="fas fa-id-badge"></i> {{ theConrat.employe.matricule }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+      <!-- Date Card -->
+      <div class="info-card">
+        <div class="card-icon-small">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="card-content">
+          <p class="card-label">Période du contrat</p>
+          <div class="date-range">
+            <div class="date-item">
+              <span class="date-label">Début</span>
+              <span class="date-value">{{ theConrat.debut }}</span>
+            </div>
+            <i class="fas fa-arrow-right date-separator"></i>
+            <div class="date-item">
+              <span class="date-label">Fin</span>
+              <span class="date-value">{{ theConrat.fin }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Working Hours Card -->
+      <div class="info-card">
+        <div class="card-icon-small">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="card-content">
+          <p class="card-label">Heures par jour</p>
+          <h3 class="card-value">{{ theConrat.nbheure }} <span class="unit">h/j</span></h3>
+        </div>
+      </div>
+
+      <!-- Salary Card -->
+      <div class="info-card">
+        <div class="card-icon-small">
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="card-content">
+          <p class="card-label">Salaire</p>
+          <h3 class="card-value">{{ theConrat.salaire }} <span class="unit">FCFA</span></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!theConrat && !isLoading">
+    <div class="error-icon">
+      <i class="fas fa-file-excel"></i>
+    </div>
+    <h2 class="error-title">Aucun contrat trouvé</h2>
+    <p class="error-message">Le contrat que vous recherchez n'existe pas ou a été supprimé.</p>
+    <button class="btn-back-error" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Retour à la liste
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des détails...</p>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de contrat'"
+  [message]="'Voulez-vous vraiment supprimer le contrat de ' + itemToDelete?.employe.nom + ' ' + itemToDelete?.employe.prenom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

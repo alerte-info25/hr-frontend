@@ -1,0 +1,157 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="employee-details-card" *ngIf="theEmployee">
+  <h2>Détails de l'employé</h2>
+
+  <!-- Avatar de profil -->
+  <div class="employee-avatar">
+    <img *ngIf="theEmployee.photo_url" [src]="theEmployee.photo_url" alt="Photo employé">
+    <div *ngIf="!theEmployee.photo_url" class="avatar-placeholder">
+      {{ getInitials() }}
+    </div>
+  </div>
+
+  <!-- Informations personnelles -->
+  <div class="details-grid">
+    <div class="detail-item">
+      <strong><span class="material-icons">badge</span> Matricule :</strong>
+      <span>{{ theEmployee?.matricule || 'non défini' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">badge</span> Nom :</strong>
+      <span>{{ theEmployee?.nom || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">person</span> Prénom(s) :</strong>
+      <span>{{ theEmployee?.prenom || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">wc</span> Genre :</strong>
+      <span>{{ getLabelGenre(theEmployee?.genre) || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">email</span> Email Personnel :</strong>
+      <span>{{ theEmployee?.emailPersonnel || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">phone</span> Téléphone :</strong>
+      <span>{{ theEmployee?.telephone || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">cake</span> Date de naissance :</strong>
+      <span>{{ theEmployee?.dateNaissance || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">place</span> Lieu de naissance :</strong>
+      <span>{{ theEmployee?.lieuNaissance || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">flag</span> Nationalité :</strong>
+      <span>{{ theEmployee?.nationnalite || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">public</span> Pays de résidence :</strong>
+      <span>{{ theEmployee?.paysResidence || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">home</span> Adresse :</strong>
+      <span>{{ theEmployee?.adresse || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">tag</span> Numéro social :</strong>
+      <span>{{ theEmployee?.numeroSocial || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">work_email</span> Email professionnel :</strong>
+      <span>{{ theEmployee?.emailProfessionnel || '' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">business</span> Service :</strong>
+      <span>{{ theEmployee?.service?.nom || 'non défini' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <strong><span class="material-icons">work</span> Fonction :</strong>
+      <span> {{ theEmployee?.fonction?.nom || 'non défini' }}</span>
+    </div>
+  </div>
+
+  <!-- Section Contrat -->
+  @if(theEmployee.contrat){
+    <div class="details-grid contract-section">
+      <div class="detail-item">
+        <strong><span class="material-icons">description</span> Type de contrat :</strong>
+        <span>{{ theEmployee?.contrat?.type?.nom || '' }}</span>
+      </div>
+
+      <!-- <div class="detail-item" *ngIf="theEmployee?.contrat.salaire">
+        <strong><span class="material-icons">payments</span> Salaire :</strong>
+        <span>{{ theEmployee?.contrat?.salaire | currency: 'XOF':'symbol':'1.0-0' }}</span>
+      </div> -->
+
+      <div class="detail-item">
+        <strong><span class="material-icons">event_available</span> Date de début :</strong>
+        <span>{{ theEmployee?.contrat?.debut || ''}}</span>
+      </div>
+
+      <div class="detail-item">
+        <strong><span class="material-icons">event_busy</span> Date de fin :</strong>
+        <span>{{ theEmployee?.contrat?.fin || 'indeterminée'}}</span>
+      </div>
+
+      <div class="detail-item" *ngIf="theEmployee.contrat.fin">
+        <strong><span class="material-icons">schedule</span> Jours restants :</strong>
+        <span [ngClass]="{ 'text-danger': calculateDaysRemaining(theEmployee.contrat.fin) <= 10 }">
+          {{ calculateDaysRemaining(theEmployee.contrat.fin) }} jour{{ calculateDaysRemaining(theEmployee.contrat.fin) > 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn back" (click)="goBack()">
+      <span class="material-icons">arrow_back</span> Retour
+    </button>
+
+    <a [routerLink]="['/edit-employe/', theEmployee.slug]">
+      <button class="btn edit">
+        <span class="material-icons">edit</span> Modifier
+      </button>
+    </a>
+
+    <button class="btn delete" (click)="openDeleteModal(theEmployee)">
+      <span class="material-icons">delete</span> Supprimer
+    </button>
+  </div>
+</div>
+
+<!-- Message d'erreur -->
+<h2 class="text-danger" *ngIf="!theEmployee && !isLoading">
+  <span class="material-icons">error_outline</span>
+  Aucun employé trouvé !
+</h2>
+
+<!-- Modal de confirmation -->
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression d\'employé ?'"
+  [message]="'Voulez-vous vraiment supprimer ' + itemToDelete?.nom + ' ' + itemToDelete?.prenom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

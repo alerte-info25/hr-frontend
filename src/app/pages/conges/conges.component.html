@@ -1,0 +1,441 @@
+@if(isLoading){
+  <app-loading></app-loading>
+}
+
+<div class="conges-container">
+  <!-- Toggle de vue -->
+  <div class="view-toggle-wrapper" *ngIf="isAdmin()">
+    <div class="view-toggle">
+      <button
+        class="toggle-btn"
+        (click)="setView('admin')"
+        [class.active]="activeView === 'admin'">
+        <i class="fas fa-users-cog"></i>
+        <span>Vue Administrateur</span>
+      </button>
+      <button
+        class="toggle-btn"
+        (click)="setView('employe')"
+        [class.active]="activeView === 'employe'">
+        <i class="fas fa-user"></i>
+        <span>Mes Demandes</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== VUE ADMINISTRATEUR ========== -->
+  <div *ngIf="activeView === 'admin'" class="admin-view">
+    <!-- Header avec statistiques -->
+    <div class="page-header">
+      <div class="header-title">
+        <div class="icon-wrapper">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <h1>Gestion des congés</h1>
+      </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <i class="fas fa-list"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalPermission }}</div>
+          <div class="stat-label">Total Demandes</div>
+        </div>
+      </div>
+
+      <div class="stat-card pending">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ permissionEnAttente }}</div>
+          <div class="stat-label">En Attente</div>
+        </div>
+      </div>
+
+      <div class="stat-card approved">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ permissionAccepte }}</div>
+          <div class="stat-label">Approuvées</div>
+        </div>
+      </div>
+
+      <div class="stat-card rejected">
+        <div class="stat-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ permissionRefuse }}</div>
+          <div class="stat-label">Refusées</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Demandes en attente -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-hourglass-half"></i>
+          Demandes en attente
+          <span class="badge-count">{{ demandeEnAttente.length }}</span>
+        </h2>
+        <button class="btn-toggle" (click)="toggleDemandeAttente()">
+          <i [class]="isDemandeCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"></i>
+          <span>{{ isDemandeCollapsed ? 'Afficher' : 'Masquer' }}</span>
+        </button>
+      </div>
+
+      <div [@slideToggle]="isDemandeCollapsed ? 'collapsed' : 'expanded'" class="section-content">
+        <app-action-conges
+          [conge]="CongeSelect!"
+          (close)="closeDetails1()"
+          (updated)="refresh()">
+        </app-action-conges>
+
+        <div class="table-wrapper">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Demandeur</th>
+                <th>Type</th>
+                <th>Date de la demande</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let Demande of demandeEnAttente" class="table-row">
+                <td data-label="Demandeur">
+                  <div class="employee-cell">
+                    <div class="avatar">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <span>{{ Demande.employe.nom }} {{ Demande.employe.prenom }}</span>
+                  </div>
+                </td>
+                <td data-label="Type">
+                  <span class="type-badge">{{ Demande.type.nom }}</span>
+                </td>
+                <td data-label="Date demande">{{ formatDate(Demande.date_demande) }}</td>
+                <td data-label="Début">{{ formatDate(Demande.debut) }}</td>
+                <td data-label="Fin">{{ formatDate(Demande.fin) }}</td>
+                <td data-label="Actions" class="actions-cell">
+                  <span *ngIf="!isLocked(Demande.debut)" [class]="getStatutBadge(Demande.statut)">
+                    {{ getStatutLabel(Demande.statut) }}
+                  </span>
+                  <button
+                    class="btn-action btn-view"
+                    (click)="CongeSelect = Demande"
+                    title="Voir">
+                    <i class="far fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="demandeEnAttente.length === 0" class="no-data-row">
+                <td colspan="6">
+                  <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune demande en attente</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Liste complète des demandes -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-clipboard-list"></i>
+          Toutes les demandes
+          <span class="badge-count">{{ filterConge.length }}</span>
+        </h2>
+        <button class="btn-toggle" (click)="toggleDemandeListe()">
+          <i [class]="isDemandeListeCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"></i>
+          <span>{{ isDemandeListeCollapsed ? 'Afficher' : 'Masquer' }}</span>
+        </button>
+      </div>
+
+      <div [@slideToggle]="isDemandeListeCollapsed ? 'collapsed' : 'expanded'" class="section-content">
+        <!-- Filtres -->
+        <div class="filters-bar">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Rechercher un employé..."
+              [(ngModel)]="searchText"
+              (input)="filterEmployees()">
+          </div>
+
+          <select class="filter-select" [(ngModel)]="selectedType" (change)="filterEmployees()">
+            <option value="">Tous les types</option>
+            <option *ngFor="let type of typeConge" [value]="type.id">{{ type.nom }}</option>
+          </select>
+
+          <select class="filter-select" [(ngModel)]="selectedStatus" (change)="filterEmployees()">
+            <option value="">Tous les statuts</option>
+            <option [value]="1">En attente</option>
+            <option [value]="2">Acceptée</option>
+            <option [value]="3">Refusée</option>
+          </select>
+
+          <button class="btn-sort" (click)="toggleSortDirection()" title="Trier">
+            <i class="fas" [ngClass]="sortDirection === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down'"></i>
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Demandé le</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th class="text-center">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let permis of paginatedPermissions" class="table-row">
+                <td data-label="Nom">
+                  <div class="employee-cell">
+                    <div class="avatar">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <span>{{ permis?.employe?.nom || '' }} {{ permis?.employe?.prenom  || ''}}</span>
+                  </div>
+                </td>
+                <td data-label="Type">
+                  <span class="type-badge">{{ permis.type.nom }}</span>
+                </td>
+                <td data-label="Demandé le">{{ formatDate(permis.date_demande) }}</td>
+                <td data-label="Début">{{ formatDate(permis.debut) }}</td>
+                <td data-label="Fin">{{ formatDate(permis.fin) }}</td>
+                <td data-label="Statut" class="status-cell">
+                  <span *ngIf="isLocke(permis.debut, permis.statut)" class="badge rounded-pill bg-dark">
+                    Date dépassée
+                  </span>
+                  <span [class]="getStatutBadge(permis.statut)">{{ getStatutLabel(permis.statut) }}</span>
+                </td>
+              </tr>
+
+              <tr *ngIf="paginatedPermissions.length === 0" class="no-data-row">
+                <td colspan="6">
+                  <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune demande trouvée</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <button
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            class="page-btn"
+            (click)="goToPage(i + 1)"
+            [class.active]="currentPage === i + 1">
+            {{ i + 1 }}
+          </button>
+
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== VUE EMPLOYÉ ========== -->
+  <div *ngIf="activeView === 'employe'" class="employe-view">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-title">
+        <div class="icon-wrapper">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <h1>Mes demandes de congés</h1>
+      </div>
+      <button class="btn-primary" (click)="openAddDialog()">
+        <i class="fas fa-plus"></i>
+        <span>Nouvelle Demande</span>
+      </button>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <i class="fas fa-list"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalmesDemande }}</div>
+          <div class="stat-label">Total Demandes</div>
+        </div>
+      </div>
+
+      <div class="stat-card pending">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ mesDemandesEnAttente }}</div>
+          <div class="stat-label">En Attente</div>
+        </div>
+      </div>
+
+      <div class="stat-card approved">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ mesDemandesAccepte }}</div>
+          <div class="stat-label">Approuvées</div>
+        </div>
+      </div>
+
+      <div class="stat-card rejected">
+        <div class="stat-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ mesDemandesRefuse }}</div>
+          <div class="stat-label">Refusées</div>
+        </div>
+      </div>
+
+      <div class="stat-card days-taken">
+        <div class="stat-icon">
+          <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalJoursPris }}</div>
+          <div class="stat-label">Jours Pris</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-list-ul"></i>
+          Mes demandes
+          <span class="badge-count">{{ filterMesDemandes.length }}</span>
+        </h2>
+      </div>
+
+      <div class="section-content">
+        <app-details-conges [conge]="selectedConge!" (close)="closeDetails()"></app-details-conges>
+
+        <div class="table-wrapper">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Date demande</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th class="text-center">Statut</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let Demande of paginatedDemandePermissions" class="table-row">
+                <td data-label="Type">
+                  <span class="type-badge">{{ Demande.type.nom }}</span>
+                </td>
+                <td data-label="Date demande">{{ formatDate(Demande.date_demande) }}</td>
+                <td data-label="Début">{{ formatDate(Demande.debut) }}</td>
+                <td data-label="Fin">{{ formatDate(Demande.fin) }}</td>
+                <td data-label="Statut" class="status-cell">
+                  <span [class]="getStatutBadge(Demande.statut)">{{ getStatutLabel(Demande.statut) }}</span>
+                </td>
+                <td data-label="Actions" class="actions-cell">
+                  <button
+                    class="btn-action btn-view"
+                    (click)="selectedConge = Demande"
+                    title="Voir">
+                    <i class="far fa-eye"></i>
+                  </button>
+                  <button
+                    class="btn-action btn-edit"
+                    [disabled]="demandeBloque(Demande.debut, Demande.statut)"
+                    title="Modifier"
+                    (click)="openEditDialog(Demande)">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  <button
+                    class="btn-action btn-delete"
+                    [disabled]="demandeBloque(Demande.debut, Demande.statut)"
+                    title="Supprimer"
+                    (click)="openDeleteModal(Demande)">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="paginatedDemandePermissions.length === 0 || !paginatedDemandePermissions" class="no-data-row">
+                <td colspan="6">
+                  <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune demande trouvée</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalDemandePages > 1">
+          <button class="page-btn" (click)="prevDemandePage()" [disabled]="currentDemandePage === 1">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <button
+            *ngFor="let page of [].constructor(totalDemandePages); let i = index"
+            class="page-btn"
+            (click)="goToDemandePage(i + 1)"
+            [class.active]="currentDemandePage === i + 1">
+            {{ i + 1 }}
+          </button>
+
+          <button class="page-btn" (click)="nextDemandePage()" [disabled]="currentDemandePage === totalDemandePages">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de demande'"
+  [message]="'Voulez-vous vraiment supprimer cette demande ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()">
+</app-confirm-delete-dialog>
