@@ -33,7 +33,6 @@
   }
 }
 
-
 .main-layout {
   height: 100vh;
 }
@@ -88,5 +87,7 @@
   transition: margin-left 0.3s ease;
 }
 .page__body-wrapper {
-  transition: margin-left 0.3s ease, width 0.3s ease;
+  transition:
+    margin-left 0.3s ease,
+    width 0.3s ease;
 }

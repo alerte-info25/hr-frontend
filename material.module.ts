@@ -101,7 +101,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 
     // Date & Time
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
   ]
 })
 export class MaterialModule {}

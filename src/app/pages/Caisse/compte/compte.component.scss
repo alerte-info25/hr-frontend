@@ -1,0 +1,769 @@
+// === Variables ===
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$accent-blue: #3a6ea5;
+$primary-yellow: #f4b400;
+$dark: #1e2a3a;
+$light: #f8f9fc;
+$gray: #6c757d;
+$success: #28a745;
+$danger: #dc3545;
+$info: #17a2b8;
+$border-color: #dee2e6;
+
+// ================================================
+// === PAGE CONTENT WRAPPER ===
+// ================================================
+
+#page-content-wrapper {
+  flex: 1;
+  transition: all 0.3s;
+  background-color: $light;
+  min-width: 0;
+}
+
+// === Navbar ===
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  padding: 15px 0;
+  background: white !important;
+
+  #menu-toggle {
+    background: $primary-blue;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    &:hover {
+      background: $secondary-blue;
+    }
+  }
+
+  .period-selector {
+    background: $light;
+    border-radius: 8px;
+    padding: 5px 15px;
+    border: 1px solid $border-color;
+    i {
+      color: $primary-yellow;
+    }
+  }
+}
+
+// ================================================
+// === PAGE HEADER ===
+// ================================================
+
+.page-header {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.page-title {
+  color: $dark;
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 1.8rem;
+  i {
+    color: $primary-yellow;
+  }
+}
+
+.page-subtitle {
+  color: $gray;
+  margin-bottom: 0;
+}
+
+// Badges de classes dans le header
+.badge-journal {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+// ================================================
+// === STATS CARDS ===
+// ================================================
+
+.stats-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba($primary-blue, 0.1);
+  }
+}
+
+.stats-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+
+  &.blue {
+    background: rgba($primary-blue, 0.1);
+    color: $primary-blue;
+  }
+  &.yellow {
+    background: rgba($primary-yellow, 0.1);
+    color: $primary-yellow;
+  }
+  &.green {
+    background: rgba($success, 0.1);
+    color: $success;
+  }
+  &.purple {
+    background: rgba($gray, 0.1);
+    color: $gray;
+  }
+}
+
+.stats-label {
+  color: $gray;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.stats-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $dark;
+  margin-bottom: 0;
+}
+
+.stats-trend {
+  font-size: 0.85rem;
+  color: $success;
+}
+
+// ================================================
+// === TOOLBAR ===
+// ================================================
+
+.accounts-toolbar {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+
+  i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+    }
+  }
+}
+
+.filter-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background: white;
+  color: $dark;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-width: 150px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-blue;
+  }
+}
+
+.btn-new-account {
+  background: $primary-blue;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $secondary-blue;
+    transform: translateY(-2px);
+    color: white;
+  }
+}
+
+// ================================================
+// === TABLEAU DES COMPTES ===
+// ================================================
+
+.accounts-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    position: sticky;
+    top: 0;
+    background: $light;
+    z-index: 10;
+  }
+
+  th {
+    padding: 18px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $dark;
+    border-bottom: 2px solid $border-color;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid $border-color;
+    color: $dark;
+  }
+
+  tbody tr {
+    transition: all 0.2s;
+    &:hover {
+      background: rgba($primary-blue, 0.02);
+    }
+  }
+}
+
+// Cellules spécifiques
+.account-code {
+  font-weight: 600;
+  color: $primary-blue;
+  font-size: 1rem;
+}
+
+.account-name {
+  font-weight: 500;
+}
+
+.account-description {
+  font-size: 0.9rem;
+  color: $gray;
+  max-width: 300px;
+}
+
+// Badges de type
+.account-type {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  &.actif {
+    background: rgba($success, 0.1);
+    color: $success;
+  }
+  &.passif {
+    background: rgba($danger, 0.1);
+    color: $danger;
+  }
+  &.charge {
+    background: rgba($primary-yellow, 0.1);
+    color: #b38600;
+  }
+  &.produit {
+    background: rgba($info, 0.1);
+    color: $info;
+  }
+}
+
+// Badge statistiques
+.stats-badge {
+  background: $light;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: $primary-blue;
+  font-size: 0.9rem;
+  white-space: nowrap;
+
+  i {
+    color: $primary-yellow;
+    margin-right: 5px;
+  }
+}
+
+// Barre de progression inline
+.progress {
+  height: 6px;
+  width: 100px;
+  border-radius: 3px;
+  background: $light;
+
+  .progress-bar {
+    background: linear-gradient(90deg, $primary-blue, $accent-blue);
+    border-radius: 3px;
+  }
+}
+
+// Boutons d'action
+.action-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  background: $light;
+  color: $gray;
+
+  &:hover {
+    background: $primary-blue;
+    color: white;
+  }
+  &.delete:hover {
+    background: $danger;
+    color: white;
+  }
+}
+
+// Toggle statut
+.status-toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.status-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+
+  &::before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+}
+
+input:checked + .status-slider {
+  background-color: $success;
+  &::before {
+    transform: translateX(26px);
+  }
+}
+
+// ================================================
+// === PAGINATION ===
+// ================================================
+
+.pagination {
+  margin: 20px 0;
+  justify-content: flex-end;
+
+  .page-item {
+    .page-link {
+      border: none;
+      color: $gray;
+      padding: 8px 14px;
+      margin: 0 3px;
+      border-radius: 6px;
+      font-weight: 500;
+
+      &:hover {
+        background: $light;
+        color: $primary-blue;
+      }
+    }
+
+    &.active .page-link {
+      background: $primary-blue;
+      color: white;
+    }
+  }
+}
+
+// ================================================
+// === SIDEBAR DROITE (Quick Actions / Top 5) ===
+// ================================================
+
+.quick-actions {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  margin-bottom: 25px;
+
+  h5 {
+    font-weight: 600;
+    color: $dark;
+    margin-bottom: 1rem;
+  }
+}
+
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  cursor: pointer;
+
+  &:hover {
+    background: $light;
+  }
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba($primary-yellow, 0.1);
+  color: $primary-yellow;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.quick-action-content {
+  h6 {
+    margin-bottom: 2px;
+    font-weight: 600;
+    color: $dark;
+  }
+  small {
+    color: $gray;
+  }
+}
+
+// ================================================
+// === MODAL ===
+// ================================================
+
+.modal-content {
+  border: none;
+  border-radius: 12px;
+}
+
+.modal-header {
+  background: $primary-blue;
+  color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 20px 25px;
+
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+}
+
+.modal-body {
+  padding: 25px;
+}
+
+.modal-footer {
+  border-top: 1px solid $border-color;
+  padding: 20px 25px;
+}
+
+.form-label {
+  font-weight: 500;
+  color: $dark;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.required-field::after {
+  content: "*";
+  color: $danger;
+  margin-left: 3px;
+}
+
+.form-control,
+.form-select {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 0.95rem;
+
+  &:focus {
+    border-color: $primary-blue;
+    box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+    outline: none;
+  }
+}
+
+.form-text {
+  color: $gray;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.example-item {
+  background: $light;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid $border-color;
+
+  i {
+    color: $primary-yellow;
+    font-size: 1.2rem;
+  }
+  span {
+    font-weight: 500;
+  }
+  small {
+    color: $gray;
+    display: block;
+  }
+}
+
+// ================================================
+// === RESPONSIVE ===
+// ================================================
+
+// Tablette (≤ 992px)
+@media (max-width: 992px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  // Masquer les badges de classes dans le header sur tablette
+  .page-header .col-lg-4 .d-flex {
+    flex-wrap: wrap;
+    justify-content: flex-start !important;
+    margin-top: 10px;
+  }
+
+  // Réduire la progress bar inline
+  .progress {
+    width: 70px;
+  }
+
+  // Colonne actions rapides passe en dessous
+  .col-lg-8,
+  .col-lg-4 {
+    width: 100%;
+  }
+}
+
+// Mobile (≤ 768px)
+@media (max-width: 768px) {
+  #page-content-wrapper {
+    min-width: 100vw;
+  }
+
+  // Toolbar
+  .accounts-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .filter-group {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .btn-new-account {
+    width: 100%;
+    justify-content: center;
+  }
+
+  // Page header
+  .page-header {
+    padding: 18px;
+
+    .col-lg-4 {
+      display: none;
+    } // badges de classes masqués sur mobile
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+  }
+
+  // Tableau : réduire padding
+  .accounts-table {
+    th,
+    td {
+      padding: 12px 10px;
+    }
+  }
+
+  // Masquer colonnes secondaires sur mobile
+  .accounts-table {
+    th:nth-child(3),
+    td:nth-child(3),
+    th:nth-child(4),
+    td:nth-child(4) {
+      display: none;
+    }
+  }
+
+  .progress {
+    display: none;
+  } // Masquer progress bars dans le tableau
+
+  .account-description {
+    display: none;
+  } // Masquer descriptions
+
+  // Stats cards : 2 colonnes
+  .col-xl-3.col-md-6 {
+    width: 50%;
+  }
+
+  .stats-value {
+    font-size: 1.6rem;
+  }
+
+  // Quick actions : plat
+  .quick-actions {
+    margin-bottom: 15px;
+  }
+
+  // Pagination centrée
+  .pagination {
+    justify-content: center;
+  }
+}
+
+// Très petit (≤ 480px)
+@media (max-width: 480px) {
+  // Stats cards : 1 colonne
+  .col-xl-3.col-md-6 {
+    width: 100%;
+  }
+
+  .stats-value {
+    font-size: 1.4rem;
+  }
+
+  .accounts-table {
+    th,
+    td {
+      padding: 10px 8px;
+      font-size: 0.85rem;
+    }
+  }
+
+  // Masquer aussi la colonne Total sur très petit écran
+  .accounts-table {
+    th:nth-child(5),
+    td:nth-child(5) {
+      display: none;
+    }
+  }
+
+  .btn-action {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .modal-dialog {
+    margin: 10px;
+  }
+  .modal-body {
+    padding: 15px;
+  }
+  .modal-footer {
+    padding: 15px;
+  }
+}

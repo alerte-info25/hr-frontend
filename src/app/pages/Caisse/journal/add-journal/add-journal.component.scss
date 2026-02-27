@@ -1,0 +1,394 @@
+// Variables
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$accent-blue: #3a6ea5;
+$primary-yellow: #f4b400;
+$secondary-yellow: #ffc107;
+$dark: #1e2a3a;
+$light: #f8f9fc;
+$gray: #6c757d;
+$success: #28a745;
+$danger: #dc3545;
+$warning: #ffc107;
+$info: #17a2b8;
+
+// Mixins
+@mixin card-base {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+}
+
+// Page content wrapper
+#page-content-wrapper {
+  flex: 1;
+  transition: all 0.3s;
+  background-color: $light;
+}
+
+// Navbar
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  padding: 15px 0;
+  background: white !important;
+
+  #menu-toggle {
+    background: $primary-blue;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+
+    &:hover {
+      background: $secondary-blue;
+    }
+  }
+
+  .period-selector {
+    background: $light;
+    border-radius: 8px;
+    padding: 5px 15px;
+    border: 1px solid #dee2e6;
+
+    i {
+      color: $primary-yellow;
+    }
+  }
+}
+
+// Container principal
+.container-fluid {
+  // Page Header
+  .page-header {
+    @include card-base;
+    padding: 20px;
+    margin-bottom: 25px;
+
+    .page-title {
+      color: $dark;
+      font-weight: 600;
+      margin-bottom: 5px;
+
+      i {
+        color: $primary-yellow;
+      }
+    }
+  }
+
+  // Quick Info Banner
+  .quick-info {
+    background: rgba($primary-yellow, 0.05);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    @include flex-center;
+    gap: 15px;
+
+    i {
+      font-size: 1.5rem;
+      color: $primary-yellow;
+    }
+
+    p {
+      margin: 0;
+      color: $dark;
+    }
+  }
+
+  // Form container
+  .form-container {
+    @include card-base;
+    padding: 25px;
+
+    .form-section {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e9ecef;
+
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      // Section title
+      .section-title {
+        color: $primary-blue;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        @include flex-center;
+
+        i {
+          width: 30px;
+          height: 30px;
+          background: rgba($primary-yellow, 0.1);
+          color: $primary-yellow;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 10px;
+        }
+      }
+
+      // Form elements
+      .form-label {
+        font-weight: 500;
+        color: $dark;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+      }
+
+      .form-control,
+      .form-select {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+
+        &:focus {
+          border-color: $primary-blue;
+          box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+          outline: none;
+        }
+      }
+
+      // Journal lines section
+      .journal-lines-container {
+        background: $light;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        overflow-x: auto;
+
+        .journal-lines-table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 800px;
+
+          th {
+            background: white;
+            color: $dark;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px;
+            border-bottom: 2px solid #dee2e6;
+          }
+
+          td {
+            padding: 10px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+
+            .form-control-sm,
+            .form-select-sm {
+              padding: 8px 10px;
+              font-size: 0.9rem;
+            }
+          }
+
+          .line-total {
+            font-weight: 600;
+            color: $primary-blue;
+          }
+
+          .btn-remove-line {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: white;
+            color: $danger;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin: 0 auto;
+
+            &:hover {
+              background: $danger;
+              color: white;
+            }
+          }
+        }
+
+        .btn-add-line {
+          background: $light;
+          border: 2px dashed $primary-blue;
+          color: $primary-blue;
+          padding: 12px;
+          border-radius: 8px;
+          width: 100%;
+          font-weight: 500;
+          transition: all 0.3s;
+          margin-top: 12px;
+          display: block;
+
+          &:hover {
+            background: $primary-blue;
+            color: white;
+            border-style: solid;
+          }
+        }
+      }
+
+      // Totals panel
+      .totals-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid #e9ecef;
+
+        .total-row {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 10px 0;
+
+          .total-label {
+            font-weight: 500;
+            color: $gray;
+            min-width: 150px;
+            text-align: right;
+            margin-right: 20px;
+          }
+
+          .total-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            min-width: 150px;
+            text-align: right;
+            padding: 5px 15px;
+            background: $light;
+            border-radius: 8px;
+
+            &.debit {
+              color: $success;
+            }
+
+            &.credit {
+              color: $danger;
+            }
+
+            &.balance {
+              color: $primary-blue;
+            }
+          }
+
+          .balance-warning {
+            color: $danger;
+            font-size: 0.9rem;
+            margin-left: 20px;
+          }
+
+          .balance-success {
+            color: $success;
+            font-size: 0.9rem;
+            margin-left: 20px;
+          }
+        }
+      }
+
+      // Advanced options
+      .border.rounded {
+        border-color: #dee2e6 !important;
+
+        i.fa-file-pdf {
+          color: $danger;
+        }
+      }
+    }
+  }
+
+  // Action bar
+  .action-bar {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 25px;
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    position: sticky;
+    bottom: 20px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+
+    .btn {
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 500;
+      @include flex-center;
+      gap: 8px;
+      transition: all 0.3s;
+
+      &-primary {
+        background: $primary-blue;
+        border: none;
+
+        &:hover {
+          background: $secondary-blue;
+          transform: translateY(-2px);
+        }
+      }
+
+      &-outline-primary {
+        border: 2px solid $primary-blue;
+        color: $primary-blue;
+        background: transparent;
+
+        &:hover {
+          background: $primary-blue;
+          color: white;
+        }
+      }
+
+      &-outline-secondary {
+        border: 2px solid $gray;
+        color: $gray;
+        background: transparent;
+
+        &:hover {
+          background: $gray;
+          color: white;
+        }
+      }
+
+      &-success {
+        &:hover {
+          transform: translateY(-2px);
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .container-fluid {
+    .action-bar {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .totals-panel .total-row {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+  }
+}

@@ -1,0 +1,252 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h2 class="page-title">
+          @if (isEditMode()) {
+            <i class="fas fa-edit me-2"></i> Modifier le bureau
+          } @else {
+            <i class="fas fa-plus-circle me-2"></i> Ajouter un nouveau bureau
+          }
+        </h2>
+
+        <p class="page-subtitle">
+          @if (isEditMode()) {
+            <i class="fas fa-edit me-2"></i> Modifier le bureau
+          } @else {
+            <i class="fas fa-plus-circle me-2"></i> Créez un nouveau bureau avec
+            son adresse complète
+          }
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <a routerLink="/caisse/bureaux" class="btn btn-outline-primary me-2">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour à la liste
+        </a>
+      </div>
+    </div>
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success">Bureau ajouté avec succès</div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Formulaire simplifié -->
+  <div class="form-container">
+    <form id="officeForm" [formGroup]="bureauForm" (ngSubmit)="onSubmit()">
+      <!-- Section libellé -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-tag"></i>
+          Libellé du bureau
+          <span class="badge">Informations principales</span>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label required-field">
+            <i class="fas fa-heading"></i> Titre / Nom du bureau
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            placeholder="Ex: Agence Nantes, Siège Social, Bureau Lyon..."
+            formControlName="libelle"
+            [class.is-invalid]="isInvalidField('libelle')"
+          />
+          @if (isInvalidField("libelle")) {
+            <div class="invalid-feedback">
+              Le nom du bureau est requis (min. 2 caractères)
+            </div>
+          }
+          <div class="form-text">
+            Donnez un nom clair et identifiable au bureau
+          </div>
+        </div>
+      </div>
+
+      <!-- Section adresse -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-map-marker-alt"></i>
+          Adresse complète
+          <span class="badge">Localisation</span>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="fas fa-road"></i> Adresse
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Numéro et rue"
+            formControlName="rue"
+          />
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">
+              <i class="fas fa-mail-bulk"></i> Code postal
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="44000"
+              formControlName="codepostal"
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label required-field">
+              <i class="fas fa-city"></i> Ville
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Nantes"
+              formControlName="ville"
+              [class.is-invalid]="isInvalidField('ville')"
+            />
+            @if (isInvalidField("ville")) {
+              <div class="invalid-feedback">
+                La ville est requise (min. 2 caractères)
+              </div>
+            }
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label required-field">
+              <i class="fas fa-flag"></i> Pays
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Côte d'Ivoire"
+              formControlName="pays"
+              [class.is-invalid]="isInvalidField('pays')"
+            />
+            @if (isInvalidField("pays")) {
+              <div class="invalid-feedback">
+                Le pays est requis (min. 2 caractères)
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="fas fa-map-pin"></i> Complément d'adresse
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Bâtiment, étage, lieu-dit..."
+            formControlName="complement"
+          />
+          <div class="form-text">
+            Optionnel - informations supplémentaires pour localiser précisément
+            le bureau
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <a routerLink="/caisse/bureaux" class="btn btn-light">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </a>
+        <div>
+          <button
+            type="button"
+            class="btn btn-outline-primary me-2"
+            (click)="resetForm()"
+          >
+            <i class="fas fa-undo me-2"></i>
+            Réinitialiser
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loader() || bureauForm.invalid">
+            @if (isEditMode()) {
+              @if (loader()) {
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                Enregistrement...
+              } @else {
+                <i class="fas fa-edit me-2"></i>
+                Modifier
+              }
+            } @else {
+              <i class="fas fa-save me-2"></i>
+              Créer le bureau
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Prévisualisation -->
+  <div class="preview-card">
+    <div class="preview-title">
+      <i class="fas fa-eye me-2"></i>
+      Prévisualisation du bureau
+    </div>
+
+    <div class="preview-office" id="officePreview">
+      <div class="preview-header">
+        <div class="preview-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="preview-info">
+          <h6>{{ bureauForm.get("libelle")?.value || "Nom du bureau" }}</h6>
+          <small>Actif</small>
+        </div>
+      </div>
+
+      <div class="preview-detail">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>
+          @if (preview().rue) {
+            {{ preview().rue }}
+          }
+          @if (preview().complement) {
+            , {{ preview().complement }}
+          }
+          @if (preview().codepostal) {
+            , {{ preview().codepostal }}
+          }
+          @if (preview().ville) {
+            {{ preview().ville }}
+          }
+          @if (preview().pays) {
+            , {{ preview().pays }}
+          }
+          @if (!preview().rue && !preview().ville && !preview().pays) {
+            Adresse non renseignée
+          }
+        </span>
+      </div>
+
+      <hr />
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="preview-badge" id="previewMainOffice">Bureau</span>
+        </div>
+        <small class="text-muted"
+          >Créé le <span id="previewDate">{{ today }}</span></small
+        >
+      </div>
+    </div>
+  </div>
+</div>

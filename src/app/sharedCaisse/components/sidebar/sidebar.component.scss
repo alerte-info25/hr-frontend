@@ -1,0 +1,172 @@
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$primary-yellow: #f4b400;
+$white: #ffffff;
+$black: #000000;
+
+:host {
+  display: block;
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  transition:
+    width 0.3s ease,
+    min-width 0.3s ease;
+}
+
+:host(.toggled) {
+  width: 0;
+  min-width: 0;
+}
+
+:host .sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, $primary-blue 0%, $secondary-blue 100%);
+  color: $white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 10px rgba($black, 0.1);
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+
+  &.toggled {
+    transform: translateX(-280px);
+  }
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba($white, 0.05);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba($white, 0.2);
+    border-radius: 4px;
+  }
+
+  * {
+    color: $white;
+  }
+}
+
+:host .sidebar-header {
+  padding: 25px 20px;
+  border-bottom: 1px solid rgba($white, 0.15);
+  flex-shrink: 0;
+  background-color: #fff;
+
+  h3 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.5rem;
+
+    .text-warning {
+      color: $primary-yellow !important;
+      font-weight: 700;
+    }
+  }
+
+  small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    display: block;
+    margin-top: 5px;
+  }
+}
+
+:host .sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba($white, 0.15);
+  flex-shrink: 0;
+
+  a {
+    color: rgba($white, 0.9);
+    text-decoration: none;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      color: $primary-yellow;
+    }
+  }
+}
+
+:host .nav {
+  flex: 1;
+  padding: 20px 0;
+}
+
+:host .nav-item {
+  width: 100%;
+  margin: 2px 0;
+}
+
+:host .nav-link {
+  color: rgba($white, 0.9) !important;
+  padding: 12px 25px;
+  transition: all 0.3s;
+  font-weight: 400;
+  border-left: 3px solid transparent;
+  display: flex;
+  align-items: center;
+
+  i {
+    width: 25px;
+    font-size: 1.1rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+    color: rgba($white, 0.9) !important;
+  }
+
+  &:hover {
+    background: rgba($white, 0.1);
+    color: $white !important;
+    padding-left: 30px;
+  }
+
+  &.active {
+    background: rgba($primary-yellow, 0.15);
+    color: $white !important;
+    border-left: 3px solid $primary-yellow;
+  }
+}
+
+:host .company-info {
+  padding: 20px;
+  background: rgba($black, 0.1);
+  margin: 20px;
+  border-radius: 10px;
+  border-left: 3px solid $primary-yellow;
+  flex-shrink: 0;
+
+  h6 {
+    margin: 0;
+    font-weight: 600;
+  }
+  small {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    width: 0 !important;
+    min-width: 0 !important;
+  }
+
+  :host .sidebar {
+    transform: translateX(-280px);
+
+    &.toggled {
+      transform: translateX(0);
+    }
+  }
+}

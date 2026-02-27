@@ -1,0 +1,27 @@
+<div class="sidebar" [class.toggled]="isToggled" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <img
+        class="main-logo"
+        src="assets/images/logo/logo-alerteInfo.png"
+        alt="logo"
+      />
+    </div>
+  </div>
+
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      @for (item of navItems; track $index) {
+        <a class="nav-link" [routerLink]="item.route" routerLinkActive="active">
+          <i class="{{ item.icon }}"></i>{{ item.label }}
+        </a>
+      }
+    </li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <a href="#" class="text-white" (click)="logout()">
+      <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+    </a>
+  </div>
+</div>

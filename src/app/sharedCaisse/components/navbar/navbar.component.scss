@@ -1,0 +1,131 @@
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$primary-yellow: #f4b400;
+$light: #f8f9fc;
+$white: #ffffff;
+$black: #000000;
+$gray: #6c757d;
+$border-color: #dee2e6;
+$sidebar-width: 290px;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+:host #wrapper {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+:host app-sidebar {
+  width: $sidebar-width;
+  min-width: $sidebar-width;
+  flex-shrink: 0;
+}
+
+:host #page-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: calc(100% - $sidebar-width);
+}
+
+:host app-navbar {
+  display: block;
+  width: 100%;
+}
+
+:host .navbar {
+  box-shadow: 0 2px 4px rgba($black, 0.02);
+  padding: 15px 0;
+  background: $secondary-blue !important;
+  width: 100%;
+  margin: 0;
+
+  .container-fluid {
+    padding: 0 20px;
+    width: 100%;
+  }
+}
+
+:host #menu-toggle {
+  background: $primary-blue;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s;
+
+  &:hover {
+    background: $secondary-blue;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+:host .period-selector {
+  background: $light;
+  border-radius: 8px;
+  padding: 8px 18px;
+  border: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover {
+    background: darken($light, 2%);
+    border-color: $primary-blue;
+  }
+
+  i {
+    color: $primary-yellow;
+    font-size: 1rem;
+  }
+
+  span {
+    color: $gray;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  &.active {
+    background: $primary-blue;
+    border-color: $primary-blue;
+
+    span,
+    i {
+      color: $white;
+    }
+  }
+}
+
+:host .period-selectors {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  :host .navbar {
+    padding: 10px 0;
+  }
+
+  :host .period-selector {
+    padding: 6px 12px;
+
+    span {
+      font-size: 0.85rem;
+    }
+  }
+}

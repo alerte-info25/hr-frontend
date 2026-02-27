@@ -1,0 +1,219 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="page-title">
+          <i class="fas fa-calendar-alt me-2"></i>
+          Gestion des exercices comptables
+        </h2>
+        <p class="text-muted mb-0">
+          Créez et gérez les exercices comptables de votre entreprise
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Info -->
+  <div class="quick-info">
+    <i class="fas fa-lightbulb"></i>
+    <div>
+      <strong>Conseil :</strong> Un exercice comptable correspond à une période
+      de 12 mois. Vous devez créer un nouvel exercice avant de commencer une
+      nouvelle période.
+    </div>
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success">Opération réussie</div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  }
+
+  <!-- Formulaire principal -->
+  <div class="form-container">
+    <form
+      id="exerciseForm"
+      (ngSubmit)="onSubmit()"
+      [formGroup]="exerciceComptableForm"
+    >
+      <!-- Section création exercice -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-plus-circle"></i>
+          Nouvel exercice
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="fas fa-tag me-1 text-warning"></i>
+              Libellé *
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ex: Exercice 2024"
+              value="Exercice 2024"
+              formControlName="libelle"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="far fa-calendar-alt me-1 text-warning"></i>
+              Date de début *
+            </label>
+            <input
+              type="date"
+              class="form-control"
+              formControlName="date_debut"
+            />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="far fa-calendar-alt me-1 text-warning"></i>
+              Date de fin *
+            </label>
+            <input
+              type="date"
+              class="form-control"
+              formControlName="date_fin"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">
+              <i class="fas fa-info-circle me-1 text-warning"></i>
+              Statut
+            </label>
+            <select class="form-select" formControlName="statut">
+              <option value="ouvert" selected>Ouvert</option>
+              <option value="cloture">Clôturé</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section dates clés -->
+      <div class="form-section"></div>
+
+      <!-- Section exercices existants -->
+      <div class="form-section">
+        <div class="section-title">
+          <i class="fas fa-list"></i>
+          Exercices enregistrés
+        </div>
+
+        <div class="exercises-container">
+          <table class="exercises-table">
+            <thead>
+              <tr>
+                <th>Libellé</th>
+                <th>Période</th>
+                <th>Statut</th>
+                <th>Écritures</th>
+                <th>Résultat</th>
+                <th>Total débit</th>
+                <th>Total crédti</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (exercice of exercices(); track exercice.rfk) {
+                <tr>
+                  <td>
+                    <strong>{{ exercice.libelle }}</strong
+                    ><br />
+                    @if (isActif(exercice)) {
+                      <small class="text-muted">
+                        Fin prévue le
+                        {{ exercice.date_fin | date: "dd/MM/yyyy" }}
+                      </small>
+                    } @else {
+                      <small class="text-muted">
+                        Clôturé le {{ exercice.date_fin | date: "dd/MM/yyyy" }}
+                      </small>
+                    }
+                  </td>
+                  <td>
+                    {{ exercice.date_debut | date: "dd/MM/yyyy" }} -
+                    {{ exercice.date_fin | date: "dd/MM/yyyy" }}
+                  </td>
+                  <td>
+                    @if (isActif(exercice)) {
+                      <span class="status-badge active">
+                        <i class="fas fa-play me-1"></i>Actif
+                      </span>
+                    } @else {
+                      <span class="status-badge closed">
+                        <i class="fas fa-lock me-1"></i>Clôturé
+                      </span>
+                    }
+                  </td>
+                  <td>{{ exercice.nb_ecritures }}</td>
+                  <td
+                    [class.text-success]="(exercice.resultat ?? 0) >= 0"
+                    [class.text-danger]="(exercice.resultat ?? 0) < 0"
+                  >
+                    {{ formatResultat(exercice) }}
+                  </td>
+                  <td>
+                    {{ exercice.total_debit | number:'1.0-2' }} Fcfa
+                  </td>
+                  <td>
+                    {{ exercice.total_credit | number:'1.0-2' }} Fcfa
+                  </td>
+                  <td>
+                    <button class="btn-action" title="Consulter" (click)="onConsultation(exercice.rfk)">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    @if (isActif(exercice)) {
+                      <button
+                        class="btn-action"
+                        title="Clôturer"
+                        (click)="onCloturer(exercice.rfk)"
+                        [disabled]="cloturerRfk() === exercice.rfk"
+                      >
+                        @if (cloturerRfk() === exercice.rfk) {
+                          <i class="fas fa-spinner fa-spin"></i>
+                        } @else {
+                          <i class="fas fa-lock"></i>
+                        }
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Barre d'actions sticky -->
+      <div class="action-bar">
+        <button type="button" class="btn btn-outline-secondary">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="exerciceComptableForm.invalid"
+        >
+          @if (loader()) {
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Enregistrement...
+          } @else {
+            <i class="fas fa-save me-2"></i>
+            Enregistrer l'écriture
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

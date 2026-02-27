@@ -1,0 +1,240 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h2 class="page-title">
+          <i class="fas fa-building me-2"></i>
+          Gestion des bureaux
+        </h2>
+        <p class="page-subtitle">
+          Gérez les différents sites, agences et services de l'entreprise
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <div class="view-toggle">
+          <button
+            class="view-btn"
+            [class.active]="viewMode === 'grid'"
+            id="gridViewBtn"
+            (click)="transformGrid()"
+          >
+            <i class="fas fa-th-large"></i>
+          </button>
+          <button
+            class="view-btn"
+            [class.active]="viewMode === 'table'"
+            id="tableViewBtn"
+            (click)="transformTable()"
+          >
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-xl-6 col-md-6 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon blue">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="stats-label">Total bureaux</div>
+        <div class="stats-value">{{ stats()?.total_bureaux ?? "—" }}</div>
+        <div class="stats-trend"></div>
+      </div>
+    </div>
+    <div class="col-xl-6 col-md-6 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon purple">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stats-label">Opérations mois</div>
+        <div class="stats-value">{{ stats()?.operations_mois ?? "—" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="offices-toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        id="searchOffice"
+        placeholder="Rechercher un bureau, une adresse..."
+        [ngModel]="recherche()"
+        (ngModelChange)="onRecherche($event)"
+      />
+    </div>
+
+    <div class="filter-group">
+      <select
+        class="filter-select"
+        [ngModel]="villeSelectionnee()"
+        (ngModelChange)="onFiltreVille($event)"
+      >
+        <option value="">Toutes les villes</option>
+        @for (ville of villes(); track $index) {
+          <option [value]="ville">{{ ville }}</option>
+        } @empty {
+          <option disabled>Aucune ville trouvée</option>
+        }
+      </select>
+    </div>
+
+    <a routerLink="/caisse/new-bureaux" class="btn btn-outline-primary me-2">
+      <i class="fa-solid fa-plus"></i>
+      Nouveau bureau
+    </a>
+  </div>
+
+  <!-- Grid View -->
+  @if (viewMode === "grid") {
+    <div class="offices-grid">
+      @for (bureau of bureauxFiltres(); track bureau.rfk) {
+        <div class="office-card active">
+          <div class="office-header">
+            <div class="office-icon">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="office-status">
+              <span class="status-badge active">Actif</span>
+            </div>
+          </div>
+
+          <div class="office-info">
+            <div class="office-name">{{ bureau.libelle }}</div>
+            <div class="office-code">{{ bureau.code }}</div>
+            <div class="office-address">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ bureau.rue || "" }}
+              {{ bureau.codepostal ? bureau.codepostal + " " : "" }}
+              {{ bureau.ville }}
+              {{ bureau.pays ? ", " + bureau.pays : "" }}
+            </div>
+            @if (bureau.complement) {
+              <div class="office-contact">
+                <i class="fas fa-map-pin"></i>
+                {{ bureau.complement }}
+              </div>
+            }
+
+            <div class="office-address">
+              <i class="fa-solid fa-chart-pie"></i>
+              {{ bureau.nb_operation }} Opérations enregistrées
+            </div>
+          </div>
+
+          <div class="office-footer">
+            <div class="office-actions">
+              <button
+                type="button"
+                class="btn-action"
+                (click)="onEdit(bureau.rfk)"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-action delete"
+                (click)="onDelete(bureau.rfk)"
+                [disabled]="deleteRfk() === bureau.rfk"
+              >
+                @if (deleteRfk() === bureau.rfk) {
+                  <i class="fas fa-spinner fa-spin"></i>
+                } @else {
+                  <i class="fas fa-trash"></i>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (bureaux().length === 0 && !loader()) {
+        <div class="text-muted p-4">Aucun bureau enregistré.</div>
+      }
+    </div>
+  }
+
+  <!-- Table View -->
+  @if (viewMode === "table") {
+    <div class="offices-table-container">
+      <div class="table-responsive">
+        <table class="offices-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Bureau</th>
+              <th>Adresse</th>
+              <th>Ville</th>
+              <th>Pays</th>
+              <th>Opérations enregistrées</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bureau of bureauxFiltres(); track bureau.rfk) {
+              <tr>
+                <td>
+                  <span class="office-badge">{{ bureau.code }}</span>
+                </td>
+                <td>
+                  <strong>{{ bureau.libelle }}</strong>
+                  @if (bureau.complement) {
+                    <br /><small class="text-muted">{{
+                      bureau.complement
+                    }}</small>
+                  }
+                </td>
+                <td>
+                  {{ bureau.rue || "—" }}
+                  {{ bureau.codepostal ? ", " + bureau.codepostal : "" }}
+                </td>
+                <td>{{ bureau.ville }}</td>
+                <td>{{ bureau.pays }}</td>
+                <td>{{ bureau.nb_operation }}</td>
+                <td>
+                  <div class="office-actions">
+                    <button
+                      type="button"
+                      class="btn-action"
+                      (click)="onEdit(bureau.rfk)"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action delete"
+                      (click)="onDelete(bureau.rfk)"
+                      [disabled]="deleteRfk() === bureau.rfk"
+                    >
+                      @if (deleteRfk() === bureau.rfk) {
+                        <i class="fas fa-spinner fa-spin"></i>
+                      } @else {
+                        <i class="fas fa-trash"></i>
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @if (bureaux().length === 0 && !loader()) {
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  Aucun bureau enregistré.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

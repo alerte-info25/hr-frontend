@@ -1,0 +1,392 @@
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="fas fa-journal-whills me-2"></i>
+          Journal comptable
+        </h2>
+        <p class="text-muted mb-0">
+          {{ operationsFiltrees().length }} opération(s) enregistrée(s)
+        </p>
+      </div>
+      <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <span class="badge-journal ach me-2">ENTREES</span>
+        <span class="badge-journal vte me-2">SORTIES</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards (responsive avec flex-wrap) -->
+  <div class="stats-grid mb-4">
+    <div class="stat-card">
+      <div class="journal-stats-card">
+        <div class="journal-icon ach"><i class="fas fa-arrow-down"></i></div>
+        <div class="journal-title">Entrées</div>
+        <h3 class="journal-count">{{ stats().nb_entrees }}</h3>
+        <div class="journal-total">
+          {{ formatMontant(stats().total_entrees) }} Fcfa
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="journal-stats-card">
+        <div class="journal-icon vte"><i class="fas fa-arrow-up"></i></div>
+        <div class="journal-title">Sorties</div>
+        <h3 class="journal-count">{{ stats().nb_sorties }}</h3>
+        <div class="journal-total">
+          {{ formatMontant(stats().total_sorties) }} Fcfa
+        </div>
+      </div>
+    </div>
+    <!-- <div class="stat-card">
+      <div class="journal-stats-card">
+        <div class="journal-icon od"><i class="fas fa-pencil-alt"></i></div>
+        <div class="journal-title">Brouillons</div>
+        <h3 class="journal-count">{{ stats().nb_brouillons }}</h3>
+        <div class="journal-total">En attente</div>
+      </div>
+    </div> -->
+    <div class="stat-card">
+      <div class="journal-stats-card">
+        <div class="journal-icon bq"><i class="fas fa-check-circle"></i></div>
+        <div class="journal-title">Validées</div>
+        <h3 class="journal-count">{{ stats().nb_validees }}</h3>
+        <div class="journal-total">Confirmées</div>
+      </div>
+    </div>
+    <!-- <div class="stat-card">
+      <div class="journal-stats-card">
+        <div class="journal-icon tva"><i class="fas fa-ban"></i></div>
+        <div class="journal-title">Annulées</div>
+        <h3 class="journal-count">{{ stats().nb_annulees }}</h3>
+        <div class="journal-total">Annulées</div>
+      </div>
+    </div> -->
+    <div class="stat-card">
+      <div class="journal-stats-card">
+        <div
+          class="journal-icon"
+          style="
+            background: rgba(244, 180, 0, 0.1);
+            color: var(--primary-yellow);
+          "
+        >
+          <i class="fas fa-calculator"></i>
+        </div>
+        <div class="journal-title">Total écritures</div>
+        <h3 class="journal-count">{{ operations().length }}</h3>
+        <div class="journal-total">
+          @if (stats().equilibre) {
+            <span class="text-success">Équilibré</span>
+          } @else {
+            <span class="text-danger">Non équilibré</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  @if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  }
+
+  <!-- Toolbar - responsive avec wrap -->
+  <div class="journal-toolbar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Rechercher..."
+        [ngModel]="recherche()"
+        (ngModelChange)="recherche.set($event)"
+      />
+    </div>
+
+    <div class="filter-group">
+      <select
+        class="filter-select"
+        [ngModel]="filtreNature()"
+        (ngModelChange)="filtreNature.set($event)"
+      >
+        <option value="">Nature</option>
+        <option value="entrée">Entrée</option>
+        <option value="sortie">Sortie</option>
+      </select>
+
+      <select
+        class="filter-select"
+        [ngModel]="filtreBureau()"
+        (ngModelChange)="filtreBureau.set($event)"
+      >
+        <option value="">Bureau</option>
+        @for (bureau of bureaus(); track bureau.rfk) {
+          <option [value]="bureau.rfk">{{ bureau.libelle }}</option>
+        }
+      </select>
+
+      <!-- <select
+        class="filter-select"
+        [ngModel]="filtreStatut()"
+        (ngModelChange)="filtreStatut.set($event)"
+      >
+        <option value="">Statut</option>
+        <option value="brouillon">Brouillon</option>
+        <option value="validee">Validée</option>
+        <option value="annulee">Annulée</option>
+      </select> -->
+    </div>
+
+    <a
+      routerLink="/caisse/new-journal"
+      class="btn-add"
+      style="text-decoration: none"
+    >
+      <i class="fa-solid fa-plus me-1"></i>
+      Nouvelle
+    </a>
+  </div>
+
+  <!-- Loader -->
+  @if (loader()) {
+    <app-loader />
+  }
+
+  <!-- Table avec scroll horizontal -->
+  <div class="table-responsive">
+    <table class="journal-table">
+      <thead>
+        <tr>
+          <th class="col-expand"></th>
+          <th class="col-number">N°</th>
+          <th class="col-date">Date</th>
+          <th class="col-label">Libellé</th>
+          <th class="col-bureau">Bureau</th>
+          <th class="col-nature">Nature</th>
+          <th class="col-exercice">Exercice</th>
+          <th class="col-amount">Débit</th>
+          <th class="col-amount">Crédit</th>
+          <th class="col-equilibre">Éq.</th>
+          <th class="col-statut">Statut</th>
+          <!-- <th class="col-actions">Actions</th> -->
+        </tr>
+      </thead>
+      <tbody>
+        @if (!loader()) {
+          @for (operation of operationsFiltrees(); track operation.rfk) {
+            <!-- Ligne opération -->
+            <tr
+              [class.table-active]="expandedRfk() === operation.rfk"
+              [class.text-success]="operation.nature_operation?.libelle === 'entrée'"
+              [class.text-danger]="operation.nature_operation?.libelle === 'sortie'"
+            >
+              <td class="col-expand">
+                <button
+                  type="button"
+                  class="btn-action"
+                  (click)="toggleLignes(operation.rfk)"
+                >
+                  <i
+                    class="fas"
+                    [class.fa-chevron-down]="expandedRfk() !== operation.rfk"
+                    [class.fa-chevron-up]="expandedRfk() === operation.rfk"
+                  >
+                  </i>
+                </button>
+              </td>
+              <td class="col-number">
+                <span class="account-code">{{ operation.numero }}</span>
+              </td>
+              <td class="col-date">
+                {{ operation.date_operation | date: "dd/MM/yyyy" }}
+              </td>
+              <td class="col-label">
+                <div class="account-name">{{ operation.libelle }}</div>
+                <div class="account-description">
+                  Saisie par {{ operation.user?.employe?.nom ?? "—" }} {{ operation.user?.employe?.prenom ?? "—" }}
+                </div>
+              </td>
+              <td class="col-bureau">{{ operation.bureau?.libelle ?? "—" }}</td>
+              <td class="col-nature">
+                <span
+                  class="badge-journal"
+                  [class.ach]="operation.nature_operation?.libelle === 'Entrée'"
+                  [class.vte]="operation.nature_operation?.libelle === 'Sortie'"
+                >
+                  {{ operation.nature_operation?.libelle ?? "—" }}
+                </span>
+              </td>
+              <td class="col-exercice">
+                {{ operation.exercice_comptable?.libelle ?? "—" }}
+              </td>
+              <td class="col-amount amount-debit">
+                {{ formatMontant(totalDebit(operation)) }}
+              </td>
+              <td class="col-amount amount-credit">
+                {{ formatMontant(totalCredit(operation)) }}
+              </td>
+              <td class="col-equilibre">
+                @if (estEquilibree(operation)) {
+                  <span class="status-badge active">
+                    <i class="fas fa-check-circle"></i>
+                  </span>
+                } @else {
+                  <span class="status-badge closed">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </span>
+                }
+              </td>
+              <td class="col-statut">
+                @switch (operation.statut) {
+                  @case ("brouillon") {
+                    <span class="status-badge draft">
+                      <i class="fas fa-pencil-alt me-1"></i>Brouillon
+                    </span>
+                  }
+                  @case ("validee") {
+                    <span class="status-badge active">
+                      <i class="fas fa-check me-1"></i>Validée
+                    </span>
+                  }
+                  @case ("annulee") {
+                    <span class="status-badge closed">
+                      <i class="fas fa-times me-1"></i>Annulée
+                    </span>
+                  }
+                }
+              </td>
+              <!-- <td class="col-actions">
+                <div class="action-btns">
+                  @if (operation.statut === "brouillon") {
+                    <button
+                      type="button"
+                      class="btn-action"
+                      title="Valider"
+                      (click)="onValider(operation.rfk)"
+                    >
+                      <i class="fas fa-check text-success"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action"
+                      title="Modifier"
+                      [routerLink]="['/caisse/edit-journal', operation.rfk]"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action delete"
+                      title="Supprimer"
+                      (click)="onDelete(operation.rfk)"
+                      [disabled]="deleteRfk() === operation.rfk"
+                    >
+                      @if (deleteRfk() === operation.rfk) {
+                        <i class="fas fa-spinner fa-spin"></i>
+                      } @else {
+                        <i class="fas fa-trash"></i>
+                      }
+                    </button>
+                  }
+                  @if (operation.statut === "validee") {
+                    <button
+                      type="button"
+                      class="btn-action delete"
+                      title="Annuler"
+                      (click)="onAnnuler(operation.rfk)"
+                    >
+                      <i class="fas fa-ban"></i>
+                    </button>
+                  }
+                </div>
+              </td> -->
+            </tr>
+
+            <!-- Lignes détail accordéon -->
+            @if (expandedRfk() === operation.rfk) {
+              <tr class="lignes-detail-header">
+                <td colspan="2"></td>
+                <td colspan="2">
+                  <small class="text-muted fw-bold">Compte</small>
+                </td>
+                <td colspan="3">
+                  <small class="text-muted fw-bold">Libellé</small>
+                </td>
+                <td><small class="text-muted fw-bold">Débit</small></td>
+                <td><small class="text-muted fw-bold">Crédit</small></td>
+                <td colspan="3"></td>
+              </tr>
+              @for (ligne of operation.lignes; track ligne.rfk) {
+                <tr class="ligne-detail-row">
+                  <td colspan="2"></td>
+                  <td colspan="2">
+                    <span class="account-code small">
+                      {{ ligne.compte?.numero ?? "—" }}
+                    </span>
+                  </td>
+                  <td colspan="3">{{ ligne.libelle ?? "—" }}</td>
+                  <td class="amount-debit">
+                    @if (ligne.montant_debit > 0) {
+                      {{ formatMontant(ligne.montant_debit) }}
+                    }
+                  </td>
+                  <td class="amount-credit">
+                    @if (ligne.montant_credit > 0) {
+                      {{ formatMontant(ligne.montant_credit) }}
+                    }
+                  </td>
+                  <td colspan="3"></td>
+                </tr>
+              }
+              <tr class="ligne-total-row">
+                <td colspan="2"></td>
+                <td colspan="5" class="text-end fw-bold">Totaux</td>
+                <td class="amount-debit fw-bold">
+                  {{ formatMontant(totalDebit(operation)) }}
+                </td>
+                <td class="amount-credit fw-bold">
+                  {{ formatMontant(totalCredit(operation)) }}
+                </td>
+                <td colspan="3"></td>
+              </tr>
+            }
+          } @empty {
+            <tr>
+              <td colspan="12">
+                <div class="empty-state">Aucune opération trouvée.</div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Totaux globaux -->
+  <div class="journal-totals">
+    <div class="total-item">
+      <span class="total-label">Total Débit :</span>
+      <span class="total-value debit"
+        >{{ formatMontant(stats().total_debit) }} Fcfa</span
+      >
+    </div>
+    <div class="total-item">
+      <span class="total-label">Total Crédit :</span>
+      <span class="total-value credit"
+        >{{ formatMontant(stats().total_credit) }} Fcfa</span
+      >
+    </div>
+    <div class="total-item">
+      <span class="total-label">Solde :</span>
+      <span
+        class="total-value"
+        [class.text-success]="stats().total_debit === stats().total_credit"
+        [class.text-danger]="stats().total_debit !== stats().total_credit"
+      >
+        {{ formatMontant(stats().total_debit - stats().total_credit) }} Fcfa
+      </span>
+    </div>
+  </div>
+</div>

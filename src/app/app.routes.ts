@@ -54,68 +54,411 @@ import { DeveloppeurRapportComponent } from './pages/primes/developpeur-rapport/
 import { CongesDirecteurComponent } from './pages/conges-directeur/conges-directeur.component';
 import { CongesEmployeComponent } from './pages/conges-employe/conges-employe.component';
 import { PrimeDeveloppeurComponent } from './pages/prime-developpeur/prime-developpeur.component';
-import { CaisseModuleComponent } from './pages/Caisse/caisse-module/caisse-module.component';
+import { CaisseLayoutComponent } from './layouts/caisse-layout/caisse-layout.component';
 
 export const routes: Routes = [
-  {path:'', component: MainComponent,
+  {
+    path: '',
+    component: MainComponent,
     canActivate: [AuthGuard],
-    children:[
-      {path:'', component: DashboardComponent, canActivate: [AdminGuard], title: 'Tableau de bord'},
-      {path:'applications', component: ApplicationsComponent, canActivate: [AuthGuard], title: 'Applications'},
-      {path:'fonctions', component: FonctionsComponent, canActivate: [AuthGuard], title: 'Fonctions'},
-      {path:'services', component: ServicesComponent, canActivate: [AuthGuard], title: 'Services'},
-      {path:'roles', component: RolesComponent, canActivate: [AuthGuard], title: 'Rôles'},
-      {path:'mes-rapports', component: RapportEmployeComponent, canActivate: [AuthGuard], title: 'Mes rapports'},
-      {path:'rapports', component: RapportsComponent, canActivate: [AuthGuard], title: 'Rapport trimestriels'},
-      {path:'add-bilan', component: BilanTrimestrielComponent, canActivate: [AuthGuard], title: 'Ajouter un bilan'},
-      {path:'edit-bilan/:slug', component: BilanTrimestrielComponent, canActivate: [AuthGuard], title: 'Modifier un bilan'},
-      {path:'bilans-trimestriel', component: BilanDirecteurComponent, canActivate: [AuthGuard], title: 'Bilans trimestriels'},
-      {path:'mes-bilans', component: BilanEmployeComponent, canActivate: [AuthGuard], title: 'Mes bilans'},
-      {path:'bilan-details/:slug', component: DetailsBilanComponent, canActivate: [AuthGuard], title: 'Détails du bilan'},
-      {path:'suivi-primes', component: AppComponent, canActivate: [AuthGuard], title: 'Suivi des primes'},
-      {path:'mes-primes', component: PrimeDeveloppeurComponent, canActivate: [AuthGuard], title: 'Suivi de mes primes'},
-      {path:'primes/dashboard', component: DashboardPrimeComponent, canActivate: [AuthGuard], title: 'Dashboard des primes'},
-      {path:'primes/rapport-developpeur', component: DeveloppeurRapportComponent, canActivate: [AuthGuard], title: 'Rapports des developpeurs'},
-      {path:'primes/projets', component: ProjetsListeComponent, canActivate: [AuthGuard], title: 'Liste des projets'},
-      {path:'projets/nouveau', component: ProjetsFormComponent, canActivate: [AuthGuard], title: 'Nouveau projet'},
-      {path:'projets/:id', component: ProjetsDetailsComponent, canActivate: [AuthGuard], title: 'Détails du projet'},
-      {path:'employes', component: ListeComponent, canActivate: [AuthGuard], title: 'Employés'},
-      {path:'bureaux', component: BureauxComponent, canActivate: [AuthGuard], title: 'Bureaux'},
-      {path:'cahiers-charges', component: CahiersDirecteurComponent, canActivate: [AuthGuard], title: 'Cahiers des charges'},
-      {path:'mes-cahiers', component: CahiersEmployeComponent, canActivate: [AuthGuard], title: 'Mes cahiers des charges'},
-      {path:'permissions', component: PermisComponent, canActivate: [AuthGuard], title: 'Permissions'},
-      {path:'permissions-archive', component: PermissionArchiveComponent, canActivate: [AuthGuard], title: ' archivées'},
-      {path:'mes-permissions', component: PermissionEmployeComponent, canActivate: [AuthGuard], title: 'Mes permissions'},
-      {path:'contrats', component: ContratsComponent, canActivate: [AuthGuard], title: 'Contrats'},
-      {path:'ajout-employe', component: AjoutComponent, canActivate: [AuthGuard], title: 'Ajouter un employé'},
-      {path:'edit-employe/:id', component: EditComponent, canActivate: [AuthGuard], title: 'Modifier un employé'},
-      {path:'detail-employe/:id', component: DetailsEmployeComponent, canActivate: [AuthGuard], title: 'Détails de l\'employé'},
-      {path:'detail-contrat/:id', component: DetailContratComponent, canActivate: [AuthGuard], title: 'Détails du contrat'},
-      {path:'detail-demande/:slug', component: DetailsDemandesExplicationsComponent, canActivate: [AuthGuard], title: 'Détails de la demande d\'explication'},
-      {path:'type-permissions', component: TypePermissionComponent, canActivate: [AuthGuard], title: 'Types de permissions'},
-      {path:'type-conges', component: TypeCongesComponent, canActivate: [AuthGuard], title: 'Types de congés'},
-      {path:'types-contrats', component: TypesContratsComponent, canActivate: [AuthGuard], title: 'Types de contrats'},
-      {path:'conges', component: CongesDirecteurComponent, canActivate: [AuthGuard], title: 'Congés'},
-      {path:'mes-conges', component: CongesEmployeComponent, canActivate: [AuthGuard], title: 'Mes congés'},
-      {path:'dossiers', component: DocumentsComponent, canActivate: [AuthGuard], title: 'Documents'},
-      {path:'dossier/:id', component: DossiersComponent, canActivate: [AuthGuard], title: 'Dossiers'},
-      {path:'sanctions', component: SanctionsComponent, canActivate: [AuthGuard], title: 'Sanctions'},
-      {path:'droits', component: DroitsComponent, canActivate: [AuthGuard], title: 'Droits'},
-      {path:'objet-demande-explication', component: ObjetsComponent, canActivate: [AuthGuard], title: 'Objets des demandes d\'explication'},
-      {path:'utilisateurs', component: UsersComponent, canActivate: [AuthGuard], title: 'Utilisateurs'},
-      {path:'programmes-conges', component: CalendarComponent, canActivate: [AuthGuard], title: 'Calendrier des congés'},
-      {path:'taches', component: TachesComponent, canActivate: [AuthGuard], title: 'Tâches'},
-      {path:'codes', component: RegisterCodesComponent, canActivate: [AuthGuard], title: 'Codes d\'enregistrement'},
-      {path:'demande-explication', component: DemandeExplicationsComponent, canActivate: [AuthGuard], title: 'Demandes d\'explication'},
-      {path: 'employee-profile',component: EmployeeProfileComponent,title: 'Mon profil'},
-
-      // Caisse
-      {path: 'caisse',component: CaisseModuleComponent,title: 'Logiciel de caisse'}
-
-    ]
+    children: [
+      {
+        path: '',
+        component: DashboardComponent,
+        canActivate: [AdminGuard],
+        title: 'Tableau de bord',
+      },
+      {
+        path: 'applications',
+        component: ApplicationsComponent,
+        canActivate: [AuthGuard],
+        title: 'Applications',
+      },
+      {
+        path: 'fonctions',
+        component: FonctionsComponent,
+        canActivate: [AuthGuard],
+        title: 'Fonctions',
+      },
+      {
+        path: 'services',
+        component: ServicesComponent,
+        canActivate: [AuthGuard],
+        title: 'Services',
+      },
+      {
+        path: 'roles',
+        component: RolesComponent,
+        canActivate: [AuthGuard],
+        title: 'Rôles',
+      },
+      {
+        path: 'mes-rapports',
+        component: RapportEmployeComponent,
+        canActivate: [AuthGuard],
+        title: 'Mes rapports',
+      },
+      {
+        path: 'rapports',
+        component: RapportsComponent,
+        canActivate: [AuthGuard],
+        title: 'Rapport trimestriels',
+      },
+      {
+        path: 'add-bilan',
+        component: BilanTrimestrielComponent,
+        canActivate: [AuthGuard],
+        title: 'Ajouter un bilan',
+      },
+      {
+        path: 'edit-bilan/:slug',
+        component: BilanTrimestrielComponent,
+        canActivate: [AuthGuard],
+        title: 'Modifier un bilan',
+      },
+      {
+        path: 'bilans-trimestriel',
+        component: BilanDirecteurComponent,
+        canActivate: [AuthGuard],
+        title: 'Bilans trimestriels',
+      },
+      {
+        path: 'mes-bilans',
+        component: BilanEmployeComponent,
+        canActivate: [AuthGuard],
+        title: 'Mes bilans',
+      },
+      {
+        path: 'bilan-details/:slug',
+        component: DetailsBilanComponent,
+        canActivate: [AuthGuard],
+        title: 'Détails du bilan',
+      },
+      {
+        path: 'suivi-primes',
+        component: AppComponent,
+        canActivate: [AuthGuard],
+        title: 'Suivi des primes',
+      },
+      {
+        path: 'mes-primes',
+        component: PrimeDeveloppeurComponent,
+        canActivate: [AuthGuard],
+        title: 'Suivi de mes primes',
+      },
+      {
+        path: 'primes/dashboard',
+        component: DashboardPrimeComponent,
+        canActivate: [AuthGuard],
+        title: 'Dashboard des primes',
+      },
+      {
+        path: 'primes/rapport-developpeur',
+        component: DeveloppeurRapportComponent,
+        canActivate: [AuthGuard],
+        title: 'Rapports des developpeurs',
+      },
+      {
+        path: 'primes/projets',
+        component: ProjetsListeComponent,
+        canActivate: [AuthGuard],
+        title: 'Liste des projets',
+      },
+      {
+        path: 'projets/nouveau',
+        component: ProjetsFormComponent,
+        canActivate: [AuthGuard],
+        title: 'Nouveau projet',
+      },
+      {
+        path: 'projets/:id',
+        component: ProjetsDetailsComponent,
+        canActivate: [AuthGuard],
+        title: 'Détails du projet',
+      },
+      {
+        path: 'employes',
+        component: ListeComponent,
+        canActivate: [AuthGuard],
+        title: 'Employés',
+      },
+      {
+        path: 'bureaux',
+        component: BureauxComponent,
+        canActivate: [AuthGuard],
+        title: 'Bureaux',
+      },
+      {
+        path: 'cahiers-charges',
+        component: CahiersDirecteurComponent,
+        canActivate: [AuthGuard],
+        title: 'Cahiers des charges',
+      },
+      {
+        path: 'mes-cahiers',
+        component: CahiersEmployeComponent,
+        canActivate: [AuthGuard],
+        title: 'Mes cahiers des charges',
+      },
+      {
+        path: 'permissions',
+        component: PermisComponent,
+        canActivate: [AuthGuard],
+        title: 'Permissions',
+      },
+      {
+        path: 'permissions-archive',
+        component: PermissionArchiveComponent,
+        canActivate: [AuthGuard],
+        title: ' archivées',
+      },
+      {
+        path: 'mes-permissions',
+        component: PermissionEmployeComponent,
+        canActivate: [AuthGuard],
+        title: 'Mes permissions',
+      },
+      {
+        path: 'contrats',
+        component: ContratsComponent,
+        canActivate: [AuthGuard],
+        title: 'Contrats',
+      },
+      {
+        path: 'ajout-employe',
+        component: AjoutComponent,
+        canActivate: [AuthGuard],
+        title: 'Ajouter un employé',
+      },
+      {
+        path: 'edit-employe/:id',
+        component: EditComponent,
+        canActivate: [AuthGuard],
+        title: 'Modifier un employé',
+      },
+      {
+        path: 'detail-employe/:id',
+        component: DetailsEmployeComponent,
+        canActivate: [AuthGuard],
+        title: "Détails de l'employé",
+      },
+      {
+        path: 'detail-contrat/:id',
+        component: DetailContratComponent,
+        canActivate: [AuthGuard],
+        title: 'Détails du contrat',
+      },
+      {
+        path: 'detail-demande/:slug',
+        component: DetailsDemandesExplicationsComponent,
+        canActivate: [AuthGuard],
+        title: "Détails de la demande d'explication",
+      },
+      {
+        path: 'type-permissions',
+        component: TypePermissionComponent,
+        canActivate: [AuthGuard],
+        title: 'Types de permissions',
+      },
+      {
+        path: 'type-conges',
+        component: TypeCongesComponent,
+        canActivate: [AuthGuard],
+        title: 'Types de congés',
+      },
+      {
+        path: 'types-contrats',
+        component: TypesContratsComponent,
+        canActivate: [AuthGuard],
+        title: 'Types de contrats',
+      },
+      {
+        path: 'conges',
+        component: CongesDirecteurComponent,
+        canActivate: [AuthGuard],
+        title: 'Congés',
+      },
+      {
+        path: 'mes-conges',
+        component: CongesEmployeComponent,
+        canActivate: [AuthGuard],
+        title: 'Mes congés',
+      },
+      {
+        path: 'dossiers',
+        component: DocumentsComponent,
+        canActivate: [AuthGuard],
+        title: 'Documents',
+      },
+      {
+        path: 'dossier/:id',
+        component: DossiersComponent,
+        canActivate: [AuthGuard],
+        title: 'Dossiers',
+      },
+      {
+        path: 'sanctions',
+        component: SanctionsComponent,
+        canActivate: [AuthGuard],
+        title: 'Sanctions',
+      },
+      {
+        path: 'droits',
+        component: DroitsComponent,
+        canActivate: [AuthGuard],
+        title: 'Droits',
+      },
+      {
+        path: 'objet-demande-explication',
+        component: ObjetsComponent,
+        canActivate: [AuthGuard],
+        title: "Objets des demandes d'explication",
+      },
+      {
+        path: 'utilisateurs',
+        component: UsersComponent,
+        canActivate: [AuthGuard],
+        title: 'Utilisateurs',
+      },
+      {
+        path: 'programmes-conges',
+        component: CalendarComponent,
+        canActivate: [AuthGuard],
+        title: 'Calendrier des congés',
+      },
+      {
+        path: 'taches',
+        component: TachesComponent,
+        canActivate: [AuthGuard],
+        title: 'Tâches',
+      },
+      {
+        path: 'codes',
+        component: RegisterCodesComponent,
+        canActivate: [AuthGuard],
+        title: "Codes d'enregistrement",
+      },
+      {
+        path: 'demande-explication',
+        component: DemandeExplicationsComponent,
+        canActivate: [AuthGuard],
+        title: "Demandes d'explication",
+      },
+      {
+        path: 'employee-profile',
+        component: EmployeeProfileComponent,
+        title: 'Mon profil',
+      },
+    ],
   },
-  {path:'connexion', component: LoginComponent, title: 'Connexion'},
-  {path:'forgot-password', component: ForgotPasswordComponent, title: 'Mot de passe oublié'},
-  {path:'reset-password', component: ResetPasswordComponent, title: 'Réinitialisation du mot de passe'},
-  {path: '**', redirectTo: ''}
+
+  // caisse
+  {
+    path: 'caisse',
+    component: CaisseLayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        title: 'Logiciel de caisse',
+        loadComponent: () =>
+          import('./pages/Caisse/dashboard/dashboard.component').then(
+            (c) => c.DashboardComponent,
+          ),
+      },
+      {
+        path: 'new-journal',
+        title: "Ecriture d'écriture comptable",
+        loadComponent: () =>
+          import('./pages/Caisse/journal/add-journal/add-journal.component').then(
+            (c) => c.AddJournalComponent,
+          ),
+      },
+      {
+        path: 'journal',
+        title: 'Liste des écritures comptable',
+        loadComponent: () =>
+          import('./pages/Caisse/journal/journal.component').then(
+            (c) => c.JournalComponent,
+          ),
+      },
+      {
+        path: 'new-bureaux',
+        title: 'Nouveau des bureaux',
+        loadComponent: () =>
+          import('./pages/Caisse/bureau/add-bureau/add-bureau.component').then(
+            (c) => c.AddBureauComponent,
+          ),
+      },
+      {
+        path: 'update-bureaux/:rfk',
+        title: 'Nouveau des bureaux',
+        loadComponent: () =>
+          import('./pages/Caisse/bureau/add-bureau/add-bureau.component').then(
+            (c) => c.AddBureauComponent,
+          ),
+      },
+      {
+        path: 'bureaux',
+        title: 'Liste des bureaux',
+        loadComponent: () =>
+          import('./pages/Caisse/bureau/bureau.component').then(
+            (c) => c.BureauComponent,
+          ),
+      },
+      {
+        path: 'add-compte',
+        title: 'Ajouter un compte',
+        loadComponent: () =>
+          import('./pages/Caisse/compte/add-compte/add-compte.component').then(
+            (c) => c.AddCompteComponent,
+          ),
+      },
+      {
+        path: 'update-compte/:rfk',
+        title: 'Modifier un compte',
+        loadComponent: () =>
+          import('./pages/Caisse/compte/add-compte/add-compte.component').then(
+            (c) => c.AddCompteComponent,
+          ),
+      },
+      {
+        path: 'comptes',
+        title: 'Liste des comptes',
+        loadComponent: () =>
+          import('./pages/Caisse/compte/compte.component').then(
+            (c) => c.CompteComponent,
+          ),
+      },
+      {
+        path: 'exercices',
+        title: 'Liste des exercices comptables',
+        loadComponent: () =>
+          import('./pages/Caisse/exercice/exercice.component').then(
+            (c) => c.ExerciceComponent,
+          ),
+      },
+      {
+        path: 'detail-exercice/:exerciceRfk',
+        title: 'Détail de l\'exercice',
+        loadComponent: () =>
+          import('./pages/Caisse/exercice/detail-exercice/detail-exercice.component').then(
+            (c) => c.DetailExerciceComponent,
+          ),
+      },
+    ],
+  },
+
+  { path: 'connexion', component: LoginComponent, title: 'Connexion' },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+    title: 'Mot de passe oublié',
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
+    title: 'Réinitialisation du mot de passe',
+  },
+  { path: '**', redirectTo: '' },
 ];

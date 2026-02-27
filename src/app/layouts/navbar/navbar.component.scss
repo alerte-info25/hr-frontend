@@ -1,3 +1,15 @@
+:host {
+  display: block; // ← empêche la navbar de se coller à gauche
+  width: 100%;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  padding: 15px 20px;
+  background: white !important;
+  width: 100%;
+}
+
 .user-portfolio-btn {
   display: flex;
   align-items: center;
@@ -49,7 +61,6 @@
   fill: #7a7a7a;
 }
 
-
 .app-header-area {
   position: fixed;
   top: 0;
@@ -60,7 +71,7 @@
   display: flex;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   // transition si tu modifies margin-left dynamiquement
   transition: margin-left 0.3s ease;

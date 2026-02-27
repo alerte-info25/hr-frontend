@@ -1,0 +1,133 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h2 class="page-title">
+          @if (compteComptable()) {
+            <i class="fas fa-edit me-2"></i>
+            Modifier le compte
+          } @else {
+            <i class="fas fa-plus-circle me-2"></i>
+            Nouveau compte comptable
+          }
+        </h2>
+        <p class="page-subtitle">
+          @if (compteComptable()) {
+            Modifier un compte existant
+          } @else {
+            Créez un nouveau compte personnalisé dans le plan comptable
+          }
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <a routerLink="/caisse/comptes" class="btn btn-light">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour au compte
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Formulaire principal -->
+    <div class="col-lg-8">
+      <div class="form-container">
+        @if (compteComptable()) {
+          <app-form [comptecomptable]="compteComptable()" />
+        } @else {
+          <app-form />
+        }
+      </div>
+    </div>
+
+    <!-- Sidebar d'aide -->
+    <div class="col-lg-4">
+      <!-- Aide rapide -->
+      <div class="form-container mb-4">
+        <h5 class="mb-3">
+          <i class="fas fa-lightbulb text-warning me-2"></i>
+          Guide rapide
+        </h5>
+
+        <div class="mb-3">
+          <h6 class="fw-bold">📋 Structure des codes</h6>
+          <p class="small text-muted">
+            Le code compte doit respecter la structure du plan comptable
+            français :
+          </p>
+          <ul class="small">
+            <li><strong>1xxxxx</strong> - Capitaux</li>
+            <li><strong>2xxxxx</strong> - Immobilisations</li>
+            <li><strong>3xxxxx</strong> - Stocks</li>
+            <li><strong>4xxxxx</strong> - Tiers</li>
+            <li><strong>5xxxxx</strong> - Financiers</li>
+            <li><strong>6xxxxx</strong> - Charges</li>
+            <li><strong>7xxxxx</strong> - Produits</li>
+          </ul>
+        </div>
+
+        <div class="mb-3">
+          <h6 class="fw-bold">🎯 Types de comptes</h6>
+          <ul class="small">
+            <li>
+              <span class="badge-classe classe1">Actif</span> Ce que
+              l'entreprise possède
+            </li>
+            <li>
+              <span class="badge-classe classe4">Passif</span> Ce que
+              l'entreprise doit
+            </li>
+            <li>
+              <span class="badge-classe classe6">Charge</span> Dépenses et coûts
+            </li>
+            <li>
+              <span class="badge-classe classe7">Produit</span> Revenus et gains
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Classes de comptes -->
+      <div class="form-container">
+        <h5 class="mb-3">
+          <i class="fas fa-tags text-warning me-2"></i>
+          Classes de comptes
+        </h5>
+
+        <div class="mb-2">
+          <span class="badge-classe classe1">Classe 1</span> Comptes de capitaux
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe2">Classe 2</span> Comptes
+          d'immobilisations
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe3">Classe 3</span> Comptes de stocks
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe4">Classe 4</span> Comptes de tiers
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe5">Classe 5</span> Comptes financiers
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe6">Classe 6</span> Comptes de charges
+        </div>
+        <div class="mb-2">
+          <span class="badge-classe classe7">Classe 7</span> Comptes de produits
+        </div>
+
+        <hr class="my-3" />
+
+        <p class="small text-muted mb-0">
+          <i class="fas fa-info-circle me-1"></i>
+          Les comptes de charges (classe 6) enregistrent toutes les dépenses de
+          l'entreprise.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

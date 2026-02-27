@@ -1,0 +1,379 @@
+<div class="container-fluid px-4">
+  <!-- En-tête -->
+  <div class="row my-4">
+    <div class="col-md-8">
+      <h2 class="dashboard-title">
+        <i class="fas fa-chart-pie text-primary me-2"></i>
+        Tableau de bord comptable
+      </h2>
+      <p class="text-muted">
+        @if (exerciceActif()) {
+          Synthèse des opérations — {{ exerciceActif()!.libelle }} ({{
+            formatDate(exerciceActif()!.date_debut)
+          }}
+          au {{ formatDate(exerciceActif()!.date_fin) }})
+        } @else {
+          Aucun exercice ouvert
+        }
+      </p>
+    </div>
+    <div class="col-md-4">
+      <div class="quick-filters">
+        <span
+          class="filter-btn"
+          [class.active]="filtrePeriode() === 'semaine'"
+          (click)="filtrePeriode.set('semaine')"
+        >
+          <i class="fas fa-calendar-week"></i> Cette semaine
+        </span>
+        <span
+          class="filter-btn"
+          [class.active]="filtrePeriode() === 'mois'"
+          (click)="filtrePeriode.set('mois')"
+        >
+          <i class="fas fa-calendar-month"></i> Ce mois
+        </span>
+        <span
+          class="filter-btn"
+          [class.active]="filtrePeriode() === 'trimestre'"
+          (click)="filtrePeriode.set('trimestre')"
+        >
+          <i class="fas fa-calendar-alt"></i> Ce trim.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerte -->
+  @if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  }
+
+  <!-- Loader -->
+  @if (loader()) {
+    <app-loader />
+  }
+
+  <!-- Cartes statistiques -->
+  @if (!loader()) {
+    <div class="row mb-4">
+      <!-- Entrées -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-8">
+                <p class="stats-label">Total Entrées</p>
+                <h3 class="stats-value text-success">
+                  {{ formatMontant(stats().total_entrees) }} Fcfa
+                </h3>
+                <small class="text-muted">{{ nbEntrees() }} opération(s)</small>
+              </div>
+              <div class="col-4 text-end">
+                <i class="fas fa-arrow-down stats-icon text-success"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sorties -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stats-card border-left-warning">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-8">
+                <p class="stats-label">Total Sorties</p>
+                <h3 class="stats-value text-danger">
+                  {{ formatMontant(stats().total_sorties) }} Fcfa
+                </h3>
+                <small class="text-muted">{{ nbSorties() }} opération(s)</small>
+              </div>
+              <div class="col-4 text-end">
+                <i class="fas fa-arrow-up stats-icon text-danger"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solde net -->
+      <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-8">
+                <p class="stats-label">Solde net</p>
+                <h3
+                  class="stats-value"
+                  [class.text-success]="stats().solde_net >= 0"
+                  [class.text-danger]="stats().solde_net < 0"
+                >
+                  {{ stats().solde_net >= 0 ? "+" : ""
+                  }}{{ formatMontant(stats().solde_net) }} Fcfa
+                </h3>
+                @if (stats().equilibre) {
+                  <small class="text-success">
+                    <i class="fas fa-check me-1"></i>Équilibré
+                  </small>
+                } @else {
+                  <small class="text-muted">Entrées − Sorties</small>
+                }
+              </div>
+              <div class="col-4 text-end">
+                <i class="fas fa-balance-scale stats-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- En attente -->
+      <!-- <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-warning">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-8">
+                <p class="stats-label">En attente</p>
+                <h3 class="stats-value">{{ stats().nb_brouillons }}</h3>
+                <small class="text-warning">
+                  <i class="fas fa-clock me-1"></i>À valider
+                </small>
+              </div>
+              <div class="col-4 text-end">
+                <i class="fas fa-hourglass-half stats-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+    </div>
+
+    <!-- Graphique évolution mensuelle -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card chart-card">
+          <div
+            class="card-header bg-white d-flex justify-content-between align-items-center"
+          >
+            <h5 class="mb-0">
+              <i class="fas fa-chart-bar text-primary me-2"></i>
+              Entrées vs Sorties — Évolution mensuelle
+            </h5>
+            <div class="d-flex gap-2">
+              <span
+                style="background: #1cc88a20; color: #1cc88a"
+                class="status-badge"
+              >
+                <i class="fas fa-circle me-1"></i>Entrées
+              </span>
+              <span
+                style="background: #e74a3b20; color: #e74a3b"
+                class="status-badge"
+              >
+                <i class="fas fa-circle me-1"></i>Sorties
+              </span>
+              <span
+                style="background: #4e73df20; color: #4e73df"
+                class="status-badge"
+              >
+                <i class="fas fa-minus me-1"></i>Solde net
+              </span>
+            </div>
+          </div>
+          <div class="card-body">
+            @if (evolutionMensuelle().length === 0) {
+              <p class="text-muted text-center py-4">
+                Aucune donnée disponible.
+              </p>
+            } @else {
+              <canvas #lineChart></canvas>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dernières écritures -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="table-card">
+          <div
+            class="card-header bg-white d-flex justify-content-between align-items-center"
+          >
+            <h5 class="mb-0">
+              <i class="fas fa-list text-primary me-2"></i>
+              Récapitulatif des opérations enregistrées (Entrées et sortie)
+            </h5>
+            <a
+              routerLink="/caisse/journal"
+              class="btn btn-sm btn-outline-primary"
+              style="text-decoration: none"
+            >
+              Voir tout
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table accounting-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Nature</th>
+                    <th>Saisie par</th>
+                    <th>Libellé</th>
+                    <th>Bureau</th>
+                    <th>Débit (Fcfa)</th>
+                    <th>Crédit (Fcfa)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (op of dernieresOperations(); track op.rfk) {
+                    <tr
+                      [class.text-success]="
+                        op.nature_operation?.libelle === 'entrée'
+                      "
+                      [class.text-danger]="
+                        op.nature_operation?.libelle === 'sortie'
+                      "
+                    >
+                      <td>{{ op.date_operation | date: "dd/MM/yyyy" }}</td>
+                      <td>
+                        <span
+                          class="badge-journal"
+                          [class.text-success]="
+                            op.nature_operation?.libelle === 'entrée'
+                          "
+                          [class.text-danger]="
+                            op.nature_operation?.libelle === 'sortie'
+                          "
+                        >
+                          {{ op.nature_operation?.libelle ?? "—" }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="piece-ref"
+                          >{{ op.user?.employe?.nom }}
+                          {{ op.user?.employe?.prenom }}</span
+                        >
+                      </td>
+                      <td>{{ op.libelle }}</td>
+                      <td>{{ op.bureau?.libelle ?? "—" }}</td>
+                      <td class="debit">
+                        @if (totalDebit(op) > 0) {
+                          {{ formatMontant(totalDebit(op)) }}
+                        } @else {
+                          —
+                        }
+                      </td>
+                      <td class="credit">
+                        @if (totalCredit(op) > 0) {
+                          {{ formatMontant(totalCredit(op)) }}
+                        } @else {
+                          —
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="7" class="text-center text-muted py-3">
+                        Aucune écriture validée.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 5 comptes -->
+    <div class="row mb-4">
+      <!-- Soldes comptes clés -->
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <i class="fas fa-chart-simple text-warning me-2"></i>
+              Soldes des comptes principaux
+            </h5>
+          </div>
+          <div class="card-body">
+            @for (compte of soldesComptesCles(); track compte.numero) {
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>{{ compte.libelle }} ({{ compte.numero }})</span>
+                  <strong
+                    [class.text-success]="compte.solde >= 0"
+                    [class.text-danger]="compte.solde < 0"
+                  >
+                    {{ compte.solde >= 0 ? "+" : ""
+                    }}{{ formatMontant(compte.solde) }} Fcfa
+                  </strong>
+                </div>
+                <div class="progress">
+                  <div
+                    class="progress-bar"
+                    [class.bg-success]="compte.solde >= 0"
+                    [class.bg-danger]="compte.solde < 0"
+                    [style.width]="getPourcentageSolde(compte.solde) + '%'"
+                  ></div>
+                </div>
+              </div>
+            } @empty {
+              <p class="text-muted text-center">Aucune donnée disponible.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <i class="fas fa-chart-pie text-warning me-2"></i>
+              Top 5 comptes les plus actifs
+            </h5>
+          </div>
+          <div class="card-body">
+            @for (
+              compte of topComptes();
+              track compte.numero;
+              let first = $first
+            ) {
+              <div [class.mb-4]="first" [class.mb-3]="!first">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-1"
+                >
+                  <span>
+                    <strong>{{ compte.numero }}</strong> — {{ compte.libelle }}
+                  </span>
+                  <span class="text-primary fw-bold small">
+                    {{
+                      formatMontant(compte.total_debit + compte.total_credit)
+                    }}
+                    Fcfa
+                  </span>
+                </div>
+                <div class="progress" style="height: 8px">
+                  <div
+                    class="progress-bar"
+                    [style.width]="
+                      getPourcentageCompte(
+                        compte.total_debit + compte.total_credit
+                      ) + '%'
+                    "
+                  ></div>
+                </div>
+              </div>
+            } @empty {
+              <p class="text-muted text-center py-4">Aucune activité.</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

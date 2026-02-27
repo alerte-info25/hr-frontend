@@ -12,7 +12,6 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-
 }
 
 /* État fermé de la sidebar */
@@ -186,7 +185,7 @@
 }
 
 .sidebar-closed .sidebar-menu-item:hover::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 100%;
   top: 50%;
@@ -197,7 +196,7 @@
   border-right-color: #333;
   margin-left: 5px;
 }
-.sidebar-closed .app-sidebar .sidebar-nav .sidebar .sidebar-menu-item i{
+.sidebar-closed .app-sidebar .sidebar-nav .sidebar .sidebar-menu-item i {
   font-size: 22px;
 }
 /* Responsive */

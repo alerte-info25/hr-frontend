@@ -1,0 +1,1013 @@
+// ============================================================================
+// MAIN CONTENT - Journal Comptable
+// Page de gestion des écritures comptables
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// Variables et couleurs
+// ----------------------------------------------------------------------------
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$accent-blue: #3a6ea5;
+$primary-yellow: #f4b400;
+$secondary-yellow: #ffc107;
+$dark: #1e2a3a;
+$light: #f8f9fc;
+$gray: #6c757d;
+$gray-light: #e9ecef;
+$success: #28a745;
+$danger: #dc3545;
+$warning: #ffc107;
+$info: #17a2b8;
+
+// Ombres
+$box-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.02);
+$box-shadow-md: 0 5px 20px rgba(30, 58, 95, 0.1);
+$box-shadow-hover: 0 4px 8px rgba(30, 58, 95, 0.2);
+
+// Bordures
+$border-radius-sm: 8px;
+$border-radius-md: 12px;
+$border-radius-lg: 20px;
+$border-radius-xl: 30px;
+
+// Transitions
+$transition-base: all 0.3s ease;
+$transition-fast: all 0.2s ease;
+
+// Breakpoints
+$breakpoint-tablet: 992px;
+$breakpoint-mobile: 768px;
+$breakpoint-small: 576px;
+
+// ----------------------------------------------------------------------------
+// Mixins
+// ----------------------------------------------------------------------------
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin card-hover-effect {
+  transition: $transition-base;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow-md;
+  }
+}
+
+@mixin focus-ring {
+  &:focus {
+    outline: none;
+    border-color: $primary-blue;
+    box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+  }
+}
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == tablet {
+    @media (max-width: $breakpoint-tablet) {
+      @content;
+    }
+  } @else if $breakpoint == mobile {
+    @media (max-width: $breakpoint-mobile) {
+      @content;
+    }
+  } @else if $breakpoint == small {
+    @media (max-width: $breakpoint-small) {
+      @content;
+    }
+  }
+}
+
+// ============================================================================
+// Styles Principaux
+// ============================================================================
+
+#page-content-wrapper {
+  flex: 1;
+  transition: $transition-base;
+  background-color: $light;
+}
+
+.container-fluid {
+  &.px-4 {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Page Header
+// ----------------------------------------------------------------------------
+.page-header {
+  background: white;
+  padding: 20px;
+  border-radius: $border-radius-md;
+  margin-bottom: 25px;
+  box-shadow: $box-shadow-sm;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.page-title {
+  color: $dark;
+  font-weight: 600;
+  margin-bottom: 5px;
+
+  i {
+    color: $primary-yellow;
+  }
+
+  @include respond-to(small) {
+    font-size: 1.3rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Stats Cards - Version Grid Responsive
+// ----------------------------------------------------------------------------
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @include respond-to(mobile) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  @include respond-to(small) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.stat-card {
+  min-width: 0; // Évite le débordement du contenu
+}
+
+.journal-stats-card {
+  background: white;
+  border-radius: $border-radius-md;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  @include card-hover-effect;
+  box-shadow: $box-shadow-sm;
+  height: 100%;
+
+  @include respond-to(small) {
+    padding: 15px;
+  }
+}
+
+.journal-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: $border-radius-md;
+  @include flex-center;
+  margin-bottom: 15px;
+
+  @each $type,
+    $color
+      in (
+        ach: $primary-blue,
+        vte: $primary-yellow,
+        bq: $info,
+        od: $gray,
+        tva: $success
+      )
+  {
+    &.#{$type} {
+      background: rgba($color, 0.1);
+      color: $color;
+    }
+  }
+
+  // Style spécial pour le total
+  &[style*="primary-yellow"] {
+    background: rgba($primary-yellow, 0.1);
+    color: $primary-yellow;
+  }
+
+  @include respond-to(small) {
+    width: 40px;
+    height: 40px;
+
+    i {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.journal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $dark;
+  margin-bottom: 5px;
+
+  @include respond-to(small) {
+    font-size: 0.9rem;
+  }
+}
+
+.journal-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $primary-blue;
+  margin-bottom: 0;
+
+  @include respond-to(small) {
+    font-size: 1.2rem;
+  }
+}
+
+.journal-total {
+  font-size: 0.85rem;
+  color: $gray;
+
+  @include respond-to(small) {
+    font-size: 0.75rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Badges Journal
+// ----------------------------------------------------------------------------
+.badge-journal {
+  padding: 5px 10px;
+  border-radius: $border-radius-lg;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: inline-block;
+
+  &.ach {
+    background: rgba($primary-blue, 0.1);
+    color: $primary-blue;
+  }
+
+  &.vte {
+    background: rgba($primary-yellow, 0.1);
+    color: #b38600;
+  }
+
+  &.bq {
+    background: rgba($info, 0.1);
+    color: $info;
+  }
+
+  &.od {
+    background: rgba($gray, 0.1);
+    color: $gray;
+  }
+
+  &.tva {
+    background: rgba($success, 0.1);
+    color: $success;
+  }
+
+  @include respond-to(small) {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Journal Toolbar - Version Flex Wrap
+// ----------------------------------------------------------------------------
+.journal-toolbar {
+  background: white;
+  padding: 15px 20px;
+  border-radius: $border-radius-md;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: $box-shadow-sm;
+
+  @include respond-to(mobile) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+  }
+}
+
+// Search Box
+.search-box {
+  flex: 1 1 200px;
+  min-width: 200px;
+  position: relative;
+
+  i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray;
+    z-index: 1;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 15px 10px 45px;
+    border: 1px solid #dee2e6;
+    border-radius: $border-radius-sm;
+    font-size: 0.95rem;
+    transition: $transition-base;
+
+    @include focus-ring;
+
+    @include respond-to(small) {
+      font-size: 0.9rem;
+      padding: 8px 15px 8px 40px;
+    }
+  }
+
+  @include respond-to(mobile) {
+    width: 100%;
+  }
+}
+
+// Filter Group
+.filter-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 2 1 300px;
+
+  @include respond-to(mobile) {
+    width: 100%;
+    flex-direction: column;
+  }
+}
+
+.filter-select {
+  flex: 1 1 120px;
+  min-width: 100px;
+  padding: 8px 15px;
+  border: 1px solid #dee2e6;
+  border-radius: $border-radius-sm;
+  background: white;
+  color: $dark;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: $transition-base;
+
+  @include focus-ring;
+
+  @include respond-to(small) {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  @include respond-to(mobile) {
+    width: 100%;
+  }
+}
+
+// New Entry Button
+.btn-add {
+  flex: 0 0 auto;
+  background: $primary-blue;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: $border-radius-sm;
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: $transition-base;
+
+  &:hover {
+    background: $secondary-blue;
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-hover;
+  }
+
+  @include respond-to(mobile) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  @include respond-to(small) {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Table Container - Avec scroll horizontal
+// ----------------------------------------------------------------------------
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+  border-radius: $border-radius-md;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: $box-shadow-sm;
+
+  // Indicateur de scroll sur mobile
+  @include respond-to(mobile) {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8));
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Journal Table - Avec largeurs de colonnes fixes
+// ----------------------------------------------------------------------------
+.journal-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px; // Force le scroll sur mobile
+  font-size: 0.95rem;
+
+  thead {
+    th {
+      background: $light;
+      color: $dark;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 15px 12px;
+      border-bottom: 2px solid #dee2e6;
+      white-space: nowrap;
+      text-align: left;
+
+      @include respond-to(small) {
+        padding: 12px 8px;
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  tbody {
+    td {
+      padding: 12px;
+      vertical-align: middle;
+      border-bottom: 1px solid #dee2e6;
+      color: $dark;
+
+      @include respond-to(small) {
+        padding: 8px;
+        font-size: 0.85rem;
+      }
+    }
+
+    tr {
+      &:hover {
+        background-color: rgba($primary-blue, 0.02);
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+
+      &.text-success td {
+        color: $success !important;
+      }
+
+      &.text-danger td {
+        color: $danger !important;
+      }
+    }
+  }
+
+  // Largeurs de colonnes
+  .col-expand {
+    width: 40px;
+    text-align: center;
+  }
+  .col-number {
+    width: 80px;
+  }
+  .col-date {
+    width: 100px;
+  }
+  .col-label {
+    min-width: 200px;
+  }
+  .col-bureau {
+    width: 120px;
+  }
+  .col-nature {
+    width: 90px;
+  }
+  .col-exercice {
+    width: 100px;
+  }
+  .col-amount {
+    width: 100px;
+    text-align: right;
+  }
+  .col-equilibre {
+    width: 60px;
+    text-align: center;
+  }
+  .col-statut {
+    width: 110px;
+  }
+  .col-actions {
+    width: 120px;
+  }
+}
+
+// Account info
+.account-code {
+  font-weight: 600;
+  color: $primary-blue;
+  font-size: 0.9rem;
+
+  &.small {
+    font-size: 0.8rem;
+  }
+}
+
+.account-name {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.account-description {
+  font-size: 0.75rem;
+  color: $gray;
+}
+
+// Amounts
+.amount-debit {
+  color: $success;
+  font-weight: 600;
+  text-align: right;
+}
+
+.amount-credit {
+  color: $danger;
+  font-weight: 600;
+  text-align: right;
+}
+
+// Status badges
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.active {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  &.closed {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  &.draft {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+// Action Buttons
+.action-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  @include flex-center;
+  transition: $transition-base;
+  background: $light;
+  color: $gray;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $primary-blue;
+    color: white;
+  }
+
+  &.delete:hover:not(:disabled) {
+    background: $danger;
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @include respond-to(small) {
+    width: 28px;
+    height: 28px;
+
+    i {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Lignes de détail (accordéon)
+// ----------------------------------------------------------------------------
+.lignes-detail-header {
+  background: $light;
+
+  td {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.8rem;
+  }
+}
+
+.ligne-detail-row {
+  background: lighten($light, 2%);
+
+  td {
+    padding: 6px 12px !important;
+    color: lighten($dark, 20%);
+    border-bottom: 1px solid $gray-light;
+  }
+
+  &:last-child td {
+    border-bottom: none;
+  }
+}
+
+.ligne-total-row {
+  background: $light;
+  font-weight: 600;
+
+  td {
+    padding: 10px 12px !important;
+    border-top: 2px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Empty State
+// ----------------------------------------------------------------------------
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: $gray;
+
+  @include respond-to(small) {
+    padding: 2rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Journal Totals
+// ----------------------------------------------------------------------------
+.journal-totals {
+  background: $light;
+  padding: 15px 20px;
+  border-radius: $border-radius-sm;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 30px;
+
+  @include respond-to(mobile) {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  @include respond-to(small) {
+    padding: 12px 15px;
+    gap: 12px;
+  }
+}
+
+.total-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  @include respond-to(mobile) {
+    justify-content: flex-end;
+  }
+
+  @include respond-to(small) {
+    justify-content: space-between;
+  }
+}
+
+.total-label {
+  font-weight: 500;
+  color: $gray;
+  font-size: 0.95rem;
+
+  @include respond-to(small) {
+    font-size: 0.85rem;
+  }
+}
+
+.total-value {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: $dark;
+
+  &.debit {
+    color: $success;
+  }
+
+  &.credit {
+    color: $danger;
+  }
+
+  @include respond-to(small) {
+    font-size: 1rem;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Pagination
+// ----------------------------------------------------------------------------
+.pagination {
+  margin-top: 20px;
+  justify-content: flex-end;
+
+  @include respond-to(small) {
+    justify-content: center;
+  }
+}
+
+.page-item {
+  .page-link {
+    border: none;
+    color: $gray;
+    padding: 8px 14px;
+    margin: 0 3px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: $transition-base;
+
+    &:hover {
+      background: $light;
+      color: $primary-blue;
+    }
+
+    @include respond-to(small) {
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+  }
+
+  &.active {
+    .page-link {
+      background: $primary-blue;
+      color: white;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Modal (conservé inchangé)
+// ----------------------------------------------------------------------------
+.modal-content {
+  border: none;
+  border-radius: $border-radius-md;
+}
+
+.modal-header {
+  background: $primary-blue;
+  color: white;
+  border-radius: $border-radius-md $border-radius-md 0 0;
+  padding: 20px;
+
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+}
+
+.modal-body {
+  padding: 25px;
+
+  @include respond-to(small) {
+    padding: 20px;
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 20px;
+}
+
+// Form Styles
+.form-label {
+  font-weight: 500;
+  color: $dark;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+
+  @include respond-to(small) {
+    font-size: 0.85rem;
+  }
+}
+
+.form-control,
+.form-select {
+  border: 1px solid #dee2e6;
+  border-radius: $border-radius-sm;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  transition: $transition-base;
+
+  @include focus-ring;
+
+  @include respond-to(small) {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+// Table in Modal
+.modal-body {
+  .table {
+    margin-bottom: 0;
+
+    thead {
+      th {
+        background: $light;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: $dark;
+        border-bottom: 2px solid #dee2e6;
+      }
+    }
+
+    tfoot {
+      td {
+        font-weight: 600;
+        background: $light;
+      }
+    }
+  }
+
+  .btn-outline-primary {
+    color: $primary-blue;
+    border-color: $primary-blue;
+
+    &:hover {
+      background: $primary-blue;
+      color: white;
+    }
+  }
+
+  .btn-outline-danger {
+    &:hover {
+      background: $danger;
+      color: white;
+    }
+  }
+}
+
+// Card in Modal
+.card {
+  border: 1px solid #dee2e6;
+
+  .card-header {
+    background: $light;
+    border-bottom: 1px solid #dee2e6;
+
+    h6 {
+      margin: 0;
+      color: $dark;
+      font-weight: 600;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Responsive Media Queries supplémentaires
+// ----------------------------------------------------------------------------
+
+// Mobile (768px)
+@include respond-to(mobile) {
+  .row {
+    margin-left: -10px;
+    margin-right: -10px;
+
+    > [class*="col-"] {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+}
+
+// Petit mobile (576px)
+@include respond-to(small) {
+  .container-fluid.px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .page-header {
+    padding: 15px;
+
+    .text-md-end {
+      text-align: left !important;
+
+      .badge-journal {
+        margin-bottom: 5px;
+      }
+    }
+  }
+
+  .modal-dialog {
+    margin: 10px;
+
+    .modal-body {
+      padding: 15px;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Animations
+// ----------------------------------------------------------------------------
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.journal-stats-card,
+.table-responsive {
+  animation: fadeIn 0.5s ease-out;
+}
+
+// ----------------------------------------------------------------------------
+// Classes utilitaires
+// ----------------------------------------------------------------------------
+.hover-lift {
+  @include card-hover-effect;
+}
+
+.text-primary-custom {
+  color: $primary-blue;
+}
+
+.bg-primary-custom {
+  background-color: $primary-blue;
+}
+
+.border-left-primary {
+  border-left: 4px solid $primary-blue;
+}
+
+.border-left-warning {
+  border-left: 4px solid $primary-yellow;
+}

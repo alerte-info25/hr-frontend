@@ -1,32 +1,29 @@
-    <!-- main.component.html -->
-  <div class="page__full-wrapper" [class]="getMainClasses()">
-    <app-sidebar
-      [class.sidebar-open]="isSidebarOpen"
-      [class.sidebar-closed]="!isSidebarOpen"
-      [style.width]="isSidebarOpen ? '200px' : '80px'">
-    </app-sidebar>
+<!-- main.component.html -->
+<div class="page__full-wrapper" [class]="getMainClasses()">
+  <app-sidebar
+    [class.sidebar-open]="isSidebarOpen"
+    [class.sidebar-closed]="!isSidebarOpen"
+    [style.width]="isSidebarOpen ? '200px' : '80px'"
+  >
+  </app-sidebar>
 
-    <div class="page__body-wrapper"
+  <div
+    class="page__body-wrapper"
     [style.margin-left]="sidebarService.getContentMarginLeft()"
     [style.width]="'calc(100% - ' + sidebarService.getSidebarWidth() + ')'"
-    >
-      <app-navbar></app-navbar>
+  >
+    <app-navbar></app-navbar>
 
-      <!-- Contenu principal de votre application -->
-      <div class="main-content" >
-        <div class="breadcrumb-container">
-          <button class="btn-home" routerLink="/applications">
-            <i class="fa-solid fa-house"></i> Accueil
-          </button>
-          <span class="current-route" *ngIf="currentRouteName !== ''"> <i class="fa-solid fa-greater-than"> </i> {{ currentRouteName }}</span>
-        </div>
-        <router-outlet></router-outlet>
-      </div>
-    </div>
-
-    <!-- Overlay pour mobile -->
-    <div class="body-overlay"
-        [class.show]="isSidebarOpen"
-        (click)="sidebarService.closeSidebar()">
+    <!-- Contenu principal de votre application -->
+    <div class="main-content">
+      <router-outlet></router-outlet>
     </div>
   </div>
+
+  <!-- Overlay pour mobile -->
+  <div
+    class="body-overlay"
+    [class.show]="isSidebarOpen"
+    (click)="sidebarService.closeSidebar()"
+  ></div>
+</div>

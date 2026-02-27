@@ -1,14 +1,23 @@
 <!-- sidebar.component.html -->
-<div class="app-sidebar"
-     [class]="getSidebarClasses()"
-     [style.width]="getSidebarWidth()">
-
+<div
+  class="app-sidebar"
+  [class]="getSidebarClasses()"
+  [style.width]="getSidebarWidth()"
+>
   <!-- Header de la sidebar -->
   <div class="sidebar-header">
     <div class="sidebar-logo" [class.logo-collapsed]="!isSidebarOpen">
       <a href="index.html" class="header-logo">
-        <img class="main-logo" src="assets/images/logo/logo-alerteInfo.png" alt="logo">
-        <img class="dark-logo" src="assets/images/logo/logo-alerteInfo.png" alt="logo">
+        <img
+          class="main-logo"
+          src="assets/images/logo/logo-alerteInfo.png"
+          alt="logo"
+        />
+        <img
+          class="dark-logo"
+          src="assets/images/logo/logo-alerteInfo.png"
+          alt="logo"
+        />
       </a>
     </div>
   </div>
@@ -17,11 +26,26 @@
   <nav class="sidebar-nav">
     <ul class="sidebar">
       <!-- Dashboard -->
-      <li class="sidebar-menu-item"
-          *ngIf="isAdmin()"
-          data-tooltip="Dashboard"
-          routerLink="/dashboard"
-          routerLinkActive="active">
+      <li
+        class="sidebar-menu-item"
+        *ngIf="isAdmin()"
+        data-tooltip="Dashboard"
+        routerLink="/applications"
+        routerLinkActive="active"
+      >
+        <div class="menu-content">
+          <i class="fa-solid fa-house menu-icon"></i>
+          <span class="menu-text" *ngIf="isSidebarOpen">Accueil</span>
+        </div>
+      </li>
+
+      <li
+        class="sidebar-menu-item"
+        *ngIf="isAdmin()"
+        data-tooltip="Dashboard"
+        routerLink="/dashboard"
+        routerLinkActive="active"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">assessment</mat-icon>
           <span class="menu-text" *ngIf="isSidebarOpen">Dashboard</span>
@@ -29,48 +53,59 @@
       </li>
 
       <!-- Applications -->
-      <li class="sidebar-menu-item"
-          data-tooltip="Projets"
-          routerLink="/applications"
-          routerLinkActive="active">
+      <li
+        class="sidebar-menu-item"
+        data-tooltip="Projets"
+        routerLink="/applications"
+        routerLinkActive="active"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">dialpad</mat-icon>
           <span class="menu-text" *ngIf="isSidebarOpen">Applications</span>
         </div>
       </li>
       <!-- Programmes congés -->
-      <li class="sidebar-menu-item"
-          routerLink="/programmes-conges"
-          routerLinkActive="active">
+      <li
+        class="sidebar-menu-item"
+        routerLink="/programmes-conges"
+        routerLinkActive="active"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">calendar_today</mat-icon>
-          <span class="menu-text" *ngIf="isSidebarOpen">Programme des congés</span>
+          <span class="menu-text" *ngIf="isSidebarOpen"
+            >Programme des congés</span
+          >
         </div>
       </li>
 
       <!-- Logiciel de caisse -->
-      <li class="sidebar-menu-item"
-          *ngIf="hasRight('caisse')"
-          data-tooltip="Caisse"
-          routerLink="/caisse"
-          routerLinkActive="active">
+      <li
+        class="sidebar-menu-item"
+        *ngIf="hasRight('caisse')"
+        data-tooltip="Caisse"
+        routerLink="/caisse"
+        routerLinkActive="active"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">point_of_sale</mat-icon>
           <span class="menu-text" *ngIf="isSidebarOpen">Caisse</span>
         </div>
       </li>
       <!-- Utilisateurs -->
-      <li *ngIf="hasRight('utilisateurs')"
-          class="sidebar-menu-item"
-          data-tooltip="Utilisateurs"
-          routerLink="/utilisateurs"
-          routerLinkActive="active">
+      <li
+        *ngIf="hasRight('utilisateurs')"
+        class="sidebar-menu-item"
+        data-tooltip="Utilisateurs"
+        routerLink="/utilisateurs"
+        routerLinkActive="active"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">people</mat-icon>
-          <span class="menu-text" *ngIf="isSidebarOpen">Comptes utilisateurs</span>
+          <span class="menu-text" *ngIf="isSidebarOpen"
+            >Comptes utilisateurs</span
+          >
         </div>
       </li>
-
 
       <!-- Paramètres
       <li class="sidebar-menu-item"
@@ -83,48 +118,62 @@
         </div>
       </li> -->
       <!-- Paramètres -->
-      <li *ngIf="hasRight('droits') || hasRight('roles')"
-          class="sidebar-menu-item"
-          [class.open]="openSection === 'settings'"
-          (click)="toggleSection('settings')"
-          data-tooltip="Paramètres">
-
+      <li
+        *ngIf="hasRight('droits') || hasRight('roles')"
+        class="sidebar-menu-item"
+        [class.open]="openSection === 'settings'"
+        (click)="toggleSection('settings')"
+        data-tooltip="Paramètres"
+      >
         <div class="menu-content">
           <mat-icon class="menu-icon">settings</mat-icon>
           <span class="menu-text" *ngIf="isSidebarOpen">Configuration</span>
           <mat-icon *ngIf="isSidebarOpen" class="arrow-icon">
-            {{ openSection === 'settings' ? 'expand_less' : 'expand_more' }}
+            {{ openSection === "settings" ? "expand_less" : "expand_more" }}
           </mat-icon>
         </div>
 
         <!-- Sous-menu -->
         <ul *ngIf="isSidebarOpen && openSection === 'settings'" class="submenu">
-          <li *ngIf="hasRight('droits')" routerLink="droits" routerLinkActive="active">
+          <li
+            *ngIf="hasRight('droits')"
+            routerLink="droits"
+            routerLinkActive="active"
+          >
             <mat-icon class="submenu-icon">shield</mat-icon>
             <span>Liste des droits</span>
           </li>
-          <li *ngIf="hasRight('roles')" routerLink="roles" routerLinkActive="active">
+          <li
+            *ngIf="hasRight('roles')"
+            routerLink="roles"
+            routerLinkActive="active"
+          >
             <mat-icon class="submenu-icon">group</mat-icon>
             <span>Liste des rôles</span>
           </li>
         </ul>
       </li>
-
-
     </ul>
   </nav>
 
   <!-- Footer de la sidebar -->
-  <div class="sidebar-footer" >
+  <div class="sidebar-footer">
     <div class="sidebar-user-info">
       <div class="user-avatar">
-        <img [src]="userData.employe.photo_url ?? 'assets/images/avatar/my-avatar.png'" alt="User" class="avatar-img">
+        <img
+          [src]="
+            userData.employe.photo_url ?? 'assets/images/avatar/my-avatar.png'
+          "
+          alt="User"
+          class="avatar-img"
+        />
       </div>
       <div class="user-details" *ngIf="isSidebarOpen">
-        <h4 class="user-name">{{userData?.employe?.nom}} {{userData?.employe?.prenom}}</h4>
-        <span class="user-role">{{userData?.role?.libelle}}</span>
+        <h4 class="user-name">
+          {{ userData?.employe?.nom }} {{ userData?.employe?.prenom }}
+        </h4>
+        <span class="user-role">{{ userData?.role?.libelle }}</span>
       </div>
     </div>
   </div>
-
 </div>

@@ -1,0 +1,174 @@
+@if (loading()) {
+  <app-loader />
+}
+
+<form
+  id="newAccountForm"
+  [formGroup]="compteComptableForm"
+  (ngSubmit)="onSubmit()"
+>
+  <input type="hidden" name="success" value="true" />
+
+  @if (success()) {
+    <div class="alert alert-success">Compte ajouté avec succès</div>
+  } 
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <label class="form-label required-field">Numéro compte</label>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Ex: 641300"
+        value="641300"
+        formControlName="numero"
+        [class.is-invalid]="isInvalidField('numero')"
+        required
+      />
+      @if (isInvalidField("numero")) {
+        <div class="invalid-feedback">
+          Le numero compte est requis et doit être un nombre positif
+        </div>
+      }
+      <div class="form-text">
+        Exemple : (ex: 641300 pour primes)
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label required-field">Classe de compte</label>
+      <select
+        class="form-select"
+        required
+        formControlName="classe_comptable_rfk"
+        [class.is-invalid]="isInvalidField('classe_comptable_rfk')"
+      >
+        <option value="">Sélectionner une classe</option>
+        @for (classe of classes(); track classe.rfk) {
+          <option [value]="classe?.rfk">{{ classe?.libelle }}</option>
+        }
+      </select>
+      @if (isInvalidField("classe_comptable_rfk")) {
+        <div class="invalid-feedback">La classe de compte est requise</div>
+      }
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <label class="form-label required-field">Catégorie de compte</label>
+      <select
+        class="form-select"
+        formControlName="categorie_comptable_rfk"
+        required
+        [class.is-invalid]="isInvalidField('categorie_comptable_rfk')"
+      >
+        <option value="">Sélectionner une catégorie de compte</option>
+        @for (categorie of categories(); track categorie.rfk) {
+          <option [value]="categorie.rfk">{{ categorie?.libelle }}</option>
+        }
+      </select>
+      @if (isInvalidField("categorie_comptable_rfk")) {
+        <div class="invalid-feedback">La categorie de compte est requise</div>
+      }
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <label class="form-label required-field">Type de compte</label>
+      <select
+        class="form-select"
+        formControlName="type_compte_comptable_rfk"
+        required
+        [class.is-invalid]="isInvalidField('type_compte_comptable_rfk')"
+      >
+        <option value="">Sélectionner un type de compte</option>
+        @for (type of types(); track type.rfk) {
+          <option [value]="type.rfk">{{ type?.libelle }}</option>
+        }
+      </select>
+      @if (isInvalidField("type_compte_comptable_rfk")) {
+        <div class="invalid-feedback">Le type de compte est requis</div>
+      }
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label required-field">Libellé du compte</label>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Ex: Primes développeurs"
+        value="Primes développeurs"
+        formControlName="libelle"
+        [class.is-invalid]="isInvalidField('libelle')"
+        required
+      />
+      @if (isInvalidField("libelle")) {
+        <div class="invalid-feedback">Le libellé du compte est requis</div>
+      }
+      <div class="form-text">
+        Nom du compte tel qu'il apparaîtra dans les écritures
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label">Description</label>
+    <textarea
+      class="form-control"
+      rows="4"
+      placeholder="Description détaillée du compte..."
+      formControlName="description"
+      [class.is-invalid]="isInvalidField('description')"
+    >
+Primes et gratifications exceptionnelles pour l'équipe de développement</textarea
+    >
+    @if (isInvalidField("description")) {
+      <div class="invalid-feedback">La description est requise</div>
+    }
+    <div class="form-text">
+      Description facultative mais recommandée pour clarifier l'utilisation du
+      compte
+    </div>
+  </div>
+
+  <div class="info-card mb-4">
+    <div class="d-flex">
+      <i
+        class="fas fa-info-circle text-primary me-3"
+        style="font-size: 1.5rem"
+      ></i>
+      <div>
+        <h6 class="fw-bold mb-2">Bon à savoir</h6>
+        <p class="mb-0 text-muted">
+          Les primes au personnel sont généralement enregistrées dans les
+          comptes de la série 641 (Rémunérations du personnel). Ce compte
+          permettra de suivre spécifiquement les gratifications attribuées à
+          l'équipe de développement.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-3 justify-content-end">
+    <button type="button" class="btn btn-light" (click)="resetForm()">
+      <i class="fas fa-times me-2"></i>
+      Annuler
+    </button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="compteComptableForm.invalid"
+    >
+      <i class="fas fa-save me-2"></i>
+      Créer le compte
+    </button>
+  </div>
+</form>

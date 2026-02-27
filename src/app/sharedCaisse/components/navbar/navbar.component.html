@@ -1,0 +1,56 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <div class="container-fluid">
+    <button
+      class="btn btn-primary"
+      id="menu-toggle"
+      (click)="onToggleSidebar()"
+    >
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="d-flex align-items-center ms-auto">
+      <!-- Période -->
+      <div class="period-selector me-3 d-none d-md-block">
+        <span>
+          {{ userData?.employe?.nom + " " + userData?.employe?.prenom }}
+        </span>
+      </div>
+
+      <!-- Profil -->
+      <div class="dropdown">
+        <button
+          class="btn btn-light dropdown-toggle d-flex align-items-center"
+          type="button"
+          data-bs-toggle="dropdown"
+        >
+          <img
+            [src]="
+              userData?.employe?.photo_url ||
+              'assets/images/avatar/my-avatar.png'
+            "
+            (error)="onImgError($event)"
+            class="rounded-circle me-2"
+            width="30"
+            height="30"
+          />
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li>
+            <a
+              class="dropdown-item"
+              [routerLink]="['/employee-profile']"
+              routerLinkActive="active"
+            >
+              Mon profil
+            </a>
+          </li>
+
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item" href="#" (click)="logout()">Déconnexion</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>

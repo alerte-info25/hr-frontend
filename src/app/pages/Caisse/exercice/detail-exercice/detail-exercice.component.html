@@ -1,0 +1,474 @@
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="page-title">
+          <i class="fas fa-journal-whills me-2"></i>
+          @if (exercice()) {
+            Opérations de {{ exercice()!.libelle }}
+          } @else {
+            Détail exercice
+          }
+        </h2>
+        <p class="text-muted mb-0">
+          @if (exercice()) {
+            Période du {{ formatDate(exercice()!.date_debut) }} au
+            {{ formatDate(exercice()!.date_fin) }} ·
+            <span class="text-success">
+              {{ stats().nb_operations }} écriture(s)
+            </span>
+            enregistrée(s)
+          }
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        @if (exercice()?.statut === "ouvert") {
+          <a
+            routerLink="/caisse/new-journal"
+            class="btn btn-primary"
+            style="text-decoration: none"
+          >
+            <i class="fas fa-plus-circle me-2"></i>
+            Nouvelle écriture
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Info -->
+  @if (exercice()) {
+    <div class="quick-info">
+      <i class="fas fa-info-circle"></i>
+      <div>
+        <strong>{{ exercice()!.libelle }} :</strong>
+        Du {{ formatDate(exercice()!.date_debut) }} au
+        {{ formatDate(exercice()!.date_fin) }} ·
+        @if (exercice()!.statut === "ouvert") {
+          <span class="text-success">Exercice ouvert</span>
+        } @else {
+          <span class="text-danger">Exercice clôturé</span>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Alertes -->
+  @if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  }
+
+  <!-- Loader exercice -->
+  @if (loader()) {
+    <app-loader />
+  }
+
+  <!-- Cartes statistiques -->
+  @if (!loader()) {
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon count"><i class="fas fa-receipt"></i></div>
+        <div class="stat-label">Total écritures</div>
+        <div class="stat-value">{{ stats().nb_operations }}</div>
+        <div class="stat-trend">
+          {{ stats().nb_validees }} validée(s) ·
+          {{ stats().nb_brouillons }} brouillon(s)
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon debit"><i class="fas fa-arrow-down"></i></div>
+        <div class="stat-label">Total Débit</div>
+        <div class="stat-value">
+          {{ formatMontant(stats().total_debit) }} Fcfa
+        </div>
+        <div class="stat-trend">Cumul exercice</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon credit"><i class="fas fa-arrow-up"></i></div>
+        <div class="stat-label">Total Crédit</div>
+        <div class="stat-value">
+          {{ formatMontant(stats().total_credit) }} Fcfa
+        </div>
+        <div class="stat-trend">Cumul exercice</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon balance">
+          <i class="fas fa-scale-balanced"></i>
+        </div>
+        <div class="stat-label">Résultat</div>
+        <div
+          class="stat-value"
+          [class.text-success]="stats().resultat >= 0"
+          [class.text-danger]="stats().resultat < 0"
+        >
+          {{ stats().resultat >= 0 ? "+" : ""
+          }}{{ formatMontant(stats().resultat) }} Fcfa
+        </div>
+        <div
+          class="stat-trend"
+          [class.positive]="stats().equilibre"
+          [class.text-danger]="!stats().equilibre"
+        >
+          {{ stats().equilibre ? "Équilibré" : "Non équilibré" }}
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filtres rapides -->
+  <div class="filters-container">
+    <div class="filter-title">
+      <i class="fas fa-filter me-2 text-warning"></i>
+      Filtres rapides
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <select
+          class="form-select"
+          [ngModel]="filtreNature()"
+          (ngModelChange)="filtreNature.set($event)"
+        >
+          <option value="">Toutes les natures</option>
+          <option value="entrée">Entrée</option>
+          <option value="sortie">Sortie</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select
+          class="form-select"
+          [ngModel]="filtreMois()"
+          (ngModelChange)="filtreMois.set($event)"
+        >
+          <option value="">Tous les mois</option>
+          <option value="01">Janvier</option>
+          <option value="02">Février</option>
+          <option value="03">Mars</option>
+          <option value="04">Avril</option>
+          <option value="05">Mai</option>
+          <option value="06">Juin</option>
+          <option value="07">Juillet</option>
+          <option value="08">Août</option>
+          <option value="09">Septembre</option>
+          <option value="10">Octobre</option>
+          <option value="11">Novembre</option>
+          <option value="12">Décembre</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Rechercher..."
+            [ngModel]="recherche()"
+            (ngModelChange)="recherche.set($event)"
+          />
+          <button class="btn btn-outline-primary" type="button">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-actions mt-4">
+      <button class="btn-quick" (click)="filtrerCeMois()">
+        <i class="fas fa-calendar-week"></i> Ce mois
+      </button>
+      <button class="btn-quick" (click)="reinitialiserFiltres()">
+        <i class="fas fa-times"></i> Réinitialiser
+      </button>
+      <button
+        class="btn-quick"
+        (click)="onExportPdf()"
+        [disabled]="exportLoader()"
+      >
+        @if (exportLoader()) {
+          <i class="fas fa-spinner fa-spin"></i> Génération...
+        } @else {
+          <i class="fas fa-file-pdf"></i> Exporter PDF
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Loader opérations -->
+  @if (loaderOps()) {
+    <app-loader />
+  }
+
+  <!-- Tableau des opérations -->
+  <div class="table-container">
+    <table class="operations-table">
+      <thead>
+        <tr>
+          <th width="3%"></th>
+          <th width="5%">N°</th>
+          <th width="10%">Date</th>
+          <th width="8%">Nature</th>
+          <th width="12%">Saisie par</th>
+          <th width="22%">Libellé</th>
+          <th width="10%">Bureau</th>
+          <th width="10%">Débit (Fcfa)</th>
+          <th width="10%">Crédit (Fcfa)</th>
+          <th width="5%">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (!loaderOps()) {
+          @for (
+            operation of operationsFiltrees();
+            track operation.rfk;
+            let i = $index
+          ) {
+            <!-- Ligne opération -->
+            <tr
+              [class.highlight]="expandedRfk() === operation.rfk"
+              [class.text-success]="
+                operation.nature_operation?.libelle?.toLocaleLowerCase() ===
+                'entrée'
+              "
+              [class.text-danger]="
+                operation.nature_operation?.libelle?.toLocaleLowerCase() ===
+                'sortie'
+              "
+            >
+              <td>
+                <button
+                  type="button"
+                  class="btn-icon view"
+                  (click)="toggleLignes(operation.rfk)"
+                  [title]="
+                    expandedRfk() === operation.rfk
+                      ? 'Masquer'
+                      : 'Voir les lignes'
+                  "
+                >
+                  <i
+                    class="fas"
+                    [class.fa-chevron-down]="expandedRfk() !== operation.rfk"
+                    [class.fa-chevron-up]="expandedRfk() === operation.rfk"
+                  >
+                  </i>
+                </button>
+              </td>
+              <td>{{ i + 1 }}</td>
+              <td>{{ operation.date_operation | date: "dd/MM/yyyy" }}</td>
+              <td>
+                <span
+                  class="badge-journal"
+                  [class.text-success]="
+                    operation.nature_operation?.libelle?.toLocaleLowerCase() ===
+                    'entrée'
+                  "
+                  [class.text-danger]="
+                    operation.nature_operation?.libelle?.toLocaleLowerCase() ===
+                    'sortie'
+                  "
+                >
+                  {{ operation.nature_operation?.libelle ?? "—" }}
+                </span>
+              </td>
+              <td>
+                {{ operation.user?.employe?.nom }}
+                {{ operation.user?.employe?.prenom }}
+              </td>
+              <td>
+                {{ operation.libelle }}
+              </td>
+              <td>{{ operation.bureau?.libelle ?? "—" }}</td>
+              <td class="amount-positive">
+                @if (totalDebit(operation) > 0) {
+                  {{ formatMontant(totalDebit(operation)) }}
+                }
+              </td>
+              <td class="amount-negative">
+                @if (totalCredit(operation) > 0) {
+                  {{ formatMontant(totalCredit(operation)) }}
+                }
+              </td>
+              <td>
+                @switch (operation.statut) {
+                  @case ("brouillon") {
+                    <span
+                      class="status-badge"
+                      style="
+                        background: #fff3cd;
+                        color: #856404;
+                        font-size: 11px;
+                      "
+                    >
+                      <i class="fas fa-pencil-alt me-1"></i>Brouillon
+                    </span>
+                  }
+                  @case ("validee") {
+                    <span class="status-badge active" style="font-size: 11px">
+                      <i class="fas fa-check me-1"></i>Validée
+                    </span>
+                  }
+                  @case ("annulee") {
+                    <span class="status-badge closed" style="font-size: 11px">
+                      <i class="fas fa-times me-1"></i>Annulée
+                    </span>
+                  }
+                }
+              </td>
+              <!-- <td>
+                <div class="d-flex gap-1">
+                  @if (operation.statut === 'brouillon') {
+                    <button type="button" class="btn-icon edit" title="Valider"
+                      (click)="onValider(operation.rfk)">
+                      <i class="fas fa-check text-success"></i>
+                    </button>
+                    <button type="button" class="btn-icon edit" title="Modifier"
+                      [routerLink]="['/caisse/edit-journal', operation.rfk]">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn-icon delete" title="Supprimer"
+                      (click)="onDelete(operation.rfk)"
+                      [disabled]="deleteRfk() === operation.rfk"
+                    >
+                      @if (deleteRfk() === operation.rfk) {
+                        <i class="fas fa-spinner fa-spin"></i>
+                      } @else {
+                        <i class="fas fa-trash"></i>
+                      }
+                    </button>
+                  }
+                  @if (operation.statut === 'validee') {
+                    <button type="button" class="btn-icon delete" title="Annuler"
+                      (click)="onAnnuler(operation.rfk)">
+                      <i class="fas fa-ban"></i>
+                    </button>
+                  }
+                </div>
+              </td> -->
+            </tr>
+
+            <!-- Lignes détail accordéon -->
+            @if (expandedRfk() === operation.rfk) {
+              <tr style="background: #f8f9fa">
+                <td colspan="2"></td>
+                <td><small class="fw-bold text-muted">Date</small></td>
+                <td colspan="2">
+                  <small class="fw-bold text-muted">Compte</small>
+                </td>
+                <td colspan="2">
+                  <small class="fw-bold text-muted">Libellé ligne</small>
+                </td>
+                <td><small class="fw-bold text-muted">Débit</small></td>
+                <td colspan="2">
+                  <small class="fw-bold text-muted">Crédit</small>
+                </td>
+              </tr>
+              @for (ligne of operation.lignes; track ligne.rfk) {
+                <tr class="ligne-detail-row">
+                  <td colspan="2"></td>
+                  <td class="text-muted small">
+                    {{ operation.date_operation | date: "dd/MM/yyyy" }}
+                  </td>
+                  <td colspan="2">
+                    <span class="piece-ref small">
+                      {{ ligne.compte?.numero ?? "—" }}
+                    </span>
+                    <span class="ms-1 small">{{
+                      ligne.compte?.libelle ?? ""
+                    }}</span>
+                  </td>
+                  <td colspan="2">{{ ligne.libelle ?? "—" }}</td>
+                  <td class="amount-positive">
+                    @if (ligne.montant_debit > 0) {
+                      {{ formatMontant(ligne.montant_debit) }}
+                    }
+                  </td>
+                  <td class="amount-negative" colspan="2">
+                    @if (ligne.montant_credit > 0) {
+                      {{ formatMontant(ligne.montant_credit) }}
+                    }
+                  </td>
+                </tr>
+              }
+              <!-- Sous-total opération -->
+              <tr style="background: #e9ecef; font-weight: bold">
+                <td colspan="7" class="text-end">Totaux opération</td>
+                <td class="amount-positive">
+                  {{ formatMontant(totalDebit(operation)) }}
+                </td>
+                <td class="amount-negative" colspan="2">
+                  {{ formatMontant(totalCredit(operation)) }}
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr>
+              <td colspan="11">
+                <div
+                  class="alert alert-warning mb-0 d-flex justify-content-center"
+                >
+                  Aucune opération pour cet exercice.
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Analyse mensuelle -->
+  <div class="form-container mt-4">
+    <div class="section-title">
+      <i class="fas fa-chart-line"></i>
+      Analyse mensuelle — {{ exercice()?.libelle }}
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th>Écritures</th>
+            <th>Débit (Fcfa)</th>
+            <th>Crédit (Fcfa)</th>
+            <th>Solde (Fcfa)</th>
+            <th>Équilibre</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (mois of analyseParMois(); track mois.numero) {
+            <tr>
+              <td>{{ mois.libelle }}</td>
+              <td>{{ mois.nb_operations }}</td>
+              <td>{{ formatMontant(mois.total_debit) }}</td>
+              <td>{{ formatMontant(mois.total_credit) }}</td>
+              <td
+                [class.text-success]="mois.solde === 0"
+                [class.text-danger]="mois.solde !== 0"
+              >
+                {{ mois.solde >= 0 ? "+" : "" }}{{ formatMontant(mois.solde) }}
+              </td>
+              <td>
+                @if (mois.solde === 0) {
+                  <span class="text-success"
+                    ><i class="fas fa-check-circle"></i
+                  ></span>
+                } @else {
+                  <span class="text-danger"
+                    ><i class="fas fa-exclamation-triangle"></i
+                  ></span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center text-muted">
+                Aucune donnée mensuelle.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
