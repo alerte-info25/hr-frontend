@@ -89,9 +89,9 @@ export class DashboardComponent implements OnInit {
     });
   });
 
-  // ----------------------------------------------------------------
+  // 
   // Stats — basées sur la période filtrée
-  // ----------------------------------------------------------------
+  // 
   stats = computed(() => {
     const ops = this.operationsFiltrees();
     const validees = ops.filter((op) => op.statut === 'validee');
@@ -275,11 +275,12 @@ export class DashboardComponent implements OnInit {
     return Math.max(...valeurs, 1);
   });
 
-  // ----------------------------------------------------------------
+  // 
   // Cycle de vie
-  // ----------------------------------------------------------------
+  // 
   ngOnInit(): void {
     this.loadData();
+    console.log(localStorage.getItem('user_token'))
   }
 
   private loadData(): void {
@@ -304,9 +305,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ----------------------------------------------------------------
   // Graphique Chart.js — Bar Entrées/Sorties + ligne solde net
-  // ----------------------------------------------------------------
   private renderChart(
     data: {
       mois: string;
@@ -405,9 +404,9 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ----------------------------------------------------------------
+  // 
   // Utilitaires
-  // ----------------------------------------------------------------
+  // 
   totalDebit(op: OperationComptable): number {
     return op.lignes.reduce((acc, l) => acc + (l.montant_debit ?? 0), 0);
   }
@@ -473,4 +472,5 @@ export class DashboardComponent implements OnInit {
           op.nature_operation?.libelle?.toLowerCase().includes('sort'),
       ).length,
   );
+
 }

@@ -55,6 +55,7 @@ import { CongesDirecteurComponent } from './pages/conges-directeur/conges-direct
 import { CongesEmployeComponent } from './pages/conges-employe/conges-employe.component';
 import { PrimeDeveloppeurComponent } from './pages/prime-developpeur/prime-developpeur.component';
 import { CaisseLayoutComponent } from './layouts/caisse-layout/caisse-layout.component';
+import { CaisseGuard } from './core/guards/caisse.guard';
 
 export const routes: Routes = [
   {
@@ -356,7 +357,7 @@ export const routes: Routes = [
   {
     path: 'caisse',
     component: CaisseLayoutComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, CaisseGuard],
     children: [
       {
         path: '',
@@ -440,7 +441,7 @@ export const routes: Routes = [
       },
       {
         path: 'detail-exercice/:exerciceRfk',
-        title: 'Détail de l\'exercice',
+        title: "Détail de l'exercice",
         loadComponent: () =>
           import('./pages/Caisse/exercice/detail-exercice/detail-exercice.component').then(
             (c) => c.DetailExerciceComponent,

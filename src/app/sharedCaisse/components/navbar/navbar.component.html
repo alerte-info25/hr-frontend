@@ -9,12 +9,15 @@
     </button>
 
     <div class="d-flex align-items-center ms-auto">
-      <!-- Période -->
-      <div class="period-selector me-3 d-none d-md-block">
-        <span>
-          {{ userData?.employe?.nom + " " + userData?.employe?.prenom }}
-        </span>
-      </div>
+      <img
+        [src]="
+          userData?.employe?.photo_url || 'assets/images/avatar/my-avatar.png'
+        "
+        (error)="onImgError($event)"
+        class="rounded-circle me-2"
+        width="30"
+        height="30"
+      />
 
       <!-- Profil -->
       <div class="dropdown">
@@ -23,16 +26,7 @@
           type="button"
           data-bs-toggle="dropdown"
         >
-          <img
-            [src]="
-              userData?.employe?.photo_url ||
-              'assets/images/avatar/my-avatar.png'
-            "
-            (error)="onImgError($event)"
-            class="rounded-circle me-2"
-            width="30"
-            height="30"
-          />
+          {{ userData?.employe?.nom + " " + userData?.employe?.prenom }}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           <li>

@@ -1,7 +1,8 @@
 <!-- sidebar.component.html -->
 <div
+  div
   class="app-sidebar"
-  [class]="getSidebarClasses()"
+  [ngClass]="getSidebarClasses()"
   [style.width]="getSidebarWidth()"
 >
   <!-- Header de la sidebar -->
@@ -81,7 +82,7 @@
       <!-- Logiciel de caisse -->
       <li
         class="sidebar-menu-item"
-        *ngIf="hasRight('caisse')"
+        *ngIf="hasRight('caisse') || canAccessCaisse()"
         data-tooltip="Caisse"
         routerLink="/caisse"
         routerLinkActive="active"

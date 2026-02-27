@@ -52,14 +52,15 @@ $sidebar-width: 290px;
 }
 
 :host #menu-toggle {
-  background: $primary-blue;
+  background: rgba($white, 0.15);
   border: none;
   padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.3s;
+  color: $white;
 
   &:hover {
-    background: $secondary-blue;
+    background: rgba($white, 0.25);
     transform: translateY(-1px);
   }
 
@@ -69,44 +70,30 @@ $sidebar-width: 290px;
 
   i {
     font-size: 1.2rem;
+    color: $white;
   }
 }
 
+// ─── Nom utilisateur ────────────────────────────────────────────
 :host .period-selector {
-  background: $light;
-  border-radius: 8px;
-  padding: 8px 18px;
-  border: 1px solid $border-color;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 8px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
 
-  &:hover {
-    background: darken($light, 2%);
-    border-color: $primary-blue;
+  span {
+    color: $white !important;
+    font-size: 0.95rem;
+    font-weight: 500;
   }
 
   i {
     color: $primary-yellow;
     font-size: 1rem;
-  }
-
-  span {
-    color: $gray;
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-
-  &.active {
-    background: $primary-blue;
-    border-color: $primary-blue;
-
-    span,
-    i {
-      color: $white;
-    }
   }
 }
 
@@ -116,16 +103,99 @@ $sidebar-width: 290px;
   align-items: center;
 }
 
+// ─── Dropdown profil ────────────────────────────────────────────
+:host .dropdown-toggle {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  width: auto;
+
+  &:hover {
+    background: rgba($white, 0.1) !important;
+  }
+
+  &::after {
+    border-top-color: $white;
+    margin-left: 6px;
+  }
+}
+
+:host .btn-light {
+  background: transparent !important;
+  border: none !important;
+  color: $white !important;
+  box-shadow: none !important;
+
+  &:hover {
+    background: rgba($white, 0.1) !important;
+    border-radius: 8px;
+  }
+
+  &:focus {
+    box-shadow: none !important;
+    outline: none;
+  }
+}
+
+// ─── Photo utilisateur ──────────────────────────────────────────
+:host .rounded-circle {
+  width: 35px !important;
+  height: 35px !important;
+  object-fit: cover;
+  border: 2px solid rgba($white, 0.4);
+  border-radius: 50% !important;
+}
+
+// ─── Dropdown menu ──────────────────────────────────────────────
+:host .dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 20px rgba($black, 0.15);
+  border-radius: 10px;
+  padding: 8px 0;
+  min-width: 180px;
+}
+
+:host .dropdown-item {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  color: #333 !important;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba($primary-blue, 0.08);
+    color: $primary-blue !important;
+    padding-left: 24px;
+  }
+
+  &.active {
+    background: rgba($primary-blue, 0.1);
+    color: $primary-blue !important;
+  }
+}
+
+:host .dropdown-divider {
+  margin: 4px 12px;
+  border-color: $border-color;
+}
+
+// ─── Responsive ─────────────────────────────────────────────────
 @media (max-width: 768px) {
   :host .navbar {
     padding: 10px 0;
   }
 
   :host .period-selector {
-    padding: 6px 12px;
+    padding: 0 4px !important;
 
     span {
       font-size: 0.85rem;
     }
+  }
+
+  :host .rounded-circle {
+    width: 30px !important;
+    height: 30px !important;
   }
 }

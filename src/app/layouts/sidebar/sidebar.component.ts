@@ -6,6 +6,7 @@ import { MaterialModule } from '../../../../material.module';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { FONCTIONS } from '../../models/Caisse/verification-fonction.model';
 
 @Component({
   selector: 'app-sidebar',
@@ -41,8 +42,31 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.userRights = droitsString.split('-'); // transforme en tableau
     }
   }
+
   hasRight(moduleName: string): boolean {
     return this.userRights.includes(moduleName);
+  }
+
+  private readonly CAISSE_FONCTIONS = [
+    FONCTIONS.COMPTABLE,
+    FONCTIONS.COMMERCIALE,
+    FONCTIONS.DIRECTEUR_GENERAL,
+  ];
+
+  hasFonction(slugFonction: string | string[]): boolean {
+    const userFonctionSlug = this.userData?.employe?.fonction?.slug;
+    if (!userFonctionSlug) return false;
+
+    if (Array.isArray(slugFonction)) {
+      return slugFonction.includes(userFonctionSlug);
+    }
+    return userFonctionSlug === slugFonction;
+  }
+
+  canAccessCaisse(): boolean {
+    if (this.isAdmin()) return true;
+
+    return this.hasFonction(this.CAISSE_FONCTIONS);
   }
 
   ngOnDestroy(): void {
@@ -54,7 +78,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
    * Retourne la largeur de la sidebar
    */
   getSidebarClasses(): string {
-    return this.isSidebarOpen ? '' : 'sidebar-closed';
+    const classes = [];
+    if (!this.isSidebarOpen) classes.push('sidebar-closed');
+    if (this.isSidebarOpen) classes.push('sidebar-open');
+    return classes.join(' ');
   }
 
   /**
