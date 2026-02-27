@@ -80,18 +80,20 @@
       </li>
 
       <!-- Logiciel de caisse -->
-      <li
-        class="sidebar-menu-item"
-        *ngIf="hasRight('caisse') || canAccessCaisse()"
-        data-tooltip="Caisse"
-        routerLink="/caisse"
-        routerLinkActive="active"
-      >
-        <div class="menu-content">
-          <mat-icon class="menu-icon">point_of_sale</mat-icon>
-          <span class="menu-text" *ngIf="isSidebarOpen">Caisse</span>
-        </div>
-      </li>
+      @if (hasRight("caisse") && canAccessCaisse()) {
+        <li
+          class="sidebar-menu-item"
+          data-tooltip="Caisse"
+          routerLink="/caisse"
+          routerLinkActive="active"
+        >
+          <div class="menu-content">
+            <mat-icon class="menu-icon">point_of_sale</mat-icon>
+            <span class="menu-text" *ngIf="isSidebarOpen">Caisse</span>
+          </div>
+        </li>
+      }
+
       <!-- Utilisateurs -->
       <li
         *ngIf="hasRight('utilisateurs')"
