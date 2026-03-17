@@ -18,7 +18,6 @@
           <button
             class="view-btn"
             [class.active]="viewMode === 'grid'"
-            id="gridViewBtn"
             (click)="transformGrid()"
           >
             <i class="fas fa-th-large"></i>
@@ -26,7 +25,6 @@
           <button
             class="view-btn"
             [class.active]="viewMode === 'table'"
-            id="tableViewBtn"
             (click)="transformTable()"
           >
             <i class="fas fa-list"></i>
@@ -38,23 +36,31 @@
 
   <!-- Stats Cards -->
   <div class="row mb-4">
-    <div class="col-xl-6 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-4 mb-4">
       <div class="stats-card">
         <div class="stats-icon blue">
-          <i class="fas fa-building"></i>
+          <i class="fas fa-arrow-down"></i>
         </div>
-        <div class="stats-label">Total bureaux</div>
-        <div class="stats-value">{{ stats()?.total_bureaux ?? "—" }}</div>
-        <div class="stats-trend"></div>
+        <div class="stats-label">Total dépenses</div>
+        <div class="stats-value">{{ stats()?.total_depenses ?? "—" }}</div>
       </div>
     </div>
-    <div class="col-xl-6 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-4 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon green">
+          <i class="fas fa-arrow-up"></i>
+        </div>
+        <div class="stats-label">Total recouvrements</div>
+        <div class="stats-value">{{ stats()?.total_recouvrements ?? "—" }}</div>
+      </div>
+    </div>
+    <div class="col-xl-4 col-md-4 mb-4">
       <div class="stats-card">
         <div class="stats-icon purple">
-          <i class="fas fa-chart-line"></i>
+          <i class="fas fa-balance-scale"></i>
         </div>
-        <div class="stats-label">Opérations mois</div>
-        <div class="stats-value">{{ stats()?.operations_mois ?? "—" }}</div>
+        <div class="stats-label">Solde</div>
+        <div class="stats-value">{{ stats()?.solde ?? "—" }}</div>
       </div>
     </div>
   </div>
@@ -66,7 +72,7 @@
       <input
         type="text"
         id="searchOffice"
-        placeholder="Rechercher un bureau, une adresse..."
+        placeholder="Rechercher un bureau, une ville..."
         [ngModel]="recherche()"
         (ngModelChange)="onRecherche($event)"
       />
@@ -108,15 +114,16 @@
           </div>
 
           <div class="office-info">
-            <div class="office-name">{{ bureau.libelle }}</div>
-            <div class="office-code">{{ bureau.code }}</div>
+            <div class="office-name">{{ bureau.nom }}</div>
+
             <div class="office-address">
               <i class="fas fa-map-marker-alt"></i>
-              {{ bureau.rue || "" }}
+              {{ bureau.adresse || "" }}
               {{ bureau.codepostal ? bureau.codepostal + " " : "" }}
               {{ bureau.ville }}
               {{ bureau.pays ? ", " + bureau.pays : "" }}
             </div>
+
             @if (bureau.complement) {
               <div class="office-contact">
                 <i class="fas fa-map-pin"></i>
@@ -125,8 +132,12 @@
             }
 
             <div class="office-address">
-              <i class="fa-solid fa-chart-pie"></i>
-              {{ bureau.nb_operation }} Opérations enregistrées
+              <i class="fa-solid fa-arrow-down"></i>
+              {{ bureau.depenses_count ?? 0 }} Dépense(s)
+            </div>
+            <div class="office-address">
+              <i class="fa-solid fa-arrow-up"></i>
+              {{ bureau.recouvrements_count ?? 0 }} Recouvrement(s)
             </div>
           </div>
 
@@ -169,12 +180,12 @@
         <table class="offices-table">
           <thead>
             <tr>
-              <th>Code</th>
               <th>Bureau</th>
               <th>Adresse</th>
               <th>Ville</th>
               <th>Pays</th>
-              <th>Opérations enregistrées</th>
+              <th>Dépenses</th>
+              <th>Recouvrements</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -182,10 +193,7 @@
             @for (bureau of bureauxFiltres(); track bureau.rfk) {
               <tr>
                 <td>
-                  <span class="office-badge">{{ bureau.code }}</span>
-                </td>
-                <td>
-                  <strong>{{ bureau.libelle }}</strong>
+                  <strong>{{ bureau.nom }}</strong>
                   @if (bureau.complement) {
                     <br /><small class="text-muted">{{
                       bureau.complement
@@ -193,12 +201,13 @@
                   }
                 </td>
                 <td>
-                  {{ bureau.rue || "—" }}
+                  {{ bureau.adresse || "—" }}
                   {{ bureau.codepostal ? ", " + bureau.codepostal : "" }}
                 </td>
                 <td>{{ bureau.ville }}</td>
                 <td>{{ bureau.pays }}</td>
-                <td>{{ bureau.nb_operation }}</td>
+                <td>{{ bureau.depenses_count ?? 0 }}</td>
+                <td>{{ bureau.recouvrements_count ?? 0 }}</td>
                 <td>
                   <div class="office-actions">
                     <button
@@ -227,7 +236,7 @@
 
             @if (bureaux().length === 0 && !loader()) {
               <tr>
-                <td colspan="6" class="text-center text-muted py-4">
+                <td colspan="7" class="text-center text-muted py-4">
                   Aucun bureau enregistré.
                 </td>
               </tr>

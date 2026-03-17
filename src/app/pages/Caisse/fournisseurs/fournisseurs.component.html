@@ -1,0 +1,531 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <div class="row my-4">
+    <div class="col-md-8">
+      <h2 class="dashboard-title">
+        <i class="fas fa-truck text-primary me-2"></i>
+        Gestion des fournisseurs
+      </h2>
+      <p class="text-muted">
+        Gérez le répertoire des fournisseurs liés aux dépenses
+      </p>
+    </div>
+  </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-danger d-flex align-items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ deleteError() }}</span>
+    </div>
+  }
+
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Total fournisseurs</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalFournisseurs() }}
+                }
+              </h3>
+            </div>
+            <i class="fas fa-truck stats-icon text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-danger">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Fournisseurs actifs</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ fournisseursActifs() }}
+                  <small class="text-muted fs-6 fw-normal ms-1"
+                    >avec dépenses</small
+                  >
+                }
+              </h3>
+            </div>
+            <i class="fas fa-building stats-icon text-danger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Total dépenses liées</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalDepenses() }}
+                  <small class="text-muted fs-6 fw-normal ms-1"
+                    >opérations</small
+                  >
+                }
+              </h3>
+            </div>
+            <i class="fas fa-arrow-trend-down stats-icon text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ← nouvelle stat card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-danger">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Montant total dépensé</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalDepensesMontant() | number: "1.0-0" }}
+                  <small class="text-muted fs-6 fw-normal ms-1">F</small>
+                }
+              </h3>
+            </div>
+            <i class="fas fa-coins stats-icon text-danger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire (inchangé) -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="form-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">
+            <i
+              class="fas fa-{{
+                isEditMode() ? 'edit' : 'plus-circle'
+              }} text-primary me-2"
+            ></i>
+            {{
+              isEditMode()
+                ? "Modifier le fournisseur"
+                : "Ajouter un fournisseur"
+            }}
+          </h5>
+          @if (isEditMode()) {
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="resetForm()"
+            >
+              <i class="fas fa-times me-1"></i>Annuler l'édition
+            </button>
+          }
+        </div>
+        <div class="card-body">
+          @if (formError()) {
+            <div
+              class="alert alert-danger d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-exclamation-circle"></i
+              ><span>{{ formError() }}</span>
+            </div>
+          }
+          @if (formSuccess()) {
+            <div
+              class="alert alert-success d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-check-circle"></i
+              ><span>{{ formSuccess() }}</span>
+            </div>
+          }
+          <form
+            id="fournisseurForm"
+            [formGroup]="form"
+            (ngSubmit)="submit()"
+            novalidate
+          >
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nom" class="form-label">
+                  <i class="fas fa-building me-1 text-primary"></i>
+                  Nom du fournisseur <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="nom"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('nom')"
+                  formControlName="nom"
+                  placeholder="Ex : BUREAU PLUS, TOTAL CI..."
+                  autocomplete="off"
+                />
+                @if (isInvalid("nom")) {
+                  <div class="invalid-feedback">{{ getError("nom") }}</div>
+                }
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="contact" class="form-label">
+                  <i class="fas fa-user-tie me-1 text-primary"></i>Personne de
+                  contact
+                </label>
+                <input
+                  id="contact"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('contact')"
+                  formControlName="contact"
+                  placeholder="Ex : M. Koné Seydou"
+                  autocomplete="off"
+                />
+                @if (isInvalid("contact")) {
+                  <div class="invalid-feedback">{{ getError("contact") }}</div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">
+                  <i class="fas fa-envelope me-1 text-primary"></i>Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('email')"
+                  formControlName="email"
+                  placeholder="Ex : contact@fournisseur.ci"
+                  autocomplete="off"
+                />
+                @if (isInvalid("email")) {
+                  <div class="invalid-feedback">{{ getError("email") }}</div>
+                }
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="telephone" class="form-label">
+                  <i class="fas fa-phone me-1 text-primary"></i>Téléphone
+                </label>
+                <input
+                  id="telephone"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('telephone')"
+                  formControlName="telephone"
+                  placeholder="Ex : +225 27 20 00 00 00"
+                  autocomplete="off"
+                />
+                @if (isInvalid("telephone")) {
+                  <div class="invalid-feedback">
+                    {{ getError("telephone") }}
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="adresse" class="form-label">
+                  <i class="fas fa-map-marker-alt me-1 text-primary"></i>Adresse
+                </label>
+                <input
+                  id="adresse"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('adresse')"
+                  formControlName="adresse"
+                  placeholder="Ex : Zone Industrielle de Vridi, Abidjan"
+                  autocomplete="off"
+                />
+                @if (isInvalid("adresse")) {
+                  <div class="invalid-feedback">{{ getError("adresse") }}</div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12 d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="isSaving() || form.invalid"
+                >
+                  @if (isSaving()) {
+                    <span
+                      class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span
+                    >Enregistrement...
+                  } @else {
+                    <i class="fas fa-save me-2"></i
+                    >{{ isEditMode() ? "Mettre à jour" : "Enregistrer" }}
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="resetForm()"
+                >
+                  <i class="fas fa-undo me-2"></i>Annuler
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="table-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-list text-primary me-2"></i>Fournisseurs
+            enregistrés
+          </h5>
+          <div class="d-flex gap-2">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Nom, contact, email, tél..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              style="width: 240px"
+            />
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table expense-table mb-0">
+              <thead>
+                <tr>
+                  <th width="4%">N°</th>
+                  <th width="18%">Fournisseur</th>
+                  <th width="13%">Contact</th>
+                  <th width="16%">Email</th>
+                  <th width="11%">Téléphone</th>
+                  <th width="13%">Adresse</th>
+                  <th width="7%" class="text-center">Dépenses</th>
+                  <th width="12%" class="text-center">Montant total</th>
+                  <!-- ← -->
+                  <th width="6%" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (isLoadingList()) {
+                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                    <tr>
+                      <td colspan="9">
+                        <!-- ← 8 → 9 -->
+                        <div class="placeholder-glow">
+                          <span class="placeholder col-12 rounded"></span>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+
+                @if (!isLoadingList() && fournisseurs().length === 0) {
+                  <tr>
+                    <td colspan="9" class="text-center text-muted py-5">
+                      <!-- ← 8 → 9 -->
+                      <i class="fas fa-truck fa-2x mb-2 d-block opacity-50"></i>
+                      Aucun fournisseur enregistré
+                      @if (searchQuery) {
+                        <div class="mt-2">
+                          <button
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="searchQuery = ''; onSearch()"
+                          >
+                            <i class="fas fa-times me-1"></i>Réinitialiser la
+                            recherche
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+
+                @for (f of fournisseurs(); track f.rfk; let i = $index) {
+                  <tr [class.table-warning]="editingRfk() === f.rfk">
+                    <td class="text-muted">
+                      {{ (currentPage() - 1) * perPage + i + 1 }}
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div
+                          class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style="
+                            width: 32px;
+                            height: 32px;
+                            font-size: 13px;
+                            font-weight: 600;
+                          "
+                        >
+                          {{ f.nom.charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                          <strong>{{ f.nom }}</strong>
+                          @if (editingRfk() === f.rfk) {
+                            <span class="badge bg-warning text-dark ms-1">
+                              <i class="fas fa-edit me-1"></i>édition
+                            </span>
+                          }
+                          <div class="text-muted" style="font-size: 11px">
+                            {{ f.rfk }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-muted">{{ f.contact || "—" }}</td>
+                    <td>
+                      @if (f.email) {
+                        <a
+                          [href]="'mailto:' + f.email"
+                          class="text-decoration-none text-primary"
+                        >
+                          <i
+                            class="fas fa-envelope me-1 text-muted"
+                            style="font-size: 11px"
+                          ></i
+                          >{{ f.email }}
+                        </a>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td>
+                      @if (f.telephone) {
+                        <a
+                          [href]="'tel:' + f.telephone"
+                          class="text-decoration-none"
+                        >
+                          <i
+                            class="fas fa-phone me-1 text-muted"
+                            style="font-size: 11px"
+                          ></i
+                          >{{ f.telephone }}
+                        </a>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ f.adresse || "—" }}</small>
+                    </td>
+                    <td class="text-center">
+                      @if ((f.depenses_count ?? 0) > 0) {
+                        <span class="badge bg-danger-subtle text-danger">{{
+                          f.depenses_count
+                        }}</span>
+                      } @else {
+                        <span class="text-muted">0</span>
+                      }
+                    </td>
+
+                    <!-- ← nouvelle cellule montant total -->
+                    <td class="text-center">
+                      @if ((f.depenses_sum_montant ?? 0) > 0) {
+                        <span class="badge bg-danger-subtle text-danger">
+                          {{ f.depenses_sum_montant | number: "1.0-0" }} F
+                        </span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+
+                    <td class="text-center">
+                      <button
+                        class="btn-icon edit"
+                        title="Modifier"
+                        (click)="editFournisseur(f)"
+                        [disabled]="isDeleting() === f.rfk"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        class="btn-icon delete"
+                        title="Supprimer"
+                        (click)="deleteFournisseur(f)"
+                        [disabled]="isDeleting() === f.rfk"
+                      >
+                        @if (isDeleting() === f.rfk) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          <i class="fas fa-trash"></i>
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-white">
+          <div
+            class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+          >
+            <span class="text-muted">
+              @if (!isLoadingList() && total() > 0) {
+                Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
+                {{ Math.min(currentPage() * perPage, total()) }} sur
+                {{ total() }} fournisseur{{ total() > 1 ? "s" : "" }}
+              }
+            </span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="currentPage() === 1">
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() - 1)"
+                    >Précédent</a
+                  >
+                </li>
+                @for (page of pages(); track page) {
+                  <li class="page-item" [class.active]="page === currentPage()">
+                    <a
+                      class="page-link"
+                      style="cursor: pointer"
+                      (click)="goToPage(page)"
+                      >{{ page }}</a
+                    >
+                  </li>
+                }
+                <li
+                  class="page-item"
+                  [class.disabled]="currentPage() === lastPage()"
+                >
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() + 1)"
+                    >Suivant</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

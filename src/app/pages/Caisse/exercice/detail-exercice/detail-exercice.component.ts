@@ -1,342 +1,216 @@
-import {
-  Component,
-  computed,
-  inject,
-  input,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 import { ExerciceComptableService } from '../../../../services/Caisse/exercice-comptable.service';
-import { OperationComptableService } from '../../../../services/Caisse/operation-comptable-service.service';
-import { ExerciceComptable } from '../../../../models/Caisse/exercice-comptable.model';
-import { OperationComptable } from '../../../../models/Caisse/operation-comptable.model';
-import { LoaderComponent } from '../../../../sharedCaisse/components/loader/loader.component';
+import { ExerciceStats } from '../../../../models/Caisse/exercice-comptable.model';
+
+export interface Operation {
+  rfk: string;
+  date: string;
+  nature: 'depense' | 'recouvrement';
+  description: string;
+  montant: number;
+  mode_paiement: string;
+  categorie: string;
+  periode_rfk?: string;
+}
 
 @Component({
   selector: 'app-detail-exercice',
-  imports: [CommonModule, RouterLink, FormsModule, LoaderComponent],
+  standalone: true,
+  imports: [CommonModule, RouterLink, FormsModule, DatePipe, DecimalPipe],
   templateUrl: './detail-exercice.component.html',
   styleUrl: './detail-exercice.component.scss',
 })
 export class DetailExerciceComponent implements OnInit {
-  exerciceRfk = input.required<string>();
-
-  private exerciceService = inject(ExerciceComptableService);
-  private operationService = inject(OperationComptableService);
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private exerciceService = inject(ExerciceComptableService);
 
-  exercice = signal<ExerciceComptable | null>(null);
-  operations = signal<OperationComptable[]>([]);
+  //  State
+  isLoading = signal(true);
+  error = signal<string | null>(null);
+  stats = signal<ExerciceStats | null>(null);
 
-  // États
-  loader = signal(false);
-  loaderOps = signal(false);
-  errorMessage = signal<string | null>(null);
-  expandedRfk = signal<string | null>(null);
-  deleteRfk = signal<string | null>(null);
+  // export
+  exportLoading = signal(false);
 
-  // Filtres
-  recherche = signal('');
-  filtreStatut = signal('');
-  filtreNature = signal('');
-  filtreMois = signal('');
+  //  Filtres
+  filterNature = '';
+  filterPeriode = '';
+  filterMode = '';
+  filterSearch = '';
 
-  // operation filtrés
-  operationsFiltrees = computed(() => {
-    let liste = this.operations();
+  //  Opérations fusionnées (dépenses + recouvrements)
+  private allOperations = signal<Operation[]>([]);
 
-    // Filtre recherche texte
-    const terme = this.recherche().trim().toLowerCase();
-    if (terme) {
-      liste = liste.filter(
-        (op) =>
-          op.libelle.toLowerCase().includes(terme) ||
-          op.numero.toLowerCase().includes(terme) ||
-          op.bureau?.libelle.toLowerCase().includes(terme),
+  operations = computed<Operation[]>(() => {
+    let ops = this.allOperations();
+
+    if (this.filterNature) {
+      ops = ops.filter((o) => o.nature === this.filterNature);
+    }
+
+    if (this.filterPeriode) {
+      ops = ops.filter((o) => o.periode_rfk === this.filterPeriode);
+    }
+
+    if (this.filterMode) {
+      ops = ops.filter((o) => o.mode_paiement === this.filterMode);
+    }
+
+    if (this.filterSearch.trim()) {
+      const q = this.filterSearch.toLowerCase();
+      ops = ops.filter(
+        (o) =>
+          o.description?.toLowerCase().includes(q) ||
+          o.rfk?.toLowerCase().includes(q) ||
+          o.categorie?.toLowerCase().includes(q),
       );
     }
 
-    // Filtre statut
-    if (this.filtreStatut()) {
-      liste = liste.filter((op) => op.statut === this.filtreStatut());
-    }
-
-    // Filtre nature (entree / sortie)
-    if (this.filtreNature()) {
-      liste = liste.filter(
-        (op) =>
-          op.nature_operation?.libelle?.toLowerCase() === this.filtreNature(),
-      );
-    }
-
-    // Filtre mois
-    if (this.filtreMois()) {
-      liste = liste.filter(
-        (op) => op.date_operation.substring(5, 7) === this.filtreMois(),
-      );
-    }
-
-    return liste;
+    return ops;
   });
 
-  // Stats calculées depuis toutes les opérations
-  stats = computed(
-    /**
-     * au depart je prévoyais 3 status pour les opérations comptables (validée, brouillo, annulée) mais finalement j'ai décidé de laisser tomber cette logique
-     * et donc toutes op est automatiquement validee
-     * @returns {{ nb_operations: any; nb_brouillons: any; nb_validees: any; nb_annulees: any; total_debit: any; total_credit: any; resultat: number; equilibre: boolean; }}
-     */
-    () => {
-      const liste = this.operations();
-      const totalDebit = liste.reduce(
-        (acc, op) => acc + this.totalDebit(op),
-        0,
-      );
-      const totalCredit = liste.reduce(
-        (acc, op) => acc + this.totalCredit(op),
-        0,
-      );
-
-      return {
-        nb_operations: liste.length,
-        nb_brouillons: liste.filter((op) => op.statut === 'brouillon').length,
-        nb_validees: liste.filter((op) => op.statut === 'validee').length,
-        nb_annulees: liste.filter((op) => op.statut === 'annulee').length,
-        total_debit: totalDebit,
-        total_credit: totalCredit,
-        resultat: totalCredit - totalDebit,
-        equilibre:
-          Math.round(totalDebit * 100) === Math.round(totalCredit * 100),
-      };
-    },
+  totalDepensesFiltre = computed(() =>
+    this.operations()
+      .filter((o) => o.nature === 'depense')
+      .reduce((sum, o) => sum + o.montant, 0),
   );
 
-  // Analyse mensuelle calculée depuis toutes les opérations
-  analyseParMois = computed(() => {
-    const moisLabels: Record<string, string> = {
-      '01': 'Janvier',
-      '02': 'Février',
-      '03': 'Mars',
-      '04': 'Avril',
-      '05': 'Mai',
-      '06': 'Juin',
-      '07': 'Juillet',
-      '08': 'Août',
-      '09': 'Septembre',
-      '10': 'Octobre',
-      '11': 'Novembre',
-      '12': 'Décembre',
-    };
+  totalRecouvrementsFiltres = computed(() =>
+    this.operations()
+      .filter((o) => o.nature === 'recouvrement')
+      .reduce((sum, o) => sum + o.montant, 0),
+  );
 
-    const map = new Map<
-      string,
-      {
-        libelle: string;
-        numero: string;
-        nb_operations: number;
-        total_debit: number;
-        total_credit: number;
-        solde: number;
-      }
-    >();
-
-    this.operations().forEach((op) => {
-      const mois = op.date_operation.substring(5, 7);
-      if (!map.has(mois)) {
-        map.set(mois, {
-          libelle: moisLabels[mois],
-          numero: mois,
-          nb_operations: 0,
-          total_debit: 0,
-          total_credit: 0,
-          solde: 0,
-        });
-      }
-      const entry = map.get(mois)!;
-      entry.nb_operations++;
-      entry.total_debit += this.totalDebit(op);
-      entry.total_credit += this.totalCredit(op);
-      entry.solde = entry.total_debit - entry.total_credit;
-    });
-
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, v]) => v);
+  soldePositif = computed(() => {
+    const s = this.stats();
+    if (!s) return false;
+    return s.solde >= 0;
   });
 
+  //  Lifecycle
   ngOnInit(): void {
-    if (!this.exerciceRfk()) {
+    const rfk = this.route.snapshot.paramMap.get('rfk');
+    if (!rfk) {
       this.router.navigate(['/caisse/exercices']);
       return;
     }
-
-    this.loadExercice();
-    this.loadOperations();
+    this.loadStats(rfk);
   }
 
-  private loadExercice(): void {
-    this.loader.set(true);
-    this.exerciceService.getOne(this.exerciceRfk()).subscribe({
-      next: (data) => {
-        this.exercice.set(data);
-        this.loader.set(false);
+  private loadStats(rfk: string): void {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    this.exerciceService.getStats(rfk).subscribe({
+      next: (stats) => {
+        this.stats.set(stats);
+        this.buildOperations(stats);
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? "Erreur lors du chargement de l'exercice",
+        this.error.set(
+          err?.error?.message ||
+            "Impossible de charger les détails de l'exercice.",
         );
-        this.loader.set(false);
+        this.isLoading.set(false);
       },
     });
   }
 
-  private loadOperations(): void {
-    this.loaderOps.set(true);
-    this.operationService.getByExercice(this.exerciceRfk()).subscribe({
-      next: (data) => {
-        this.operations.set(data);
-        this.loaderOps.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? 'Erreur lors du chargement des opérations',
-        );
-        this.loaderOps.set(false);
-      },
-    });
+  /**
+   * Fusionne dépenses et recouvrements en une liste unifiée
+   * triée par date décroissante.
+   */
+  private buildOperations(stats: ExerciceStats): void {
+    const depenses: Operation[] = (stats.depenses ?? []).map((d: any) => ({
+      rfk: d.rfk,
+      date: d.date_depense,
+      nature: 'depense' as const,
+      description: d.description ?? '',
+      montant: Number(d.montant),
+      mode_paiement: d.mode_paiement,
+      categorie: d.type_depense?.libelle ?? '—',
+      periode_rfk: d.periode?.rfk ?? undefined,
+    }));
+
+    const recouvrements: Operation[] = (stats.recouvrements ?? []).map(
+      (r: any) => ({
+        rfk: r.rfk,
+        date: r.date_recouvrement,
+        nature: 'recouvrement' as const,
+        description: r.description ?? '',
+        montant: Number(r.montant),
+        mode_paiement: r.mode_paiement,
+        categorie: r.service_propose?.nom ?? '—',
+        periode_rfk: r.periode?.rfk ?? undefined,
+      }),
+    );
+
+    const merged = [...depenses, ...recouvrements].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
+    this.allOperations.set(merged);
   }
 
-  toggleLignes(rfk: string): void {
-    this.expandedRfk.set(this.expandedRfk() === rfk ? null : rfk);
+  //  Actions filtres
+  // Méthode déclenchée par (change) et (input) depuis le template
+  applyFilters(): void {
+    // Les computed signals se réévaluent automatiquement
+    // On force la mise à jour en réassignant allOperations
+    this.allOperations.set([...this.allOperations()]);
   }
 
-  onValider(rfk: string): void {
-    if (
-      !confirm('Valider cette opération ? Elle ne pourra plus être modifiée.')
-    )
-      return;
-
-    this.operationService.valider(rfk).subscribe({
-      next: (data) => {
-        this.operations.update((liste) =>
-          liste.map((op) =>
-            op.rfk === rfk ? { ...op, statut: data.statut } : op,
-          ),
-        );
-      },
-      error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? 'Erreur lors de la validation',
-        );
-        setTimeout(() => this.errorMessage.set(null), 3000);
-      },
-    });
+  setNature(nature: string): void {
+    this.filterNature = nature;
+    this.applyFilters();
   }
 
-  onAnnuler(rfk: string): void {
-    if (!confirm('Annuler cette opération ?')) return;
+  //  Clôture exercice
+  cloturer(): void {
+    const s = this.stats();
+    if (!s?.exercice?.rfk) return;
 
-    this.operationService.annuler(rfk).subscribe({
-      next: (data) => {
-        this.operations.update((liste) =>
-          liste.map((op) =>
-            op.rfk === rfk ? { ...op, statut: data.statut } : op,
-          ),
-        );
-      },
-      error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? "Erreur lors de l'annulation",
-        );
-        setTimeout(() => this.errorMessage.set(null), 3000);
-      },
-    });
-  }
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir clôturer l'exercice ${s.exercice.annee} ?\nCette action est irréversible.`,
+    );
+    if (!confirmed) return;
 
-  onDelete(rfk: string): void {
-    if (!confirm('Supprimer cette opération ?')) return;
-
-    this.deleteRfk.set(rfk);
-    this.operationService.delete(rfk).subscribe({
+    this.exerciceService.cloturer(s.exercice.rfk).subscribe({
       next: () => {
-        this.operations.update((liste) => liste.filter((op) => op.rfk !== rfk));
-        this.deleteRfk.set(null);
+        this.loadStats(s.exercice.rfk);
       },
       error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? 'Erreur lors de la suppression',
+        alert(
+          err?.error?.message ?? "Erreur lors de la clôture de l'exercice.",
         );
-        this.deleteRfk.set(null);
-        setTimeout(() => this.errorMessage.set(null), 3000);
       },
     });
   }
-
-  totalDebit(operation: OperationComptable): number {
-    return operation.lignes.reduce((acc, l) => acc + (l.montant_debit ?? 0), 0);
-  }
-
-  totalCredit(operation: OperationComptable): number {
-    return operation.lignes.reduce(
-      (acc, l) => acc + (l.montant_credit ?? 0),
-      0,
-    );
-  }
-
-  estEquilibree(operation: OperationComptable): boolean {
-    return (
-      Math.round(this.totalDebit(operation) * 100) ===
-      Math.round(this.totalCredit(operation) * 100)
-    );
-  }
-
-  formatMontant(montant: number): string {
-    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0 }).format(
-      montant,
-    );
-  }
-
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('fr-FR');
-  }
-
-  filtrerCeMois(): void {
-    const mois = String(new Date().getMonth() + 1).padStart(2, '0');
-    this.filtreMois.set(mois);
-  }
-
-  reinitialiserFiltres(): void {
-    this.recherche.set('');
-    this.filtreStatut.set('');
-    this.filtreNature.set('');
-    this.filtreMois.set('');
-  }
-
-  exportLoader = signal(false);
 
   onExportPdf(): void {
-    if (!this.exercice()) return;
+    const rfk = this.stats()?.exercice?.rfk;
+    if (!rfk) return;
 
-    this.exportLoader.set(true);
+    this.exportLoading.set(true);
 
-    this.operationService.exportExercicePdf(this.exerciceRfk()).subscribe({
+    this.exerciceService.exportPdf(rfk).subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${this.exercice()!.libelle}.pdf`;
+        a.download = `exercice-${this.stats()?.exercice?.annee}-${new Date().toISOString().slice(0, 10)}.pdf`;
         a.click();
-        window.URL.revokeObjectURL(url);
-        this.exportLoader.set(false);
+        URL.revokeObjectURL(url);
+        this.exportLoading.set(false);
       },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? "Erreur lors de l'export");
-        this.exportLoader.set(false);
-        setTimeout(() => this.errorMessage.set(null), 3000);
+      error: () => {
+        this.error.set("Erreur lors de l'export PDF.");
+        this.exportLoading.set(false);
       },
     });
   }

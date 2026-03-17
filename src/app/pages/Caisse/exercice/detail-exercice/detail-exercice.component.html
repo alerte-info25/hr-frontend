@@ -1,474 +1,537 @@
 <div class="container-fluid px-4">
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="row align-items-center">
-      <div class="col-md-8">
-        <h2 class="page-title">
-          <i class="fas fa-journal-whills me-2"></i>
-          @if (exercice()) {
-            Opérations de {{ exercice()!.libelle }}
-          } @else {
-            Détail exercice
-          }
-        </h2>
-        <p class="text-muted mb-0">
-          @if (exercice()) {
-            Période du {{ formatDate(exercice()!.date_debut) }} au
-            {{ formatDate(exercice()!.date_fin) }} ·
-            <span class="text-success">
-              {{ stats().nb_operations }} écriture(s)
-            </span>
-            enregistrée(s)
-          }
-        </p>
-      </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        @if (exercice()?.statut === "ouvert") {
-          <a
-            routerLink="/caisse/new-journal"
-            class="btn btn-primary"
-            style="text-decoration: none"
-          >
-            <i class="fas fa-plus-circle me-2"></i>
-            Nouvelle écriture
-          </a>
-        }
+  @if (isLoading()) {
+    <div
+      class="d-flex justify-content-center align-items-center"
+      style="min-height: 300px"
+    >
+      <div class="text-center text-muted">
+        <i class="fas fa-spinner fa-spin fa-2x mb-3 d-block"></i>
+        Chargement de l'exercice...
       </div>
     </div>
-  </div>
+  }
 
-  <!-- Quick Info -->
-  @if (exercice()) {
+  @if (error()) {
+    <div class="alert alert-danger mt-4">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ error() }}
+    </div>
+  }
+
+  @if (!isLoading() && stats(); as s) {
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <div class="d-flex align-items-center gap-3 mb-1">
+            <a [routerLink]="['/caisse/exercices']" class="btn-back">
+              <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="page-title mb-0">Exercice {{ s.exercice.annee }}</h2>
+            @if (s.exercice.est_cloture) {
+              <span class="badge-status cloture">
+                <i class="fas fa-lock me-1"></i>Clôturé
+              </span>
+            } @else if (s.exercice.est_actif) {
+              <span class="badge-status actif">
+                <i class="fas fa-circle me-1"></i>Actif
+              </span>
+            } @else {
+              <span class="badge-status inactif">
+                <i class="fas fa-pause me-1"></i>Inactif
+              </span>
+            }
+          </div>
+          <p class="text-muted mb-0 ms-5">
+            Du {{ s.exercice.date_debut | date: "dd/MM/yyyy" }} au
+            {{ s.exercice.date_fin | date: "dd/MM/yyyy" }} ·
+            <span class="text-primary fw-semibold"
+              >{{ s.nb_periodes }} période{{
+                s.nb_periodes > 1 ? "s" : ""
+              }}</span
+            >
+            ·
+            <span class="text-warning fw-semibold">
+              {{ s.nb_depenses + s.nb_recouvrements }} opération{{
+                s.nb_depenses + s.nb_recouvrements > 1 ? "s" : ""
+              }}
+            </span>
+            enregistrée{{ s.nb_depenses + s.nb_recouvrements > 1 ? "s" : "" }}
+          </p>
+        </div>
+        <div
+          class="col-md-4 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end flex-wrap"
+        >
+          @if (!s.exercice.est_cloture) {
+            <a [routerLink]="['/caisse/depenses/new']" class="btn btn-warning">
+              <i class="fa-solid fa-arrow-trend-down me-2"></i>Dépense
+            </a>
+            <a
+              [routerLink]="['/caisse/recouvrements/new']"
+              class="btn btn-success"
+            >
+              <i class="fa-solid fa-arrow-trend-up me-2"></i>Recouvrement
+            </a>
+            <button class="btn btn-danger" (click)="cloturer()">
+              <i class="fas fa-lock me-2"></i>Clôturer
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
     <div class="quick-info">
       <i class="fas fa-info-circle"></i>
       <div>
-        <strong>{{ exercice()!.libelle }} :</strong>
-        Du {{ formatDate(exercice()!.date_debut) }} au
-        {{ formatDate(exercice()!.date_fin) }} ·
-        @if (exercice()!.statut === "ouvert") {
-          <span class="text-success">Exercice ouvert</span>
+        <strong>Exercice {{ s.exercice.annee }} :</strong>
+        Du {{ s.exercice.date_debut | date: "dd/MM/yyyy" }} au
+        {{ s.exercice.date_fin | date: "dd/MM/yyyy" }} ·
+        @if (s.exercice.est_cloture) {
+          <span class="text-danger fw-semibold">Exercice clôturé</span>
         } @else {
-          <span class="text-danger">Exercice clôturé</span>
+          <span class="text-success fw-semibold">
+            {{ s.nb_periodes }} période{{
+              s.nb_periodes > 1 ? "s" : ""
+            }}
+            configurée{{ s.nb_periodes > 1 ? "s" : "" }}
+          </span>
         }
       </div>
     </div>
-  }
 
-  <!-- Alertes -->
-  @if (errorMessage()) {
-    <div class="alert alert-danger">{{ errorMessage() }}</div>
-  }
-
-  <!-- Loader exercice -->
-  @if (loader()) {
-    <app-loader />
-  }
-
-  <!-- Cartes statistiques -->
-  @if (!loader()) {
     <div class="stats-cards">
       <div class="stat-card">
-        <div class="stat-icon count"><i class="fas fa-receipt"></i></div>
-        <div class="stat-label">Total écritures</div>
-        <div class="stat-value">{{ stats().nb_operations }}</div>
-        <div class="stat-trend">
-          {{ stats().nb_validees }} validée(s) ·
-          {{ stats().nb_brouillons }} brouillon(s)
+        <div class="stat-icon count">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div class="stat-label">Total opérations</div>
+        <div class="stat-value">{{ s.nb_depenses + s.nb_recouvrements }}</div>
+        <div class="stat-trend positive">
+          {{ s.nb_depenses }} dépenses. · {{ s.nb_recouvrements }} recouvrement.
         </div>
       </div>
+
       <div class="stat-card">
-        <div class="stat-icon debit"><i class="fas fa-arrow-down"></i></div>
-        <div class="stat-label">Total Débit</div>
-        <div class="stat-value">
-          {{ formatMontant(stats().total_debit) }} Fcfa
+        <div class="stat-icon debit">
+          <i class="fa-solid fa-arrow-trend-down"></i>
         </div>
-        <div class="stat-trend">Cumul exercice</div>
+        <div class="stat-label">Total dépenses</div>
+        <div class="stat-value">{{ s.total_depenses | number: "1.0-0" }} F</div>
       </div>
+
       <div class="stat-card">
-        <div class="stat-icon credit"><i class="fas fa-arrow-up"></i></div>
-        <div class="stat-label">Total Crédit</div>
-        <div class="stat-value">
-          {{ formatMontant(stats().total_credit) }} Fcfa
+        <div class="stat-icon credit">
+          <i class="fa-solid fa-arrow-trend-up"></i>
         </div>
-        <div class="stat-trend">Cumul exercice</div>
+        <div class="stat-label">Total recouvrements</div>
+        <div class="stat-value">
+          {{ s.total_recouvrements | number: "1.0-0" }} F
+        </div>
       </div>
+
       <div class="stat-card">
         <div class="stat-icon balance">
           <i class="fas fa-scale-balanced"></i>
         </div>
-        <div class="stat-label">Résultat</div>
+        <div class="stat-label">Solde net</div>
         <div
           class="stat-value"
-          [class.text-success]="stats().resultat >= 0"
-          [class.text-danger]="stats().resultat < 0"
+          [class.text-success]="soldePositif()"
+          [class.text-danger]="!soldePositif()"
         >
-          {{ stats().resultat >= 0 ? "+" : ""
-          }}{{ formatMontant(stats().resultat) }} Fcfa
+          {{ soldePositif() ? "+" : "" }}{{ s.solde | number: "1.0-0" }} F
         </div>
         <div
           class="stat-trend"
-          [class.positive]="stats().equilibre"
-          [class.text-danger]="!stats().equilibre"
+          [class.positive]="soldePositif()"
+          [class.negative]="!soldePositif()"
         >
-          {{ stats().equilibre ? "Équilibré" : "Non équilibré" }}
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Filtres rapides -->
-  <div class="filters-container">
-    <div class="filter-title">
-      <i class="fas fa-filter me-2 text-warning"></i>
-      Filtres rapides
-    </div>
-
-    <div class="row g-4">
-      <div class="col-md-4">
-        <select
-          class="form-select"
-          [ngModel]="filtreNature()"
-          (ngModelChange)="filtreNature.set($event)"
-        >
-          <option value="">Toutes les natures</option>
-          <option value="entrée">Entrée</option>
-          <option value="sortie">Sortie</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <select
-          class="form-select"
-          [ngModel]="filtreMois()"
-          (ngModelChange)="filtreMois.set($event)"
-        >
-          <option value="">Tous les mois</option>
-          <option value="01">Janvier</option>
-          <option value="02">Février</option>
-          <option value="03">Mars</option>
-          <option value="04">Avril</option>
-          <option value="05">Mai</option>
-          <option value="06">Juin</option>
-          <option value="07">Juillet</option>
-          <option value="08">Août</option>
-          <option value="09">Septembre</option>
-          <option value="10">Octobre</option>
-          <option value="11">Novembre</option>
-          <option value="12">Décembre</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Rechercher..."
-            [ngModel]="recherche()"
-            (ngModelChange)="recherche.set($event)"
-          />
-          <button class="btn btn-outline-primary" type="button">
-            <i class="fas fa-search"></i>
-          </button>
+          <i
+            class="fas fa-{{
+              soldePositif() ? 'check-circle' : 'exclamation-circle'
+            }} me-1"
+          ></i>
+          {{ soldePositif() ? "Excédent" : "Déficit" }}
         </div>
       </div>
     </div>
 
-    <div class="quick-actions mt-4">
-      <button class="btn-quick" (click)="filtrerCeMois()">
-        <i class="fas fa-calendar-week"></i> Ce mois
-      </button>
-      <button class="btn-quick" (click)="reinitialiserFiltres()">
-        <i class="fas fa-times"></i> Réinitialiser
-      </button>
-      <button
-        class="btn-quick"
-        (click)="onExportPdf()"
-        [disabled]="exportLoader()"
-      >
-        @if (exportLoader()) {
-          <i class="fas fa-spinner fa-spin"></i> Génération...
-        } @else {
-          <i class="fas fa-file-pdf"></i> Exporter PDF
-        }
-      </button>
-    </div>
-  </div>
+    <div class="filters-container">
+      <div class="filter-title">
+        <i class="fas fa-filter me-2 text-warning"></i>
+        Filtres rapides
+      </div>
 
-  <!-- Loader opérations -->
-  @if (loaderOps()) {
-    <app-loader />
-  }
-
-  <!-- Tableau des opérations -->
-  <div class="table-container">
-    <table class="operations-table">
-      <thead>
-        <tr>
-          <th width="3%"></th>
-          <th width="5%">N°</th>
-          <th width="10%">Date</th>
-          <th width="8%">Nature</th>
-          <th width="12%">Saisie par</th>
-          <th width="22%">Libellé</th>
-          <th width="10%">Bureau</th>
-          <th width="10%">Débit (Fcfa)</th>
-          <th width="10%">Crédit (Fcfa)</th>
-          <th width="5%">Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (!loaderOps()) {
-          @for (
-            operation of operationsFiltrees();
-            track operation.rfk;
-            let i = $index
-          ) {
-            <!-- Ligne opération -->
-            <tr
-              [class.highlight]="expandedRfk() === operation.rfk"
-              [class.text-success]="
-                operation.nature_operation?.libelle?.toLocaleLowerCase() ===
-                'entrée'
-              "
-              [class.text-danger]="
-                operation.nature_operation?.libelle?.toLocaleLowerCase() ===
-                'sortie'
-              "
-            >
-              <td>
-                <button
-                  type="button"
-                  class="btn-icon view"
-                  (click)="toggleLignes(operation.rfk)"
-                  [title]="
-                    expandedRfk() === operation.rfk
-                      ? 'Masquer'
-                      : 'Voir les lignes'
-                  "
-                >
-                  <i
-                    class="fas"
-                    [class.fa-chevron-down]="expandedRfk() !== operation.rfk"
-                    [class.fa-chevron-up]="expandedRfk() === operation.rfk"
-                  >
-                  </i>
-                </button>
-              </td>
-              <td>{{ i + 1 }}</td>
-              <td>{{ operation.date_operation | date: "dd/MM/yyyy" }}</td>
-              <td>
-                <span
-                  class="badge-journal"
-                  [class.text-success]="
-                    operation.nature_operation?.libelle?.toLocaleLowerCase() ===
-                    'entrée'
-                  "
-                  [class.text-danger]="
-                    operation.nature_operation?.libelle?.toLocaleLowerCase() ===
-                    'sortie'
-                  "
-                >
-                  {{ operation.nature_operation?.libelle ?? "—" }}
-                </span>
-              </td>
-              <td>
-                {{ operation.user?.employe?.nom }}
-                {{ operation.user?.employe?.prenom }}
-              </td>
-              <td>
-                {{ operation.libelle }}
-              </td>
-              <td>{{ operation.bureau?.libelle ?? "—" }}</td>
-              <td class="amount-positive">
-                @if (totalDebit(operation) > 0) {
-                  {{ formatMontant(totalDebit(operation)) }}
-                }
-              </td>
-              <td class="amount-negative">
-                @if (totalCredit(operation) > 0) {
-                  {{ formatMontant(totalCredit(operation)) }}
-                }
-              </td>
-              <td>
-                @switch (operation.statut) {
-                  @case ("brouillon") {
-                    <span
-                      class="status-badge"
-                      style="
-                        background: #fff3cd;
-                        color: #856404;
-                        font-size: 11px;
-                      "
-                    >
-                      <i class="fas fa-pencil-alt me-1"></i>Brouillon
-                    </span>
-                  }
-                  @case ("validee") {
-                    <span class="status-badge active" style="font-size: 11px">
-                      <i class="fas fa-check me-1"></i>Validée
-                    </span>
-                  }
-                  @case ("annulee") {
-                    <span class="status-badge closed" style="font-size: 11px">
-                      <i class="fas fa-times me-1"></i>Annulée
-                    </span>
-                  }
-                }
-              </td>
-              <!-- <td>
-                <div class="d-flex gap-1">
-                  @if (operation.statut === 'brouillon') {
-                    <button type="button" class="btn-icon edit" title="Valider"
-                      (click)="onValider(operation.rfk)">
-                      <i class="fas fa-check text-success"></i>
-                    </button>
-                    <button type="button" class="btn-icon edit" title="Modifier"
-                      [routerLink]="['/caisse/edit-journal', operation.rfk]">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn-icon delete" title="Supprimer"
-                      (click)="onDelete(operation.rfk)"
-                      [disabled]="deleteRfk() === operation.rfk"
-                    >
-                      @if (deleteRfk() === operation.rfk) {
-                        <i class="fas fa-spinner fa-spin"></i>
-                      } @else {
-                        <i class="fas fa-trash"></i>
-                      }
-                    </button>
-                  }
-                  @if (operation.statut === 'validee') {
-                    <button type="button" class="btn-icon delete" title="Annuler"
-                      (click)="onAnnuler(operation.rfk)">
-                      <i class="fas fa-ban"></i>
-                    </button>
-                  }
-                </div>
-              </td> -->
-            </tr>
-
-            <!-- Lignes détail accordéon -->
-            @if (expandedRfk() === operation.rfk) {
-              <tr style="background: #f8f9fa">
-                <td colspan="2"></td>
-                <td><small class="fw-bold text-muted">Date</small></td>
-                <td colspan="2">
-                  <small class="fw-bold text-muted">Compte</small>
-                </td>
-                <td colspan="2">
-                  <small class="fw-bold text-muted">Libellé ligne</small>
-                </td>
-                <td><small class="fw-bold text-muted">Débit</small></td>
-                <td colspan="2">
-                  <small class="fw-bold text-muted">Crédit</small>
-                </td>
-              </tr>
-              @for (ligne of operation.lignes; track ligne.rfk) {
-                <tr class="ligne-detail-row">
-                  <td colspan="2"></td>
-                  <td class="text-muted small">
-                    {{ operation.date_operation | date: "dd/MM/yyyy" }}
-                  </td>
-                  <td colspan="2">
-                    <span class="piece-ref small">
-                      {{ ligne.compte?.numero ?? "—" }}
-                    </span>
-                    <span class="ms-1 small">{{
-                      ligne.compte?.libelle ?? ""
-                    }}</span>
-                  </td>
-                  <td colspan="2">{{ ligne.libelle ?? "—" }}</td>
-                  <td class="amount-positive">
-                    @if (ligne.montant_debit > 0) {
-                      {{ formatMontant(ligne.montant_debit) }}
-                    }
-                  </td>
-                  <td class="amount-negative" colspan="2">
-                    @if (ligne.montant_credit > 0) {
-                      {{ formatMontant(ligne.montant_credit) }}
-                    }
-                  </td>
-                </tr>
-              }
-              <!-- Sous-total opération -->
-              <tr style="background: #e9ecef; font-weight: bold">
-                <td colspan="7" class="text-end">Totaux opération</td>
-                <td class="amount-positive">
-                  {{ formatMontant(totalDebit(operation)) }}
-                </td>
-                <td class="amount-negative" colspan="2">
-                  {{ formatMontant(totalCredit(operation)) }}
-                </td>
-              </tr>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <select
+            class="form-select"
+            [(ngModel)]="filterNature"
+            (change)="applyFilters()"
+          >
+            <option value="">Toutes les opérations</option>
+            <option value="depense">Dépenses uniquement</option>
+            <option value="recouvrement">Recouvrements uniquement</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select
+            class="form-select"
+            [(ngModel)]="filterPeriode"
+            (change)="applyFilters()"
+          >
+            <option value="">Toutes les périodes</option>
+            @for (p of s.periodes; track p.rfk) {
+              <option [value]="p.rfk">{{ p.libelle }}</option>
             }
-          } @empty {
-            <tr>
-              <td colspan="11">
-                <div
-                  class="alert alert-warning mb-0 d-flex justify-content-center"
-                >
-                  Aucune opération pour cet exercice.
-                </div>
-              </td>
-            </tr>
-          }
-        }
-      </tbody>
-    </table>
-  </div>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select
+            class="form-select"
+            [(ngModel)]="filterMode"
+            (change)="applyFilters()"
+          >
+            <option value="">Tous les modes de paiement</option>
+            <option value="especes">Espèces</option>
+            <option value="cheque">Chèque</option>
+            <option value="virement">Virement</option>
+            <option value="mobile_money">Mobile Money</option>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Réf., description, catégorie..."
+              [(ngModel)]="filterSearch"
+              (input)="applyFilters()"
+            />
+            <button class="btn btn-outline-primary" type="button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
 
-  <!-- Analyse mensuelle -->
-  <div class="form-container mt-4">
-    <div class="section-title">
-      <i class="fas fa-chart-line"></i>
-      Analyse mensuelle — {{ exercice()?.libelle }}
+      <div class="quick-actions mt-3">
+        <button
+          class="btn-quick"
+          [class.active]="filterNature === ''"
+          (click)="setNature('')"
+        >
+          <i class="fas fa-list"></i> Tout
+        </button>
+        <button
+          class="btn-quick"
+          [class.active]="filterNature === 'depense'"
+          (click)="setNature('depense')"
+        >
+          <i class="fa-solid fa-arrow-trend-down"></i> Dépenses
+          @if (s.nb_depenses > 0) {
+            <span class="ms-1 badge bg-danger-subtle text-danger">{{
+              s.nb_depenses
+            }}</span>
+          }
+        </button>
+        <button
+          class="btn-quick"
+          [class.active]="filterNature === 'recouvrement'"
+          (click)="setNature('recouvrement')"
+        >
+          <i class="fa-solid fa-arrow-trend-up"></i> Recouvrements
+          @if (s.nb_recouvrements > 0) {
+            <span class="ms-1 badge bg-success-subtle text-success">{{
+              s.nb_recouvrements
+            }}</span>
+          }
+        </button>
+        <button
+          class="btn-quick"
+          (click)="onExportPdf()"
+          [disabled]="exportLoading()"
+        >
+          @if (exportLoading()) {
+            <i class="fas fa-spinner fa-spin"></i> Export...
+          } @else {
+            <i class="fas fa-file-pdf"></i> Exporter PDF
+          }
+        </button>
+      </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-sm">
+    <div class="table-container">
+      <table class="operations-table">
         <thead>
           <tr>
-            <th>Mois</th>
-            <th>Écritures</th>
-            <th>Débit (Fcfa)</th>
-            <th>Crédit (Fcfa)</th>
-            <th>Solde (Fcfa)</th>
-            <th>Équilibre</th>
+            <th width="4%">N°</th>
+            <th width="9%">Date</th>
+            <th width="7%">Nature</th>
+            <th width="13%">Référence</th>
+            <th width="22%">Description</th>
+            <th width="13%">Catégorie</th>
+            <th width="10%">Mode</th>
+            <th width="12%">Montant (F)</th>
+            <th width="10%">Actions</th>
           </tr>
         </thead>
         <tbody>
-          @for (mois of analyseParMois(); track mois.numero) {
+          @if (operations().length === 0) {
             <tr>
-              <td>{{ mois.libelle }}</td>
-              <td>{{ mois.nb_operations }}</td>
-              <td>{{ formatMontant(mois.total_debit) }}</td>
-              <td>{{ formatMontant(mois.total_credit) }}</td>
-              <td
-                [class.text-success]="mois.solde === 0"
-                [class.text-danger]="mois.solde !== 0"
-              >
-                {{ mois.solde >= 0 ? "+" : "" }}{{ formatMontant(mois.solde) }}
-              </td>
-              <td>
-                @if (mois.solde === 0) {
-                  <span class="text-success"
-                    ><i class="fas fa-check-circle"></i
-                  ></span>
-                } @else {
-                  <span class="text-danger"
-                    ><i class="fas fa-exclamation-triangle"></i
-                  ></span>
+              <td colspan="9" class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                Aucune opération trouvée
+                @if (
+                  filterNature || filterPeriode || filterMode || filterSearch
+                ) {
+                  <div class="mt-2">
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      (click)="
+                        filterNature = '';
+                        filterPeriode = '';
+                        filterMode = '';
+                        filterSearch = '';
+                        applyFilters()
+                      "
+                    >
+                      <i class="fas fa-times me-1"></i>Réinitialiser les filtres
+                    </button>
+                  </div>
                 }
               </td>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="text-center text-muted">
-                Aucune donnée mensuelle.
+          }
+
+          @for (op of operations(); track op.rfk; let i = $index) {
+            <tr [class.highlight]="op.nature === 'recouvrement'">
+              <td class="text-muted">{{ i + 1 }}</td>
+
+              <td>{{ op.date | date: "dd/MM/yyyy" }}</td>
+
+              <td>
+                @if (op.nature === "depense") {
+                  <span class="badge-nature depense">
+                    <i class="fa-solid fa-arrow-trend-down me-1"></i>Dép.
+                  </span>
+                } @else {
+                  <span class="badge-nature recouvrement">
+                    <i class="fa-solid fa-arrow-trend-up me-1"></i>Rec.
+                  </span>
+                }
+              </td>
+
+              <td>
+                <span class="piece-ref">{{ op.rfk }}</span>
+              </td>
+
+              <td
+                class="text-truncate"
+                style="max-width: 200px"
+                [title]="op.description"
+              >
+                {{ op.description || "—" }}
+              </td>
+
+              <td>
+                <small class="text-muted">{{ op.categorie }}</small>
+              </td>
+
+              <td>
+                <span class="badge-mode {{ op.mode_paiement }}">
+                  @switch (op.mode_paiement) {
+                    @case ("especes") {
+                      <i class="fas fa-money-bill-wave me-1"></i>Espèces
+                    }
+                    @case ("cheque") {
+                      <i class="fas fa-money-check me-1"></i>Chèque
+                    }
+                    @case ("virement") {
+                      <i class="fas fa-exchange-alt me-1"></i>Virement
+                    }
+                    @case ("mobile_money") {
+                      <i class="fas fa-mobile-alt me-1"></i>Mobile
+                    }
+                    @default {
+                      {{ op.mode_paiement }}
+                    }
+                  }
+                </span>
+              </td>
+
+              <td
+                class="fw-semibold"
+                [class.amount-negative]="op.nature === 'depense'"
+                [class.amount-positive]="op.nature === 'recouvrement'"
+              >
+                {{ op.nature === "depense" ? "− " : "+ "
+                }}{{ op.montant | number: "1.0-0" }}
+              </td>
+
+              <td>
+                <button class="btn-icon view" title="Voir les détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+                @if (!s.exercice.est_cloture) {
+                  <button class="btn-icon edit" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-icon delete" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                }
               </td>
             </tr>
           }
         </tbody>
       </table>
+
+      @if (operations().length > 0) {
+        <div class="pagination-info">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="text-muted">
+              {{ operations().length }} opération{{
+                operations().length > 1 ? "s" : ""
+              }}
+              affichée{{ operations().length > 1 ? "s" : "" }}
+            </span>
+            <span class="text-danger fw-semibold">
+              <i class="fa-solid fa-arrow-trend-down me-1"></i>
+              Dépenses : {{ totalDepensesFiltre() | number: "1.0-0" }} F
+            </span>
+            <span class="text-success fw-semibold">
+              <i class="fa-solid fa-arrow-trend-up me-1"></i>
+              Recouvrements :
+              {{ totalRecouvrementsFiltres() | number: "1.0-0" }} F
+            </span>
+            <span
+              class="fw-semibold"
+              [class.text-success]="
+                totalRecouvrementsFiltres() >= totalDepensesFiltre()
+              "
+              [class.text-danger]="
+                totalRecouvrementsFiltres() < totalDepensesFiltre()
+              "
+            >
+              <i class="fas fa-scale-balanced me-1"></i>
+              Solde :
+              {{
+                totalRecouvrementsFiltres() - totalDepensesFiltre()
+                  | number: "1.0-0"
+              }}
+              F
+            </span>
+          </div>
+        </div>
+      }
     </div>
-  </div>
+
+    @if (s.periodes.length > 0) {
+      <div class="form-container mt-4">
+        <div class="section-title">
+          <i class="fas fa-chart-line"></i>
+          Analyse par période — {{ s.exercice.annee }}
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Période</th>
+                <th>Type</th>
+                <th class="text-center">Opérations</th>
+                <th class="text-end">Dépenses (F)</th>
+                <th class="text-end">Recouvrements (F)</th>
+                <th class="text-end">Solde (F)</th>
+                <th class="text-center">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of s.periodes; track p.rfk) {
+                <tr
+                  style="cursor: pointer"
+                  [class.table-active]="filterPeriode === p.rfk"
+                  (click)="filterPeriode = p.rfk; applyFilters()"
+                  title="Cliquer pour filtrer par cette période"
+                >
+                  <td>
+                    <strong>{{ p.libelle }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge-type {{ p.type }}">{{ p.type }}</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="text-danger me-2">{{ p.nb_depenses }}↓</span>
+                    <span class="text-success">{{ p.nb_recouvrements }}↑</span>
+                  </td>
+                  <td class="text-end amount-negative">
+                    {{ p.total_depenses | number: "1.0-0" }}
+                  </td>
+                  <td class="text-end amount-positive">
+                    {{ p.total_recouvrements | number: "1.0-0" }}
+                  </td>
+                  <td
+                    class="text-end fw-semibold"
+                    [class.amount-positive]="
+                      p.total_recouvrements >= p.total_depenses
+                    "
+                    [class.amount-negative]="
+                      p.total_recouvrements < p.total_depenses
+                    "
+                  >
+                    {{
+                      p.total_recouvrements - p.total_depenses | number: "1.0-0"
+                    }}
+                  </td>
+                  <td class="text-center">
+                    @if (p.est_cloturee) {
+                      <span class="badge-status cloture">
+                        <i class="fas fa-lock me-1"></i>Clôturée
+                      </span>
+                    } @else {
+                      <span class="badge-status actif">
+                        <i class="fas fa-circle me-1"></i>Ouverte
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="2">Total exercice</td>
+                <td class="text-center">
+                  {{ s.nb_depenses + s.nb_recouvrements }}
+                </td>
+                <td class="text-end amount-negative">
+                  {{ s.total_depenses | number: "1.0-0" }}
+                </td>
+                <td class="text-end amount-positive">
+                  {{ s.total_recouvrements | number: "1.0-0" }}
+                </td>
+                <td
+                  class="text-end"
+                  [class.amount-positive]="soldePositif()"
+                  [class.amount-negative]="!soldePositif()"
+                >
+                  {{ s.solde | number: "1.0-0" }}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        @if (filterPeriode) {
+          <div class="mt-2 text-end">
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="filterPeriode = ''; applyFilters()"
+            >
+              <i class="fas fa-times me-1"></i>Retirer le filtre période
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
 </div>

@@ -1,13 +1,13 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ExerciceComptableService } from '../../../services/Caisse/exercice-comptable.service';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  ExerciceComptable,
-  ExerciceComptablePayload,
-} from '../../../models/Caisse/exercice-comptable.model';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ExerciceComptableService } from '../../../services/Caisse/exercice-comptable.service';
+import {
+  ExerciceModel,
+  ExercicePayload,
+} from '../../../models/Caisse/exercice-comptable.model';
 
 @Component({
   selector: 'app-exercice',
@@ -17,24 +17,45 @@ import { Router } from '@angular/router';
 })
 export class ExerciceComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private exerciceComptableService = inject(ExerciceComptableService);
-  private router = inject(Router)
+  private exerciceService = inject(ExerciceComptableService);
+  private router = inject(Router);
 
   loader = signal(false);
   success = signal(false);
   errorMessage = signal<string | null>(null);
   cloturerRfk = signal<string | null>(null);
 
-  exercices = signal<ExerciceComptable[]>([]);
+  exercices = signal<ExerciceModel[]>([]);
 
-  exerciceComptableForm = this.fb.nonNullable.group({
-    libelle: ['', Validators.required],
+  // Pagination
+  currentPage = signal(1);
+  lastPage = signal(1);
+  total = signal(0);
+  perPage = signal(15);
+
+  pageRange = computed(() => {
+    const current = this.currentPage();
+    const last = this.lastPage();
+    if (last <= 1) return [];
+    const start = Math.max(1, current - 2);
+    const end = Math.min(last, current + 2);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  pageStart = computed(() =>
+    this.total() === 0 ? 0 : (this.currentPage() - 1) * this.perPage() + 1,
+  );
+
+  pageEnd = computed(() =>
+    Math.min(this.currentPage() * this.perPage(), this.total()),
+  );
+
+  exerciceForm = this.fb.nonNullable.group({
+    libelle: [''],
+    annee: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
     date_debut: ['', Validators.required],
     date_fin: ['', Validators.required],
-    statut: this.fb.nonNullable.control<'ouvert' | 'cloture'>(
-      'ouvert',
-      Validators.required,
-    ),
+    est_actif: [true],
   });
 
   ngOnInit(): void {
@@ -43,26 +64,49 @@ export class ExerciceComponent implements OnInit {
 
   private loadData(): void {
     this.loader.set(true);
-    this.exerciceComptableService.getAll().subscribe({
-      next: (data) => {
-        this.exercices.set(data);
-        this.loader.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Une erreur est survenue');
-        this.loader.set(false);
-      },
-    });
+    this.exerciceService
+      .getAll({ page: this.currentPage(), per_page: this.perPage() })
+      .subscribe({
+        next: (paginated) => {
+          const liste = Array.isArray(paginated?.data) ? paginated.data : [];
+          this.exercices.set(liste);
+          this.currentPage.set(paginated?.current_page ?? 1);
+          this.lastPage.set(paginated?.last_page ?? 1);
+          this.total.set(paginated?.total ?? liste.length);
+          this.loader.set(false);
+        },
+        error: (err) => {
+          this.errorMessage.set(
+            err.error?.message ?? 'Une erreur est survenue',
+          );
+          this.loader.set(false);
+        },
+      });
   }
 
-  isActif(exercice: ExerciceComptable): boolean {
-    return exercice.statut === 'ouvert';
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.lastPage()) return;
+    this.currentPage.set(page);
+    this.loadData();
   }
 
-  formatResultat(exercice: ExerciceComptable): string {
-    const resultat = exercice.resultat ?? 0;
-    const signe = resultat >= 0 ? '+' : '';
-    return `${signe}${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(resultat)} Fcfa`;
+  // true = exercice en cours (actif et non clôturé)
+  isActif(exercice: ExerciceModel): boolean {
+    return exercice.est_actif && !exercice.est_cloture;
+  }
+
+  // Libellé du badge statut
+  getStatutLabel(exercice: ExerciceModel): string {
+    if (exercice.est_cloture) return 'Clôturé';
+    if (exercice.est_actif) return 'Actif';
+    return 'Inactif';
+  }
+
+  // Classe CSS du badge statut
+  getStatutClass(exercice: ExerciceModel): string {
+    if (exercice.est_cloture) return 'closed';
+    if (exercice.est_actif) return 'active';
+    return 'inactive';
   }
 
   onCloturer(rfk: string): void {
@@ -75,10 +119,18 @@ export class ExerciceComponent implements OnInit {
 
     this.cloturerRfk.set(rfk);
 
-    this.exerciceComptableService.cloturer(rfk).subscribe({
-      next: (data) => {
+    this.exerciceService.cloturer(rfk).subscribe({
+      next: (updated) => {
         this.exercices.update((liste) =>
-          liste.map((e) => (e.rfk === rfk ? { ...e, statut: data.statut } : e)),
+          liste.map((e) =>
+            e.rfk === rfk
+              ? {
+                  ...e,
+                  est_cloture: updated.est_cloture,
+                  est_actif: updated.est_actif,
+                }
+              : e,
+          ),
         );
         this.cloturerRfk.set(null);
         this.success.set(true);
@@ -95,22 +147,31 @@ export class ExerciceComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.exerciceComptableForm.invalid) {
-      this.exerciceComptableForm.markAllAsTouched();
+    if (this.exerciceForm.invalid) {
+      this.exerciceForm.markAllAsTouched();
       return;
     }
 
     this.loader.set(true);
 
-    const payload: ExerciceComptablePayload =
-      this.exerciceComptableForm.getRawValue();
+    const raw: ExercicePayload = this.exerciceForm.getRawValue();
+    const payload: ExercicePayload = {
+      ...raw,
+      libelle: `Exercice ${raw.annee}`,
+    };
 
-    this.exerciceComptableService.create(payload).subscribe({
-      next: (data) => {
-        this.exercices.update((liste) => [data, ...liste]);
+    this.exerciceService.create(payload).subscribe({
+      next: (created) => {
+        this.loadData();
+
         this.success.set(true);
         this.loader.set(false);
-        this.exerciceComptableForm.reset({ statut: 'ouvert' });
+        this.exerciceForm.reset({
+          annee: '',
+          date_debut: '',
+          date_fin: '',
+          libelle: '',
+        });
         setTimeout(() => this.success.set(false), 3000);
       },
       error: (err) => {
@@ -121,7 +182,7 @@ export class ExerciceComponent implements OnInit {
     });
   }
 
-  onConsultation (rfk: string) {
-    this.router.navigate(['/caisse/detail-exercice', rfk])
+  onConsultation(rfk: string): void {
+    this.router.navigate(['/caisse/detail-exercice', rfk]);
   }
 }

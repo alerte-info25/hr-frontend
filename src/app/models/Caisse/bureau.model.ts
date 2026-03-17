@@ -1,37 +1,61 @@
+export interface PaginatedResponse<T> {
+  current_page: number;
+  data: T[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string; 
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
 export interface BureauModel {
+  id: number;
   rfk: string;
-  code: string;
-  libelle: string;
-  rue?: string | null;
-  codepostal?: string | null;
+  nom: string;
   ville: string;
   pays: string;
+  adresse?: string | null;
   complement?: string | null;
-  nb_operation?: number;
+  codepostal?: string | null;
+  // Compteurs injectés par withCount()
+  depenses_count?: number;
+  recouvrements_count?: number;
+  utilisateurs_count?: number;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface BureauModelPayload {
-  libelle: string;
-  rue?: string | null;
-  codepostal?: string | null;
+export interface BureauPayload {
+  nom: string;
   ville: string;
   pays: string;
+  adresse?: string | null;
   complement?: string | null;
-}
-
-export interface BureauPreview {
-  libelle: string;
-  rue: string;
-  complement: string;
-  codepostal: string;
-  ville: string;
-  pays: string;
+  codepostal?: string | null;
 }
 
 export interface BureauStats {
-  total_bureaux: number;
-  total_employes: number;
-  operations_mois: number;
+  bureau: string;
+  total_depenses: number;
+  total_recouvrements: number;
+  solde: number;
+}
+
+export interface BureauFilters {
+  search?: string;
+  pays?: string;
+  ville?: string;
+  per_page?: number;
+  page?: number;
 }

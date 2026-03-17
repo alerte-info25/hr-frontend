@@ -1,0 +1,524 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <div class="row my-4">
+    <div class="col-md-8">
+      <h2 class="dashboard-title">
+        <i class="fas fa-users text-primary me-2"></i>
+        Gestion des clients
+      </h2>
+      <p class="text-muted">
+        Gérez le répertoire des clients liés aux recouvrements
+      </p>
+    </div>
+  </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-danger d-flex align-items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ deleteError() }}</span>
+    </div>
+  }
+
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Total clients</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalClients() }}
+                }
+              </h3>
+            </div>
+            <i class="fas fa-users stats-icon text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Clients actifs</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ clientsActifs() }}
+                  <small class="text-muted fs-6 fw-normal ms-1"
+                    >avec recouvr.</small
+                  >
+                }
+              </h3>
+            </div>
+            <i class="fas fa-user-check stats-icon text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Total recouvrements liés</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalRecouvrements() }}
+                  <small class="text-muted fs-6 fw-normal ms-1"
+                    >opérations</small
+                  >
+                }
+              </h3>
+            </div>
+            <i class="fas fa-arrow-trend-up stats-icon text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ← nouvelle stat card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stats-card border-left-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Montant total recouvré</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ totalRecouvrementsMontant() | number: "1.0-0" }}
+                  <small class="text-muted fs-6 fw-normal ms-1">F</small>
+                }
+              </h3>
+            </div>
+            <i class="fas fa-coins stats-icon text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire (inchangé) -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="form-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">
+            <i
+              class="fas fa-{{
+                isEditMode() ? 'user-edit' : 'user-plus'
+              }} text-primary me-2"
+            ></i>
+            {{ isEditMode() ? "Modifier le client" : "Ajouter un client" }}
+          </h5>
+          @if (isEditMode()) {
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="resetForm()"
+            >
+              <i class="fas fa-times me-1"></i>Annuler l'édition
+            </button>
+          }
+        </div>
+        <div class="card-body">
+          @if (formError()) {
+            <div
+              class="alert alert-danger d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-exclamation-circle"></i
+              ><span>{{ formError() }}</span>
+            </div>
+          }
+          @if (formSuccess()) {
+            <div
+              class="alert alert-success d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-check-circle"></i
+              ><span>{{ formSuccess() }}</span>
+            </div>
+          }
+          <form
+            id="clientForm"
+            [formGroup]="form"
+            (ngSubmit)="submit()"
+            novalidate
+          >
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nom" class="form-label">
+                  <i class="fas fa-user me-1 text-primary"></i>
+                  Nom <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="nom"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('nom')"
+                  formControlName="nom"
+                  placeholder="Ex : Kouassi"
+                  autocomplete="off"
+                />
+                @if (isInvalid("nom")) {
+                  <div class="invalid-feedback">{{ getError("nom") }}</div>
+                }
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="prenom" class="form-label">
+                  <i class="fas fa-user me-1 text-primary"></i>Prénom
+                </label>
+                <input
+                  id="prenom"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('prenom')"
+                  formControlName="prenom"
+                  placeholder="Ex : Ama"
+                  autocomplete="off"
+                />
+                @if (isInvalid("prenom")) {
+                  <div class="invalid-feedback">{{ getError("prenom") }}</div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">
+                  <i class="fas fa-envelope me-1 text-primary"></i>Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('email')"
+                  formControlName="email"
+                  placeholder="Ex : client@exemple.com"
+                  autocomplete="off"
+                />
+                @if (isInvalid("email")) {
+                  <div class="invalid-feedback">{{ getError("email") }}</div>
+                }
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="telephone" class="form-label">
+                  <i class="fas fa-phone me-1 text-primary"></i>Téléphone
+                </label>
+                <input
+                  id="telephone"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('telephone')"
+                  formControlName="telephone"
+                  placeholder="Ex : +225 07 00 00 00 00"
+                  autocomplete="off"
+                />
+                @if (isInvalid("telephone")) {
+                  <div class="invalid-feedback">
+                    {{ getError("telephone") }}
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="adresse" class="form-label">
+                  <i class="fas fa-map-marker-alt me-1 text-primary"></i>Adresse
+                </label>
+                <input
+                  id="adresse"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="isInvalid('adresse')"
+                  formControlName="adresse"
+                  placeholder="Ex : Cocody, Rue des Jardins, Abidjan"
+                  autocomplete="off"
+                />
+                @if (isInvalid("adresse")) {
+                  <div class="invalid-feedback">{{ getError("adresse") }}</div>
+                }
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12 d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="isSaving() || form.invalid"
+                >
+                  @if (isSaving()) {
+                    <span
+                      class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span
+                    >Enregistrement...
+                  } @else {
+                    <i class="fas fa-save me-2"></i
+                    >{{ isEditMode() ? "Mettre à jour" : "Enregistrer" }}
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="resetForm()"
+                >
+                  <i class="fas fa-undo me-2"></i>Annuler
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="table-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-list text-primary me-2"></i>Clients enregistrés
+          </h5>
+          <div class="d-flex gap-2">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Nom, prénom, email, tél..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              style="width: 240px"
+            />
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table expense-table mb-0">
+              <thead>
+                <tr>
+                  <th width="4%">N°</th>
+                  <th width="18%">Nom complet</th>
+                  <th width="17%">Email</th>
+                  <th width="13%">Téléphone</th>
+                  <th width="17%">Adresse</th>
+                  <th width="8%" class="text-center">Recouvr.</th>
+                  <th width="13%" class="text-center">Montant total</th>
+                  <!-- ← -->
+                  <th width="10%" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (isLoadingList()) {
+                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                    <tr>
+                      <td colspan="8">
+                        <!-- ← 7 → 8 -->
+                        <div class="placeholder-glow">
+                          <span class="placeholder col-12 rounded"></span>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+
+                @if (!isLoadingList() && clients().length === 0) {
+                  <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                      <!-- ← 7 → 8 -->
+                      <i class="fas fa-users fa-2x mb-2 d-block opacity-50"></i>
+                      Aucun client enregistré
+                      @if (searchQuery) {
+                        <div class="mt-2">
+                          <button
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="searchQuery = ''; onSearch()"
+                          >
+                            <i class="fas fa-times me-1"></i>Réinitialiser la
+                            recherche
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+
+                @for (client of clients(); track client.rfk; let i = $index) {
+                  <tr [class.table-warning]="editingRfk() === client.rfk">
+                    <td class="text-muted">
+                      {{ (currentPage() - 1) * perPage + i + 1 }}
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div
+                          class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style="
+                            width: 32px;
+                            height: 32px;
+                            font-size: 12px;
+                            font-weight: 600;
+                          "
+                        >
+                          {{ client.nom.charAt(0).toUpperCase()
+                          }}{{ client.prenom?.charAt(0)?.toUpperCase() ?? "" }}
+                        </div>
+                        <div>
+                          <strong>{{ nomComplet(client) }}</strong>
+                          @if (editingRfk() === client.rfk) {
+                            <span class="badge bg-warning text-dark ms-1">
+                              <i class="fas fa-edit me-1"></i>édition
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      @if (client.email) {
+                        <a
+                          [href]="'mailto:' + client.email"
+                          class="text-decoration-none text-primary"
+                        >
+                          <i
+                            class="fas fa-envelope me-1 text-muted"
+                            style="font-size: 11px"
+                          ></i
+                          >{{ client.email }}
+                        </a>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td>
+                      @if (client.telephone) {
+                        <a
+                          [href]="'tel:' + client.telephone"
+                          class="text-decoration-none"
+                        >
+                          <i
+                            class="fas fa-phone me-1 text-muted"
+                            style="font-size: 11px"
+                          ></i
+                          >{{ client.telephone }}
+                        </a>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ client.adresse || "—" }}</small>
+                    </td>
+                    <td class="text-center">
+                      @if ((client.recouvrements_count ?? 0) > 0) {
+                        <span class="badge bg-success-subtle text-success">{{
+                          client.recouvrements_count
+                        }}</span>
+                      } @else {
+                        <span class="text-muted">0</span>
+                      }
+                    </td>
+
+                    <!-- ← nouvelle cellule montant total -->
+                    <td class="text-center">
+                      @if ((client.recouvrements_sum_montant ?? 0) > 0) {
+                        <span class="badge bg-success-subtle text-success">
+                          {{
+                            client.recouvrements_sum_montant | number: "1.0-0"
+                          }}
+                          F
+                        </span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+
+                    <td class="text-center">
+                      <button
+                        class="btn-icon edit"
+                        title="Modifier"
+                        (click)="editClient(client)"
+                        [disabled]="isDeleting() === client.rfk"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        class="btn-icon delete"
+                        title="Supprimer"
+                        (click)="deleteClient(client)"
+                        [disabled]="isDeleting() === client.rfk"
+                      >
+                        @if (isDeleting() === client.rfk) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          <i class="fas fa-trash"></i>
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-white">
+          <div
+            class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+          >
+            <span class="text-muted">
+              @if (!isLoadingList() && total() > 0) {
+                Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
+                {{ Math.min(currentPage() * perPage, total()) }} sur
+                {{ total() }} client{{ total() > 1 ? "s" : "" }}
+              }
+            </span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="currentPage() === 1">
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() - 1)"
+                    >Précédent</a
+                  >
+                </li>
+                @for (page of pages(); track page) {
+                  <li class="page-item" [class.active]="page === currentPage()">
+                    <a
+                      class="page-link"
+                      style="cursor: pointer"
+                      (click)="goToPage(page)"
+                      >{{ page }}</a
+                    >
+                  </li>
+                }
+                <li
+                  class="page-item"
+                  [class.disabled]="currentPage() === lastPage()"
+                >
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() + 1)"
+                    >Suivant</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

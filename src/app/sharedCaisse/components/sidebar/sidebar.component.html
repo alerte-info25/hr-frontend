@@ -1,4 +1,6 @@
 <div class="sidebar" [class.toggled]="isToggled" id="sidebar">
+
+  <!-- HEADER -->
   <div class="sidebar-header">
     <div class="logo">
       <img
@@ -9,19 +11,50 @@
     </div>
   </div>
 
+  <!-- NAVIGATION -->
   <ul class="nav flex-column">
-    <li class="nav-item">
-      @for (item of navItems; track $index) {
-        <a class="nav-link" [routerLink]="item.route" routerLinkActive="active">
-          <i class="{{ item.icon }}"></i>{{ item.label }}
-        </a>
+
+    @for (item of navItems; track $index) {
+
+      <!-- Titre de section -->
+      @if (isSection(item)) {
+        <li class="nav-item">
+          <div class="px-4 pt-3 pb-1">
+            <small
+              class="text-uppercase fw-bold d-block"
+              style="font-size: 0.65rem; letter-spacing: 0.1em; opacity: 0.45; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;"
+            >
+              {{ item.sectionTitle }}
+            </small>
+          </div>
+        </li>
       }
-    </li>
+
+      <!-- Lien normal -->
+      @else {
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/caisse' || item.route === '/applications' }"
+          >
+            <i class="{{ item.icon }}"></i>
+            {{ item.label }}
+          </a>
+        </li>
+      }
+
+    }
+
   </ul>
 
+  <!-- FOOTER -->
   <div class="sidebar-footer">
-    <a href="#" class="text-white" (click)="logout()">
-      <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+    <a (click)="logout()" style="cursor: pointer">
+      <i class="fas fa-sign-out-alt me-2"></i>
+      Déconnexion
     </a>
   </div>
+
 </div>

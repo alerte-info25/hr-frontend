@@ -363,24 +363,8 @@ export const routes: Routes = [
         path: '',
         title: 'Logiciel de caisse',
         loadComponent: () =>
-          import('./pages/Caisse/dashboard/dashboard.component').then(
-            (c) => c.DashboardComponent,
-          ),
-      },
-      {
-        path: 'new-journal',
-        title: "Ecriture d'écriture comptable",
-        loadComponent: () =>
-          import('./pages/Caisse/journal/add-journal/add-journal.component').then(
-            (c) => c.AddJournalComponent,
-          ),
-      },
-      {
-        path: 'journal',
-        title: 'Liste des écritures comptable',
-        loadComponent: () =>
-          import('./pages/Caisse/journal/journal.component').then(
-            (c) => c.JournalComponent,
+          import('./pages/Caisse/dashboard-caisse/dashboard-caisse.component').then(
+            (c) => c.DashboardCaisseComponent,
           ),
       },
       {
@@ -408,30 +392,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'add-compte',
-        title: 'Ajouter un compte',
-        loadComponent: () =>
-          import('./pages/Caisse/compte/add-compte/add-compte.component').then(
-            (c) => c.AddCompteComponent,
-          ),
-      },
-      {
-        path: 'update-compte/:rfk',
-        title: 'Modifier un compte',
-        loadComponent: () =>
-          import('./pages/Caisse/compte/add-compte/add-compte.component').then(
-            (c) => c.AddCompteComponent,
-          ),
-      },
-      {
-        path: 'comptes',
-        title: 'Liste des comptes',
-        loadComponent: () =>
-          import('./pages/Caisse/compte/compte.component').then(
-            (c) => c.CompteComponent,
-          ),
-      },
-      {
         path: 'exercices',
         title: 'Liste des exercices comptables',
         loadComponent: () =>
@@ -440,11 +400,75 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'detail-exercice/:exerciceRfk',
+        path: 'detail-exercice/:rfk',
         title: "Détail de l'exercice",
         loadComponent: () =>
           import('./pages/Caisse/exercice/detail-exercice/detail-exercice.component').then(
             (c) => c.DetailExerciceComponent,
+          ),
+      },
+      {
+        path: 'types-depenses',
+        title: 'gestion des types de dépenses',
+        loadComponent: () =>
+          import('./pages/Caisse/type-depense/type-depense.component').then(
+            (c) => c.TypeDepenseComponent,
+          ),
+      },
+      {
+        path: 'services-propose',
+        title: 'gestion des services proposés',
+        loadComponent: () =>
+          import('./pages/Caisse/service-propose/service-propose.component').then(
+            (c) => c.ServiceProposeComponent,
+          ),
+      },
+      {
+        path: 'clients',
+        title: 'gestion des clients',
+        loadComponent: () =>
+          import('./pages/Caisse/clients/clients.component').then(
+            (c) => c.ClientsComponent,
+          ),
+      },
+      {
+        path: 'fournisseurs',
+        title: 'gestion des fournisseurs',
+        loadComponent: () =>
+          import('./pages/Caisse/fournisseurs/fournisseurs.component').then(
+            (c) => c.FournisseursComponent,
+          ),
+      },
+      {
+        path: 'depenses',
+        title: 'Nouvelle dépense',
+        loadComponent: () =>
+          import('./pages/Caisse/depense/depense.component').then(
+            (c) => c.DepenseComponent,
+          ),
+      },
+      {
+        path: 'recouvrements',
+        title: 'Nouvelle récouvrement',
+        loadComponent: () =>
+          import('./pages/Caisse/recouvrement/recouvrement.component').then(
+            (c) => c.RecouvrementComponent,
+          ),
+      },
+      {
+        path: 'periodes',
+        title: 'Gestion des périodes',
+        loadComponent: () =>
+          import('./pages/Caisse/periode/periode.component').then(
+            (c) => c.PeriodeComponent,
+          ),
+      },
+      {
+        path: 'comptes',
+        title: 'Gestion des comptes',
+        loadComponent: () =>
+          import('./pages/Caisse/compte-comptable/compte-comptable.component').then(
+            (c) => c.CompteComptableComponent,
           ),
       },
     ],

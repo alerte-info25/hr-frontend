@@ -1,0 +1,580 @@
+// Variables (à définir globalement)
+$primary-blue: #1e3a5f;
+$secondary-blue: #2b4c7c;
+$accent-blue: #3a6ea5;
+$primary-yellow: #f4b400;
+$secondary-yellow: #ffc107;
+$dark: #1e2a3a;
+$light: #f8f9fc;
+$gray: #6c757d;
+$success: #28a745;
+$danger: #dc3545;
+$warning: #ffc107;
+$info: #17a2b8;
+
+// Mixins pour la responsive
+@mixin mobile {
+  @media (max-width: 576px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 769px) {
+    @content;
+  }
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Page content wrapper
+#page-content-wrapper {
+  flex: 1;
+  transition: all 0.3s;
+  background-color: $light;
+
+  @include tablet {
+    min-width: 100vw;
+  }
+}
+
+// Navbar
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  padding: 15px 0;
+  background: white !important;
+
+  .btn-primary {
+    background: $primary-blue;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+
+    &:hover {
+      background: $secondary-blue;
+    }
+  }
+
+  .dropdown {
+    .btn-light {
+      background: transparent;
+      border: none;
+
+      img {
+        width: 30px;
+        height: 30px;
+        object-fit: cover;
+      }
+    }
+
+    .badge {
+      background-color: $primary-yellow !important;
+    }
+  }
+}
+
+// Container principal
+.container-fluid {
+  padding: 0 1.5rem;
+
+  @include mobile {
+    padding: 0 1rem;
+  }
+}
+
+// En-tête
+.dashboard-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: $dark;
+  margin-bottom: 0.25rem;
+
+  i {
+    color: $primary-blue;
+  }
+
+  @include mobile {
+    font-size: 1.4rem;
+  }
+}
+
+.text-muted {
+  color: $gray !important;
+  font-size: 0.95rem;
+
+  @include mobile {
+    font-size: 0.85rem;
+  }
+}
+
+// Cards
+.stats-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  transition: all 0.3s;
+  animation: slideIn 0.5s ease-out;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba($primary-blue, 0.1);
+  }
+
+  &.border-left-primary {
+    border-left: 4px solid $primary-blue;
+  }
+
+  &.border-left-warning {
+    border-left: 4px solid $primary-yellow;
+  }
+
+  .card-body {
+    padding: 1.2rem;
+
+    @include mobile {
+      padding: 1rem;
+    }
+  }
+
+  .stats-label {
+    color: $gray;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+
+    @include mobile {
+      font-size: 0.7rem;
+    }
+  }
+
+  .stats-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $dark;
+    margin: 0;
+
+    @include mobile {
+      font-size: 1.2rem;
+    }
+  }
+
+  .stats-icon {
+    font-size: 2rem;
+    color: rgba($primary-blue, 0.1);
+
+    @include mobile {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// Formulaire
+.form-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  animation: slideIn 0.5s ease-out;
+
+  .card-header {
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0 !important;
+
+    h5 {
+      color: $dark;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+
+      i {
+        color: $primary-blue;
+      }
+    }
+
+    @include mobile {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+
+    @include mobile {
+      padding: 1rem;
+    }
+  }
+}
+
+// Labels de formulaire
+.form-label {
+  color: $dark;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+
+  i {
+    color: $primary-blue;
+    margin-right: 0.25rem;
+  }
+
+  @include mobile {
+    font-size: 0.85rem;
+  }
+}
+
+// Champs de formulaire
+.form-control,
+.form-select {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+
+  &:focus {
+    border-color: $primary-blue;
+    box-shadow: 0 0 0 0.2rem rgba($primary-blue, 0.1);
+  }
+
+  @include mobile {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+// Boutons
+.btn-primary {
+  background-color: $primary-blue;
+  border-color: $primary-blue;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+
+  &:hover {
+    background-color: $secondary-blue;
+    border-color: $secondary-blue;
+  }
+
+  @include mobile {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-warning {
+  background-color: $primary-yellow;
+  border-color: $primary-yellow;
+  color: $dark;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+
+  &:hover {
+    background-color: darken($primary-yellow, 5%);
+    border-color: darken($primary-yellow, 5%);
+  }
+
+  @include mobile {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-outline-primary {
+  color: $primary-blue;
+  border-color: $primary-blue;
+
+  &:hover {
+    background-color: $primary-blue;
+    border-color: $primary-blue;
+    color: white;
+  }
+}
+
+.btn-outline-secondary {
+  color: $gray;
+  border-color: #dee2e6;
+
+  &:hover {
+    background-color: $gray;
+    border-color: $gray;
+    color: white;
+  }
+}
+
+.btn-outline-danger {
+  color: $danger;
+  border-color: $danger;
+
+  &:hover {
+    background-color: $danger;
+    border-color: $danger;
+    color: white;
+  }
+}
+
+.btn-group-sm-custom {
+  @include mobile {
+    display: flex;
+    gap: 5px;
+  }
+}
+
+// Tableau
+.table-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  animation: slideIn 0.5s ease-out;
+
+  .card-header {
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0 !important;
+
+    h5 {
+      color: $dark;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+
+      i {
+        color: $primary-blue;
+      }
+    }
+
+    .form-control-sm,
+    .form-select-sm {
+      border-radius: 6px;
+
+      @include mobile {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    @include mobile {
+      padding: 0.75rem 1rem;
+
+      .d-flex {
+        flex-direction: column;
+        width: 100%;
+
+        input,
+        select {
+          width: 100% !important;
+        }
+      }
+    }
+  }
+
+  .card-body {
+    padding: 0;
+  }
+
+  .card-footer {
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 12px 12px;
+
+    @include mobile {
+      padding: 0.75rem 1rem;
+
+      .d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center !important;
+
+        div:first-child {
+          margin-bottom: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+.expense-table {
+  margin-bottom: 0;
+
+  thead {
+    th {
+      background: $light;
+      color: $dark;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem;
+      white-space: nowrap;
+
+      @include mobile {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  tbody {
+    td {
+      padding: 1rem;
+      vertical-align: middle;
+      color: $dark;
+
+      @include mobile {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
+
+// Badges
+.badge-category {
+  background: rgba($primary-blue, 0.1);
+  color: $primary-blue;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: inline-block;
+
+  @include mobile {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+.badge-active {
+  background: rgba($success, 0.1);
+  color: $success;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: inline-block;
+
+  @include mobile {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+.badge-inactive {
+  background: rgba($danger, 0.1);
+  color: $danger;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: inline-block;
+
+  @include mobile {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+// Boutons d'action dans le tableau
+.btn-group-sm {
+  .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+
+    i {
+      font-size: 0.8rem;
+    }
+
+    @include mobile {
+      padding: 0.2rem 0.4rem;
+
+      i {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+// Pagination
+.pagination {
+  .page-item {
+    &.active .page-link {
+      background-color: $primary-blue;
+      border-color: $primary-blue;
+      color: #fff;
+    }
+
+    .page-link {
+      color: $primary-blue;
+      border-radius: 6px;
+      margin: 0 2px;
+
+      &:hover {
+        background-color: rgba($primary-blue, 0.1);
+        border-color: #dee2e6;
+      }
+    }
+  }
+
+  @include mobile {
+    margin-top: 0.5rem;
+
+    .page-link {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Texte d'information du tableau
+#tableInfo {
+  font-size: 0.9rem;
+
+  @include mobile {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+}
+
+// Utilitaires responsive
+.dashboard-header {
+  @include mobile {
+    .col-md-8,
+    .col-md-4 {
+      text-align: center !important;
+    }
+
+    .btn-warning {
+      margin-top: 1rem;
+      width: 100%;
+    }
+  }
+}

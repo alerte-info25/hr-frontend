@@ -1,0 +1,752 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!--  En-tête  -->
+  <div class="row my-4">
+    <div class="col-md-8">
+      <h2 class="dashboard-title">
+        Gestion des dépenses
+      </h2>
+      <p class="text-muted">
+        Enregistrez et suivez toutes les dépenses de la caisse
+      </p>
+    </div>
+  </div>
+
+  <!--  Alerte suppression  -->
+  @if (deleteError()) {
+    <div class="alert alert-danger d-flex align-items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i><span>{{ deleteError() }}</span>
+    </div>
+  }
+
+  <!--  Cartes statistiques  -->
+  <div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card stats-card border-left-danger">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Total dépenses (page)</p>
+              <h3 class="stats-value text-danger">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-6"></span>
+                } @else {
+                  {{ totalMontant() | number: "1.0-0" }}
+                  <small class="fs-6 fw-normal">F</small>
+                }
+              </h3>
+            </div>
+            <i class="fas fa-arrow-trend-down stats-icon text-danger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card stats-card border-left-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Nombre de dépenses</p>
+              <h3 class="stats-value">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-4"></span>
+                } @else {
+                  {{ total() }}
+                  <small class="text-muted fs-6 fw-normal ms-1"
+                    >opérations</small
+                  >
+                }
+              </h3>
+            </div>
+            <i class="fas fa-list-ul stats-icon text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card stats-card border-left-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="stats-label">Moyenne par dépense</p>
+              <h3 class="stats-value text-warning">
+                @if (isLoadingList()) {
+                  <span class="placeholder col-6"></span>
+                } @else {
+                  {{
+                    depenses().length > 0
+                      ? (totalMontant() / depenses().length | number: "1.0-0")
+                      : 0
+                  }}
+                  <small class="fs-6 fw-normal">F</small>
+                }
+              </h3>
+            </div>
+            <i class="fas fa-chart-bar stats-icon text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  Formulaire  -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="form-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">
+            <i
+              class="fas fa-{{
+                isEditMode() ? 'edit' : 'plus-circle'
+              }} text-danger me-2"
+            ></i>
+            {{
+              isEditMode() ? "Modifier la dépense" : "Enregistrer une dépense"
+            }}
+          </h5>
+          @if (isEditMode()) {
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              (click)="resetForm()"
+            >
+              <i class="fas fa-times me-1"></i>Annuler l'édition
+            </button>
+          }
+        </div>
+
+        <div class="card-body">
+          @if (isLoadingRefs()) {
+            <div class="text-center text-muted py-4">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Chargement des référentiels...
+            </div>
+          }
+
+          @if (formSuccess()) {
+            <div
+              class="alert alert-success d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-check-circle"></i
+              ><span>{{ formSuccess() }}</span>
+            </div>
+          }
+
+          @if (formError()) {
+            <div
+              class="alert alert-danger d-flex align-items-center gap-2 mb-3"
+            >
+              <i class="fas fa-exclamation-circle"></i
+              ><span>{{ formError() }}</span>
+            </div>
+          }
+
+          @if (!isLoadingRefs()) {
+            <form
+              id="depenseForm"
+              [formGroup]="form"
+              (ngSubmit)="submit()"
+              novalidate
+            >
+              <!--  Ligne 1 : Exercice / Période  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-journal-whills me-1 text-danger"></i>
+                    Exercice <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isInvalid('exercice_id')"
+                    formControlName="exercice_id"
+                    (change)="onExerciceChange(form.get('exercice_id')?.value)"
+                  >
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    @for (ex of exercices(); track ex.id) {
+                      <option [ngValue]="ex.id">
+                        {{ ex.annee }}
+                        @if (ex.est_actif) {
+                          ★
+                        }
+                      </option>
+                    }
+                  </select>
+                  @if (isInvalid("exercice_id")) {
+                    <div class="invalid-feedback">
+                      {{ getError("exercice_id") }}
+                    </div>
+                  }
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-calendar-alt me-1 text-danger"></i>
+                    Période <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isInvalid('periode_id')"
+                    formControlName="periode_id"
+                  >
+                    <option [ngValue]="null">
+                      {{
+                        periodes().length === 0
+                          ? "— Sélectionnez d'abord un exercice —"
+                          : "— Sélectionner —"
+                      }}
+                    </option>
+                    @for (p of periodes(); track p.rfk) {
+                      <option [ngValue]="p.id">{{ p.libelle }}</option>
+                    }
+                  </select>
+                  @if (isInvalid("periode_id")) {
+                    <div class="invalid-feedback">
+                      {{ getError("periode_id") }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!--  Ligne 2 : Bureau / Type dépense  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-building me-1 text-danger"></i>
+                    Bureau <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isInvalid('bureau_id')"
+                    formControlName="bureau_id"
+                  >
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    @for (b of bureaux(); track b.id) {
+                      <option [ngValue]="b.id">{{ b.nom }}</option>
+                    }
+                  </select>
+                  @if (isInvalid("bureau_id")) {
+                    <div class="invalid-feedback">
+                      {{ getError("bureau_id") }}
+                    </div>
+                  }
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-tag me-1 text-danger"></i>
+                    Type de dépense <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isInvalid('type_depense_id')"
+                    formControlName="type_depense_id"
+                  >
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    @for (t of typesDepense(); track t.id) {
+                      <option [ngValue]="t.id">{{ t.libelle }}</option>
+                    }
+                  </select>
+                  @if (isInvalid("type_depense_id")) {
+                    <div class="invalid-feedback">
+                      {{ getError("type_depense_id") }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!--  Ligne 3 : Compte comptable / Fournisseur  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-book me-1 text-danger"></i>
+                    Compte comptable <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isInvalid('compte_comptable_id')"
+                    formControlName="compte_comptable_id"
+                  >
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    @for (c of comptes(); track c.id) {
+                      <option [ngValue]="c.id">
+                        {{ c.code }} — {{ c.libelle }}
+                      </option>
+                    }
+                  </select>
+                  @if (isInvalid("compte_comptable_id")) {
+                    <div class="invalid-feedback">
+                      {{ getError("compte_comptable_id") }}
+                    </div>
+                  }
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-truck me-1 text-danger"></i>
+                    Fournisseur
+                    <small class="text-muted fw-normal">(optionnel)</small>
+                  </label>
+                  <select class="form-select" formControlName="fournisseur_id">
+                    <option [ngValue]="null">— Aucun fournisseur —</option>
+                    @for (f of fournisseurs(); track f.id) {
+                      <option [ngValue]="f.id">{{ f.nom }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!--  Ligne 4 : Date / Montant  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-calendar-day me-1 text-danger"></i>
+                    Date de la dépense <span class="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [class.is-invalid]="isInvalid('date_depense')"
+                    formControlName="date_depense"
+                  />
+                  @if (isInvalid("date_depense")) {
+                    <div class="invalid-feedback">
+                      {{ getError("date_depense") }}
+                    </div>
+                  }
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-coins me-1 text-danger"></i>
+                    Montant (F CFA) <span class="text-danger">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [class.is-invalid]="isInvalid('montant')"
+                    formControlName="montant"
+                    placeholder="Ex : 150000"
+                    min="1"
+                  />
+                  @if (isInvalid("montant")) {
+                    <div class="invalid-feedback">
+                      {{ getError("montant") }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!--  Ligne 5 : Mode paiement / Référence  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-credit-card me-1 text-danger"></i>
+                    Mode de paiement
+                  </label>
+                  <select class="form-select" formControlName="mode_paiement">
+                    <option [ngValue]="null">— Sélectionner —</option>
+                    @for (m of modesOptions; track m[0]) {
+                      <option [value]="m[0]">
+                        {{ m[1] }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-hashtag me-1 text-danger"></i>
+                    Référence de paiement
+                    <small class="text-muted fw-normal">(optionnel)</small>
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="reference_paiement"
+                    placeholder="Ex : CHQ-00123, VIR-2025-456..."
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              <!--  Ligne 6 : Description  -->
+              <div class="row">
+                <div class="col-12 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-align-left me-1 text-danger"></i>
+                    Description <span class="text-danger">*</span>
+                  </label>
+                  <textarea
+                    class="form-control"
+                    [class.is-invalid]="isInvalid('description')"
+                    formControlName="description"
+                    rows="2"
+                    placeholder="Décrivez brièvement cette dépense..."
+                  ></textarea>
+                  @if (isInvalid("description")) {
+                    <div class="invalid-feedback">
+                      {{ getError("description") }}
+                    </div>
+                  }
+                  <div class="text-end mt-1">
+                    <small class="text-muted">
+                      {{ form.get("description")?.value?.length ?? 0 }}/500
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!--  Boutons  -->
+              <div class="d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-danger"
+                  [disabled]="isSaving() || form.invalid"
+                >
+                  @if (isSaving()) {
+                    <span
+                      class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
+                    Enregistrement...
+                  } @else {
+                    <i class="fas fa-save me-2"></i>
+                    {{
+                      isEditMode() ? "Mettre à jour" : "Enregistrer la dépense"
+                    }}
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="resetForm()"
+                >
+                  <i class="fas fa-undo me-2"></i>Annuler
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  Filtres  -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="table-card">
+        <div class="card-body py-3">
+          <div class="row g-2 align-items-end" style="padding: 15px">
+            <div class="col-md-3">
+              <label class="form-label form-label-sm text-muted mb-1"
+                >Exercice</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="filterExerciceId"
+                (change)="onFilterChange()"
+              >
+                <option value="">Tous les exercices</option>
+                @for (ex of exercices(); track ex.id) {
+                  <option [value]="ex.id">{{ ex.annee }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label form-label-sm text-muted mb-1"
+                >Type de dépense</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="filterTypeId"
+                (change)="onFilterChange()"
+              >
+                <option value="">Tous les types</option>
+                @for (t of typesDepense(); track t.id) {
+                  <option [value]="t.id">{{ t.libelle }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label form-label-sm text-muted mb-1"
+                >Mode paiement</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="filterMode"
+                (change)="onFilterChange()"
+              >
+                <option value="">Tous les modes</option>
+                @for (m of modesOptions; track m[0]) {
+                  <option [value]="m[0]">{{ m[1] }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label form-label-sm text-muted mb-1"
+                >Recherche</label
+              >
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Référence, description..."
+                [(ngModel)]="filterSearch"
+                (input)="onFilterChange()"
+                style="height: 43px"
+              />
+            </div>
+
+            <div class="col-md-1">
+              <button
+                class="btn btn-sm btn-outline-secondary w-100"
+                title="Réinitialiser les filtres"
+                (click)="
+                  filterExerciceId = '';
+                  filterTypeId = '';
+                  filterMode = '';
+                  filterSearch = '';
+                  onFilterChange()
+                "
+                style="height: 43px"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  Liste des dépenses  -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="table-card">
+        <div
+          class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-list text-danger me-2"></i>
+            Dépenses enregistrées
+          </h5>
+          <span class="badge bg-danger-subtle text-danger px-3 py-2">
+            {{ total() }} résultat{{ total() > 1 ? "s" : "" }}
+          </span>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table expense-table mb-0">
+              <thead>
+                <tr>
+                  <th width="4%">N°</th>
+                  <th width="8%">Référence</th>
+                  <th width="9%">Date</th>
+                  <th width="15%">Type</th>
+                  <th width="14%">Fournisseur</th>
+                  <th width="13%">Période</th>
+                  <th width="10%">Mode</th>
+                  <th width="11%" class="text-end">Montant (F)</th>
+                  <th width="10%" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Skeleton -->
+                @if (isLoadingList()) {
+                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                    <tr>
+                      <td colspan="9">
+                        <div class="placeholder-glow">
+                          <span class="placeholder col-12 rounded"></span>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+
+                <!-- Vide -->
+                @if (!isLoadingList() && depenses().length === 0) {
+                  <tr>
+                    <td colspan="9" class="text-center text-muted py-5">
+                      <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                      Aucune dépense trouvée
+                      @if (
+                        filterSearch ||
+                        filterExerciceId ||
+                        filterTypeId ||
+                        filterMode
+                      ) {
+                        <div class="mt-2">
+                          <button
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="
+                              filterExerciceId = '';
+                              filterTypeId = '';
+                              filterMode = '';
+                              filterSearch = '';
+                              onFilterChange()
+                            "
+                          >
+                            <i class="fas fa-times me-1"></i>Réinitialiser les
+                            filtres
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+
+                <!-- Lignes -->
+                @for (d of depenses(); track d.rfk; let i = $index) {
+                  <tr [class.table-warning]="editingRfk() === d.rfk">
+                    <td class="text-muted">
+                      {{ (currentPage() - 1) * perPage + i + 1 }}
+                    </td>
+
+                    <td>
+                      <small class="text-muted font-monospace">{{
+                        d.rfk
+                      }}</small>
+                    </td>
+
+                    <td>{{ d.date_depense | date: "dd/MM/yyyy" }}</td>
+
+                    <td>
+                      <span class="badge bg-danger-subtle text-danger">
+                        {{ d.type_depense?.libelle ?? "—" }}
+                      </span>
+                    </td>
+
+                    <td class="text-muted">
+                      <i
+                        class="fas fa-truck me-1 opacity-50"
+                        style="font-size: 11px"
+                      ></i>
+                      {{ d.fournisseur?.nom ?? "—" }}
+                    </td>
+
+                    <td class="text-muted">{{ d.periode?.libelle ?? "—" }}</td>
+
+                    <td>
+                      @if (d.mode_paiement) {
+                        <span class="badge bg-secondary-subtle text-secondary">
+                          <i
+                            class="fas {{
+                              modePaiementIcons[d.mode_paiement]
+                            }} me-1"
+                          ></i>
+                          {{ modePaiementLabels[d.mode_paiement] }}
+                        </span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+
+                    <td class="text-end fw-semibold text-danger">
+                      {{ d.montant | number: "1.0-0" }}
+                    </td>
+
+                    <td class="text-center">
+                      <button
+                        class="btn-icon edit"
+                        title="Modifier"
+                        (click)="editDepense(d)"
+                        [disabled]="isDeleting() === d.rfk"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        class="btn-icon delete"
+                        title="Supprimer"
+                        (click)="deleteDepense(d)"
+                        [disabled]="isDeleting() === d.rfk"
+                      >
+                        @if (isDeleting() === d.rfk) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          <i class="fas fa-trash"></i>
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+
+              <!-- Footer totaux -->
+              @if (!isLoadingList() && depenses().length > 0) {
+                <tfoot>
+                  <tr class="table-light fw-semibold">
+                    <td colspan="7" class="text-end text-muted">
+                      Total de la page ({{ depenses().length }} ligne{{
+                        depenses().length > 1 ? "s" : ""
+                      }}) :
+                    </td>
+                    <td class="text-end text-danger">
+                      {{ totalMontant() | number: "1.0-0" }} F
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer pagination -->
+        <div class="card-footer bg-white">
+          <div
+            class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+          >
+            <span class="text-muted">
+              @if (!isLoadingList() && total() > 0) {
+                Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
+                {{ Math.min(currentPage() * perPage, total()) }} sur
+                {{ total() }} dépense{{ total() > 1 ? "s" : "" }}
+              }
+            </span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="currentPage() === 1">
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() - 1)"
+                    >Précédent</a
+                  >
+                </li>
+                @for (page of pages(); track page) {
+                  <li class="page-item" [class.active]="page === currentPage()">
+                    <a
+                      class="page-link"
+                      style="cursor: pointer"
+                      (click)="goToPage(page)"
+                      >{{ page }}</a
+                    >
+                  </li>
+                }
+                <li
+                  class="page-item"
+                  [class.disabled]="currentPage() === lastPage()"
+                >
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(currentPage() + 1)"
+                    >Suivant</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -74,7 +74,7 @@ $sidebar-width: 290px;
   }
 }
 
-// ─── Nom utilisateur ────────────────────────────────────────────
+//  Nom utilisateur
 :host .period-selector {
   background: transparent !important;
   border: none !important;
@@ -103,7 +103,7 @@ $sidebar-width: 290px;
   align-items: center;
 }
 
-// ─── Dropdown profil ────────────────────────────────────────────
+//  Dropdown profil
 :host .dropdown-toggle {
   border: none !important;
   box-shadow: none !important;
@@ -139,7 +139,7 @@ $sidebar-width: 290px;
   }
 }
 
-// ─── Photo utilisateur ──────────────────────────────────────────
+//  Photo utilisateur
 :host .rounded-circle {
   width: 35px !important;
   height: 35px !important;
@@ -148,7 +148,7 @@ $sidebar-width: 290px;
   border-radius: 50% !important;
 }
 
-// ─── Dropdown menu ──────────────────────────────────────────────
+//  Dropdown menu
 :host .dropdown-menu {
   border: none;
   box-shadow: 0 4px 20px rgba($black, 0.15);
@@ -180,7 +180,7 @@ $sidebar-width: 290px;
   border-color: $border-color;
 }
 
-// ─── Responsive ─────────────────────────────────────────────────
+//  Responsive
 @media (max-width: 768px) {
   :host .navbar {
     padding: 10px 0;

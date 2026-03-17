@@ -21,26 +21,34 @@ export class BureauComponent implements OnInit {
   loader = signal(false);
   errorMessage = signal<string | null>(null);
   deleteRfk = signal<string | null>(null);
-  stats = signal<BureauStats | null>(null);
   villes = signal<string[]>([]);
 
-  ngOnInit(): void {
-    this.loadBureaux();
-    this.animerStats();
-    this.loadStats();
-    this.loadSelect();
+  // ✅ Calculé depuis les données déjà chargées, plus d'appel HTTP
+  stats = computed<BureauStats | null>(() => {
+    const liste = this.bureaux();
+    if (!liste.length) return null;
 
-    this.rechercheSubject
-      .pipe(debounceTime(300))
-      .subscribe((terme) => this.recherche.set(terme));
-  }
+    const total_depenses = liste.reduce(
+      (sum, b) => sum + (b.depenses_count ?? 0),
+      0,
+    );
+    const total_recouvrements = liste.reduce(
+      (sum, b) => sum + (b.recouvrements_count ?? 0),
+      0,
+    );
 
-  // recherche
+    return {
+      bureau: 'global',
+      total_depenses,
+      total_recouvrements,
+      solde: total_recouvrements - total_depenses,
+    };
+  });
+
   recherche = signal('');
   villeSelectionnee = signal('');
   private rechercheSubject = new Subject<string>();
 
-  // Calculé automatiquement depuis bureaux + filtres
   bureauxFiltres = computed(() => {
     const terme = this.recherche().toLowerCase();
     const ville = this.villeSelectionnee();
@@ -48,16 +56,25 @@ export class BureauComponent implements OnInit {
     return this.bureaux().filter((b) => {
       const matchRecherche =
         !terme ||
-        b.libelle.toLowerCase().includes(terme) ||
-        b.code.toLowerCase().includes(terme) ||
+        b.nom.toLowerCase().includes(terme) ||
+        b.pays.toLowerCase().includes(terme) ||
         b.ville?.toLowerCase().includes(terme) ||
-        b.rue?.toLowerCase().includes(terme);
+        b.adresse?.toLowerCase().includes(terme);
 
       const matchVille = !ville || b.ville === ville;
-
       return matchRecherche && matchVille;
     });
   });
+
+  ngOnInit(): void {
+    this.loadBureaux();
+    this.animerStats();
+    // ✅ loadStats() supprimé
+
+    this.rechercheSubject
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((terme) => this.recherche.set(terme));
+  }
 
   onRecherche(terme: string): void {
     this.rechercheSubject.next(terme);
@@ -74,18 +91,16 @@ export class BureauComponent implements OnInit {
       next: (data) => {
         this.bureaux.set(data);
         this.loader.set(false);
+
+        const villesUniques = [
+          ...new Set(data.map((b) => b.ville).filter((v): v is string => !!v)),
+        ].sort();
+        this.villes.set(villesUniques);
       },
       error: (err) => {
         this.errorMessage.set(err.error?.message ?? 'Une erreur est survenue');
         this.loader.set(false);
       },
-    });
-  }
-
-  private loadStats(): void {
-    this.bureauService.getStats().subscribe({
-      next: (data) => this.stats.set(data),
-      error: (err) => console.error('Erreur stats', err),
     });
   }
 
@@ -109,14 +124,13 @@ export class BureauComponent implements OnInit {
     });
   }
 
-  onEdit(rfk: string) {
+  onEdit(rfk: string): void {
     this.router.navigate(['/caisse/update-bureaux', rfk]);
   }
 
   transformGrid(): void {
     this.viewMode = 'grid';
   }
-
   transformTable(): void {
     this.viewMode = 'table';
   }
@@ -145,7 +159,6 @@ export class BureauComponent implements OnInit {
     duration: number,
   ): void {
     let startTimestamp: number | null = null;
-
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
@@ -154,22 +167,6 @@ export class BureauComponent implements OnInit {
       ).toString();
       if (progress < 1) window.requestAnimationFrame(step);
     };
-
     window.requestAnimationFrame(step);
-  }
-
-  private loadSelect() {
-    this.bureauService.getAll().subscribe({
-      next: (data) => {
-        const villesUniques = [
-          ...new Set(data.map((b) => b.ville).filter((v): v is string => !!v)),
-        ].sort();
-
-        this.villes.set(villesUniques);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Une erreur est survenue');
-      },
-    });
   }
 }

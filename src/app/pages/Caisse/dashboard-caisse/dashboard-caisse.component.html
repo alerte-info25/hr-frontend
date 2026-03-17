@@ -1,0 +1,925 @@
+<app-loader />
+
+<div class="container-fluid px-4 dashboard-caisse">
+  <div class="row my-4 align-items-center">
+    <div class="col-md-8">
+      <h2 class="dashboard-title mb-1">
+        Tableau de bord
+      </h2>
+      @if (data()) {
+        <p class="text-muted mb-0">
+          Exercice <strong>{{ data()!.exercice.annee }}</strong>
+          &nbsp;·&nbsp;
+          {{ data()!.exercice.date_debut | date: "dd/MM/yyyy" }}
+          au
+          {{ data()!.exercice.date_fin | date: "dd/MM/yyyy" }}
+        </p>
+      }
+    </div>
+    <div class="col-md-4 text-md-end">
+      <button
+        class="btn btn-sm btn-outline-primary"
+        (click)="load()"
+        [disabled]="isLoading()"
+      >
+        <i class="fas fa-sync-alt me-1" [class.fa-spin]="isLoading()"></i
+        >Actualiser
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger d-flex align-items-center gap-2">
+      <i class="fas fa-exclamation-circle"></i>
+      <div>
+        <strong>Erreur :</strong> {{ error() }}
+        <button class="btn btn-sm btn-outline-danger ms-3" (click)="load()">
+          Réessayer
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="row mb-4">
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card stats-card placeholder-glow">
+            <div class="card-body">
+              <span class="placeholder col-6 mb-2 d-block rounded"></span>
+              <span
+                class="placeholder col-8 placeholder-lg d-block rounded"
+              ></span>
+              <span class="placeholder col-4 mt-1 d-block rounded"></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!isLoading() && data()) {
+    <div class="section-label">
+      <i class="fas fa-chart-pie me-2"></i>Vue globale —
+      {{ data()!.exercice.annee }}
+    </div>
+
+    <div class="row mb-2">
+      <!-- Recouvrements -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-success">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <p class="stats-label">Total recouvrements</p>
+                <h3 class="stats-value text-success">
+                  {{ data()!.kpis.total_recouvrements | number: "1.0-0" }}
+                  <small class="fs-6 fw-normal">F</small>
+                </h3>
+                <div class="stats-sub">
+                  {{ data()!.kpis.nb_recouvrements }} opération{{
+                    data()!.kpis.nb_recouvrements > 1 ? "s" : ""
+                  }}
+                </div>
+                <div class="stats-sub">
+                  Moyenne. {{ data()!.kpis.moyenne_recouvr | number: "1.0-0" }} F /
+                  opérations
+                </div>
+              </div>
+              <i class="fas fa-arrow-trend-up stats-icon text-success"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dépenses -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-danger">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <p class="stats-label">Total dépenses</p>
+                <h3 class="stats-value text-danger">
+                  {{ data()!.kpis.total_depenses | number: "1.0-0" }}
+                  <small class="fs-6 fw-normal">F</small>
+                </h3>
+                <div class="stats-sub">
+                  {{ data()!.kpis.nb_depenses }} opération{{
+                    data()!.kpis.nb_depenses > 1 ? "s" : ""
+                  }}
+                </div>
+                <div class="stats-sub">
+                  Moyenne. {{ data()!.kpis.moyenne_depense | number: "1.0-0" }} F /
+                  opérations
+                </div>
+              </div>
+              <i class="fas fa-arrow-trend-down stats-icon text-danger"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solde net -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div
+          class="card stats-card"
+          [class.border-left-success]="soldePositif()"
+          [class.border-left-danger]="!soldePositif()"
+        >
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <p class="stats-label">Solde net</p>
+                <h3
+                  class="stats-value"
+                  [class]="soldeClass(data()!.kpis.solde)"
+                >
+                  {{ soldePrefix(data()!.kpis.solde)
+                  }}{{ data()!.kpis.solde | number: "1.0-0" }}
+                  <small class="fs-6 fw-normal">F</small>
+                </h3>
+                <div class="stats-sub">
+                  @if (soldePositif()) {
+                    <i class="fas fa-check-circle text-success me-1"></i
+                    >Excédentaire
+                  } @else {
+                    <i class="fas fa-exclamation-circle text-danger me-1"></i
+                    >Déficitaire 
+                  }
+                </div>
+                <div class="stats-sub">
+
+                </div>
+              </div>
+              <i
+                class="fas fa-scale-balanced stats-icon"
+                [class.text-success]="soldePositif()"
+                [class.text-danger]="!soldePositif()"
+              ></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Taux de couverture -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <p class="stats-label">Taux de couverture</p>
+                <h3 class="stats-value text-primary">
+                  @if (data()!.kpis.taux_couverture !== null) {
+                    {{ data()!.kpis.taux_couverture | number: "1.0-1" }}%
+                  } @else {
+                    —
+                  }
+                </h3>
+                <div class="stats-sub">Recouvrements / Dépenses</div>
+              </div>
+              <i class="fas fa-percent stats-icon text-primary"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label mt-2">
+      <i class="fas fa-arrow-trend-down text-danger me-2"></i>
+      Dépenses — {{ data()!.exercice.annee }}
+    </div>
+
+    <div class="row mb-4">
+      <!-- Évolution mensuelle dépenses -->
+      <div class="col-xl-8 mb-4">
+        <div class="section-card h-100">
+          <div class="section-header">
+            <i class="fas fa-chart-line text-danger me-2"></i>
+            Évolution mensuelle des dépenses
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th class="text-end">Montant (F)</th>
+                  <th class="text-end">Nb opérations</th>
+                  <th style="width: 160px">Visualisation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of evolutionUnifiee(); track row.mois) {
+                  <tr>
+                    <td class="fw-semibold">{{ formatMois(row.mois) }}</td>
+                    <td class="text-end text-danger fw-semibold">
+                      {{ row.depenses | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ nbMois(data()!.evolution_depenses, row.mois) }}
+                    </td>
+                    <td>
+                      <div class="mini-bar-wrap">
+                        <div
+                          class="mini-bar bg-danger"
+                          [style.width.%]="
+                            pct(row.depenses, data()!.kpis.total_depenses)
+                          "
+                        ></div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (evolutionUnifiee().length === 0) {
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="text-center text-muted py-3 fst-italic"
+                    >
+                      Aucune dépense cette année
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (evolutionUnifiee().length > 0) {
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td>Total</td>
+                    <td class="text-end text-danger">
+                      {{ data()!.kpis.total_depenses | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">{{ data()!.kpis.nb_depenses }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modes de paiement dépenses -->
+      <div class="col-xl-4 mb-4">
+        <div class="section-card h-100">
+          <div class="section-header">
+            <i class="fas fa-credit-card text-danger me-2"></i>
+            Modes de paiement — Dépenses
+          </div>
+          <div class="section-body">
+            @for (m of data()!.depenses_par_mode; track m.mode_paiement) {
+              <div class="repartition-row">
+                <span class="repartition-label">
+                  <i
+                    class="fas {{ iconMode(m.mode_paiement) }} me-1 text-muted"
+                  ></i>
+                  {{ labelMode(m.mode_paiement) }}
+                </span>
+                <div class="repartition-bar-wrap">
+                  <div
+                    class="repartition-bar bg-danger"
+                    [style.width.%]="pct(m.total, data()!.kpis.total_depenses)"
+                  ></div>
+                </div>
+                <span class="repartition-montant text-danger"
+                  >{{ m.total | number: "1.0-0" }} F</span
+                >
+                <span class="repartition-pct"
+                  >{{ pct(m.total, data()!.kpis.total_depenses) }}%</span
+                >
+              </div>
+            }
+            @if (data()!.depenses_par_mode.length === 0) {
+              <p class="text-center text-muted py-4 fst-italic">
+                Aucune donnée
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des 20 dernières dépenses -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="section-card">
+          <div class="section-header justify-content-between">
+            <span
+              ><i class="fas fa-list text-danger me-2"></i>20 dernières
+              dépenses</span
+            >
+            <small class="text-muted fw-normal"
+              >{{ data()!.kpis.nb_depenses }} opération{{
+                data()!.kpis.nb_depenses > 1 ? "s" : ""
+              }}
+              au total cette année</small
+            >
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th width="9%">Référence</th>
+                  <th width="9%">Date</th>
+                  <th width="14%">Type</th>
+                  <th width="13%">Fournisseur</th>
+                  <th width="11%">Période</th>
+                  <th width="11%">Bureau</th>
+                  <th width="10%">Mode</th>
+                  <th width="13%">Description</th>
+                  <th width="10%" class="text-end">Montant (F)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of data()!.dernieres_depenses; track d.rfk) {
+                  <tr>
+                    <td>
+                      <small class="font-monospace text-muted">{{
+                        d.rfk
+                      }}</small>
+                    </td>
+                    <td>{{ d.date_depense | date: "dd/MM/yyyy" }}</td>
+                    <td>
+                      <span class="badge bg-danger-subtle text-danger">
+                        {{ d.type_depense?.libelle ?? "—" }}
+                      </span>
+                    </td>
+                    <td class="text-muted">{{ d.fournisseur?.nom ?? "—" }}</td>
+                    <td class="text-muted">
+                      <small>{{ d.periode?.libelle ?? "—" }}</small>
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ d.bureau?.nom ?? "—" }}</small>
+                    </td>
+                    <td>
+                      @if (d.mode_paiement) {
+                        <small class="text-muted">
+                          <i
+                            class="fas {{ iconMode(d.mode_paiement) }} me-1"
+                          ></i>
+                          {{ labelMode(d.mode_paiement) }}
+                        </small>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ d.description || "—" }}</small>
+                    </td>
+                    <td class="text-end fw-semibold text-danger">
+                      {{ d.montant | number: "1.0-0" }}
+                    </td>
+                  </tr>
+                }
+                @if (data()!.dernieres_depenses.length === 0) {
+                  <tr>
+                    <td
+                      colspan="9"
+                      class="text-center text-muted py-4 fst-italic"
+                    >
+                      Aucune dépense enregistrée
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label mt-2">
+      <i class="fas fa-arrow-trend-up text-success me-2"></i>
+      Recouvrements (entrées) — {{ data()!.exercice.annee }}
+    </div>
+
+    <div class="row mb-4">
+      <!-- Évolution mensuelle recouvrements -->
+      <div class="col-xl-8 mb-4">
+        <div class="section-card h-100">
+          <div class="section-header">
+            <i class="fas fa-chart-line text-success me-2"></i>
+            Évolution mensuelle des recouvrements
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th class="text-end">Montant (F)</th>
+                  <th class="text-end">Nb opérations</th>
+                  <th style="width: 160px">Visualisation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of evolutionUnifiee(); track row.mois) {
+                  <tr>
+                    <td class="fw-semibold">{{ formatMois(row.mois) }}</td>
+                    <td class="text-end text-success fw-semibold">
+                      {{ row.recouvrements | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ nbMois(data()!.evolution_recouvrements, row.mois) }}
+                    </td>
+                    <td>
+                      <div class="mini-bar-wrap">
+                        <div
+                          class="mini-bar bg-success"
+                          [style.width.%]="
+                            pct(
+                              row.recouvrements,
+                              data()!.kpis.total_recouvrements
+                            )
+                          "
+                        ></div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (evolutionUnifiee().length === 0) {
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="text-center text-muted py-3 fst-italic"
+                    >
+                      Aucun recouvrement cette année
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (evolutionUnifiee().length > 0) {
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td>Total</td>
+                    <td class="text-end text-success">
+                      {{ data()!.kpis.total_recouvrements | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">
+                      {{ data()!.kpis.nb_recouvrements }}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modes de paiement recouvrements -->
+      <div class="col-xl-4 mb-4">
+        <div class="section-card h-100">
+          <div class="section-header">
+            <i class="fas fa-credit-card text-success me-2"></i>
+            Modes de paiement — Recouvrements
+          </div>
+          <div class="section-body">
+            @for (m of data()!.recouvrements_par_mode; track m.mode_paiement) {
+              <div class="repartition-row">
+                <span class="repartition-label">
+                  <i
+                    class="fas {{ iconMode(m.mode_paiement) }} me-1 text-muted"
+                  ></i>
+                  {{ labelMode(m.mode_paiement) }}
+                </span>
+                <div class="repartition-bar-wrap">
+                  <div
+                    class="repartition-bar bg-success"
+                    [style.width.%]="
+                      pct(m.total, data()!.kpis.total_recouvrements)
+                    "
+                  ></div>
+                </div>
+                <span class="repartition-montant text-success"
+                  >{{ m.total | number: "1.0-0" }} F</span
+                >
+                <span class="repartition-pct"
+                  >{{ pct(m.total, data()!.kpis.total_recouvrements) }}%</span
+                >
+              </div>
+            }
+            @if (data()!.recouvrements_par_mode.length === 0) {
+              <p class="text-center text-muted py-4 fst-italic">
+                Aucune donnée
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des 20 derniers recouvrements -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="section-card">
+          <div class="section-header justify-content-between">
+            <span
+              ><i class="fas fa-list text-success me-2"></i>20 derniers
+              recouvrements</span
+            >
+            <small class="text-muted fw-normal"
+              >{{ data()!.kpis.nb_recouvrements }} opération{{
+                data()!.kpis.nb_recouvrements > 1 ? "s" : ""
+              }}
+              au total cette année</small
+            >
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th width="9%">Référence</th>
+                  <th width="9%">Date</th>
+                  <th width="14%">Service</th>
+                  <th width="14%">Client</th>
+                  <th width="10%">Période</th>
+                  <th width="10%">Bureau</th>
+                  <th width="10%">Mode</th>
+                  <th width="14%">Description</th>
+                  <th width="10%" class="text-end">Montant (F)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of data()!.derniers_recouvrements; track r.rfk) {
+                  <tr>
+                    <td>
+                      <small class="font-monospace text-muted">{{
+                        r.rfk
+                      }}</small>
+                    </td>
+                    <td>{{ r.date_recouvrement | date: "dd/MM/yyyy" }}</td>
+                    <td>
+                      <span class="badge bg-success-subtle text-success">
+                        {{ r.service_propose?.nom ?? "—" }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-1">
+                        <div class="avatar-xs bg-primary text-white">
+                          {{ r.client?.nom?.charAt(0)?.toUpperCase() ?? "?" }}
+                        </div>
+                        {{ nomClient(r.client) }}
+                      </div>
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ r.periode?.libelle ?? "—" }}</small>
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ r.bureau?.nom ?? "—" }}</small>
+                    </td>
+                    <td>
+                      @if (r.mode_paiement) {
+                        <small class="text-muted">
+                          <i
+                            class="fas {{ iconMode(r.mode_paiement) }} me-1"
+                          ></i>
+                          {{ labelMode(r.mode_paiement) }}
+                        </small>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-muted">
+                      <small>{{ r.description || "—" }}</small>
+                    </td>
+                    <td class="text-end fw-semibold text-success">
+                      {{ r.montant | number: "1.0-0" }}
+                    </td>
+                  </tr>
+                }
+                @if (data()!.derniers_recouvrements.length === 0) {
+                  <tr>
+                    <td
+                      colspan="9"
+                      class="text-center text-muted py-4 fst-italic"
+                    >
+                      Aucun recouvrement enregistré
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label mt-2">
+      <!-- <i class="fas fa-tags text-danger me-2"></i> -->
+      Statistiques par type de dépense
+    </div>
+
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-tag text-danger me-2"></i>
+            Répartition des dépenses par catégorie
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th width="3%">Rang</th>
+                  <th width="28%">Type de dépense</th>
+                  <th width="15%" class="text-end">Total (F)</th>
+                  <th width="10%" class="text-end">Nb opérations</th>
+                  <th width="12%" class="text-end">Moyenne (F)</th>
+                  <th width="8%" class="text-end">Part</th>
+                  <th>Visualisation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of data()!.types_depense; track t.id; let i = $index) {
+                  <tr>
+                    <td class="text-muted fw-bold">{{ i + 1 }}</td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="type-icon bg-danger-subtle text-danger">
+                          <i class="fas fa-tag"></i>
+                        </div>
+                        <strong>{{ t.libelle }}</strong>
+                      </div>
+                    </td>
+                    <td class="text-end fw-semibold text-danger">
+                      {{ t.total_montant | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">{{ t.nb_operations }}</td>
+                    <td class="text-end text-muted">
+                      {{
+                        t.nb_operations > 0
+                          ? (t.total_montant / t.nb_operations
+                            | number: "1.0-0")
+                          : "—"
+                      }}
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-danger-subtle text-danger">
+                        {{ pct(t.total_montant, data()!.kpis.total_depenses) }}%
+                      </span>
+                    </td>
+                    <td>
+                      <div class="repartition-bar-wrap" style="height: 10px">
+                        <div
+                          class="repartition-bar bg-danger"
+                          [style.width.%]="
+                            pct(t.total_montant, data()!.kpis.total_depenses)
+                          "
+                        ></div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (data()!.types_depense.length === 0) {
+                  <tr>
+                    <td
+                      colspan="7"
+                      class="text-center text-muted py-4 fst-italic"
+                    >
+                      Aucun type de dépense avec des opérations cette année
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (data()!.types_depense.length > 0) {
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td colspan="2">Total</td>
+                    <td class="text-end text-danger">
+                      {{ data()!.kpis.total_depenses | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">{{ data()!.kpis.nb_depenses }}</td>
+                    <td class="text-end text-muted">
+                      {{ data()!.kpis.moyenne_depense | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">100%</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label mt-2">
+      <!-- <i class="fas fa-concierge-bell text-success me-2"></i> -->
+      Statistiques par type de recouvrement (service proposé)
+    </div>
+
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-concierge-bell text-success me-2"></i>
+            Répartition des recouvrements par service
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th width="3%">Rang</th>
+                  <th width="28%">Service proposé</th>
+                  <th width="15%" class="text-end">Total (F)</th>
+                  <th width="10%" class="text-end">Nb opérations</th>
+                  <th width="12%" class="text-end">Moyenne (F)</th>
+                  <th width="8%" class="text-end">Part</th>
+                  <th>Visualisation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  s of data()!.services_propose;
+                  track s.id;
+                  let i = $index
+                ) {
+                  <tr>
+                    <td class="text-muted fw-bold">{{ i + 1 }}</td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="type-icon bg-success-subtle text-success">
+                          <i class="fas fa-concierge-bell"></i>
+                        </div>
+                        <strong>{{ s.nom }}</strong>
+                      </div>
+                    </td>
+                    <td class="text-end fw-semibold text-success">
+                      {{ s.total_montant | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">{{ s.nb_operations }}</td>
+                    <td class="text-end text-muted">
+                      {{
+                        s.nb_operations > 0
+                          ? (s.total_montant / s.nb_operations
+                            | number: "1.0-0")
+                          : "—"
+                      }}
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-success-subtle text-success">
+                        {{
+                          pct(
+                            s.total_montant,
+                            data()!.kpis.total_recouvrements
+                          )
+                        }}%
+                      </span>
+                    </td>
+                    <td>
+                      <div class="repartition-bar-wrap" style="height: 10px">
+                        <div
+                          class="repartition-bar bg-success"
+                          [style.width.%]="
+                            pct(
+                              s.total_montant,
+                              data()!.kpis.total_recouvrements
+                            )
+                          "
+                        ></div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @if (data()!.services_propose.length === 0) {
+                  <tr>
+                    <td
+                      colspan="7"
+                      class="text-center text-muted py-4 fst-italic"
+                    >
+                      Aucun service avec des opérations cette année
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (data()!.services_propose.length > 0) {
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td colspan="2">Total</td>
+                    <td class="text-end text-success">
+                      {{ data()!.kpis.total_recouvrements | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">
+                      {{ data()!.kpis.nb_recouvrements }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ data()!.kpis.moyenne_recouvr | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">100%</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label mt-2">
+      <!-- <i class="fas fa-building text-primary me-2"></i> -->
+      Statistiques par bureau
+    </div>
+
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-building text-primary me-2"></i>
+            Performance par bureau — {{ data()!.exercice.annee }}
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table mb-0">
+              <thead>
+                <tr>
+                  <th width="20%">Bureau</th>
+                  <th width="12%" class="text-end text-success">
+                    Recouvrements (F)
+                  </th>
+                  <th width="8%" class="text-end text-muted">Nb opérations</th>
+                  <th width="12%" class="text-end text-muted">Moy. recouvr.</th>
+                  <th width="12%" class="text-end text-danger">Dépenses (F)</th>
+                  <th width="8%" class="text-end text-muted">Nb opérations</th>
+                  <th width="12%" class="text-end text-muted">Moy. dép.</th>
+                  <th width="16%" class="text-end">Solde net</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of data()!.bureaux; track b.id) {
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="type-icon bg-primary-subtle text-primary">
+                          <i class="fas fa-building"></i>
+                        </div>
+                        <strong>{{ b.nom }}</strong>
+                      </div>
+                    </td>
+                    <td class="text-end fw-semibold text-success">
+                      {{ b.total_recouvrements | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ b.nb_recouvrements }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ b.moyenne_recouvr | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end fw-semibold text-danger">
+                      {{ b.total_depenses | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-muted">{{ b.nb_depenses }}</td>
+                    <td class="text-end text-muted">
+                      {{ b.moyenne_depense | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end fw-bold" [class]="soldeClass(b.solde)">
+                      {{ soldePrefix(b.solde)
+                      }}{{ b.solde | number: "1.0-0" }} F
+                    </td>
+                  </tr>
+                }
+                @if (data()!.bureaux.length === 0) {
+                  <tr>
+                    <td
+                      colspan="8"
+                      class="text-center text-muted py-4 fst-italic"
+                    >
+                      Aucun bureau avec des opérations cette année
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              @if (data()!.bureaux.length > 1) {
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td>Total</td>
+                    <td class="text-end text-success">
+                      {{ data()!.kpis.total_recouvrements | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">
+                      {{ data()!.kpis.nb_recouvrements }}
+                    </td>
+                    <td class="text-end text-muted">
+                      {{ data()!.kpis.moyenne_recouvr | number: "1.0-0" }}
+                    </td>
+                    <td class="text-end text-danger">
+                      {{ data()!.kpis.total_depenses | number: "1.0-0" }} F
+                    </td>
+                    <td class="text-end">{{ data()!.kpis.nb_depenses }}</td>
+                    <td class="text-end text-muted">
+                      {{ data()!.kpis.moyenne_depense | number: "1.0-0" }}
+                    </td>
+                    <td
+                      class="text-end"
+                      [class]="soldeClass(data()!.kpis.solde)"
+                    >
+                      {{ soldePrefix(data()!.kpis.solde)
+                      }}{{ data()!.kpis.solde | number: "1.0-0" }} F
+                    </td>
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

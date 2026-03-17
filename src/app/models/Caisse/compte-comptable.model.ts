@@ -1,48 +1,31 @@
-export interface CompteComptableRelation {
-  rfk: string;
-  code: string;
-  libelle: string;
-  description: string;
-}
+import { ApiResponse, PaginatedResponse } from './bureau.model';
 
-export interface CompteComptableModel {
+export type { ApiResponse, PaginatedResponse };
+
+//  Modèle principal 
+export interface CompteComptable {
   rfk: string;
-  numero: string;
   libelle: string;
-  actif: boolean;
-  classe_comptable: CompteComptableRelation | null;
-  type_compte_comptable: CompteComptableRelation | null;
-  categorie_comptable: CompteComptableRelation | null;
   description: string;
-  nb_operations?: number;
-  total_debit?: number; 
-  total_credit?: number; 
-  solde?: number;
+  est_actif: boolean;
+  // Compteurs via withCount()
+  depenses_count?: number;
+  recouvrements_count?: number;
   created_at: string;
   updated_at: string;
 }
 
+//  Payload 
 export interface CompteComptablePayload {
-  numero: string;
   libelle: string;
-  classe_comptable_rfk: string;
-  type_compte_comptable_rfk: string;
-  categorie_comptable_rfk: string;
   description: string;
-  actif?: boolean;
+  est_actif: boolean;
 }
 
-export interface SoldeCompte {
-  compte_rfk: string;
-  total_debit: number;
-  total_credit: number;
-  solde: number;
-  nb_operations: number;
-}
-
-export interface CompteActif {
-  rfk: string;
-  numero: string;
-  libelle: string;
-  nb_operations: number;
+//  Filtres 
+export interface CompteComptableFilters {
+  search?: string;
+  est_actif?: boolean;
+  per_page?: number;
+  page?: number;
 }
