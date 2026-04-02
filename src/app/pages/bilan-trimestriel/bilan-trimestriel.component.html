@@ -76,6 +76,10 @@
               [style]="{'height':'250px'}"
               [modules]="editorModules">
             </p-editor>
+            <small class="text-danger"
+              *ngIf="bilanForm.get('introduction')?.touched && bilanForm.get('introduction')?.invalid">
+              L’introduction est obligatoire
+            </small>
             <small class="field-hint">Décrivez brièvement le contexte et les objectifs du trimestre</small>
           </div>
 
@@ -185,8 +189,20 @@
                         formControlName="lien"
                         placeholder="https://www.alerte-info.net/article/1"
                         class="w-full" />
-                        <small class="warning-text" *ngIf="article.get('lien')?.hasError('duplicateLink')">
-                          Ce lien a déjà été ajouté. La direction sera prévenue en cas de soumission de liens en double.
+                        <small class="text-danger"
+                          *ngIf="article.get('lien')?.touched && article.get('lien')?.invalid">
+
+                          <span *ngIf="article.get('lien')?.hasError('required')">
+                            Le lien est obligatoire
+                          </span>
+
+                          <span *ngIf="article.get('lien')?.hasError('pattern')">
+                            URL invalide
+                          </span>
+
+                          <span *ngIf="article.get('lien')?.hasError('duplicateLink')">
+                            Lien déjà ajouté
+                          </span>
                         </small>
                     </div>
 

@@ -139,15 +139,17 @@ export class BilanTrimestrielComponent {
   ngOnInit(): void {
     this.loadEmployeData();
 
-    if (this.employe()) {
-      this.initForm();
+    setTimeout(() => {
+      if (this.employe()) {
+        this.initForm();
 
-      this.bilanId = this.route.snapshot.paramMap.get('slug');
-      if (this.bilanId) {
-        this.isEditMode.set(true);
-        this.loadBilan(this.bilanId);
+        this.bilanId = this.route.snapshot.paramMap.get('slug');
+        if (this.bilanId) {
+          this.isEditMode.set(true);
+          this.loadBilan(this.bilanId);
+        }
       }
-    }
+    });
   }
 
   // Remplir le formulaire avec les détails existants
@@ -482,9 +484,62 @@ export class BilanTrimestrielComponent {
     return !this.employe()?.id_service;
   }
 
+  // onSubmit(): void {
+  //   if (this.bilanForm.invalid) {
+  //     this.markFormGroupTouched(this.bilanForm);
+  //     return;
+  //   }
+
+  //   this.isSubmitting.set(true);
+  //   const formData = this.prepareFormData();
+
+  //   const request$ = this.isEditMode()
+  //     ? this.bilanSvr.updateBilan(this.bilanId!, formData)
+  //     : this.bilanSvr.addBilan(formData);
+
+  //   request$.subscribe({
+  //     next: (res) => {
+  //       this.isSubmitting.set(false);
+  //       this.snackBar.open(
+  //         res.message || (this.isEditMode() ? 'Bilan modifié avec succès' : 'Bilan envoyé avec succès'),
+  //         // this.isEditMode() ? 'Bilan modifié avec succès' : 'Bilan envoyé avec succès',
+  //         'Fermer',
+  //         { duration: 3000, panelClass: 'toast-success' }
+  //       );
+
+  //       if(res.success === false){
+  //         // Rester sur la page en cas d'erreur métier
+  //         return;
+  //       }else{
+  //         this.router.navigate(['/mes-bilans']);
+  //       }
+  //     },
+  //     error: err => {
+  //       this.isSubmitting.set(false);
+  //       this.snackBar.open(
+  //         err.error?.message || 'Erreur lors de l’opération',
+  //         'Fermer',
+  //         { duration: 4000, panelClass: 'toast-error' }
+  //       );
+  //     }
+  //   });
+  // }
   onSubmit(): void {
     if (this.bilanForm.invalid) {
       this.markFormGroupTouched(this.bilanForm);
+
+      const errors = this.getFormErrors();
+
+      this.snackBar.open(
+        errors.length
+          ? `Formulaire invalide : ${errors[0]}`
+          : 'Veuillez remplir correctement tous les champs obligatoires',
+        'Fermer',
+        { duration: 5000, panelClass: 'toast-error' }
+      );
+
+      console.log('FORM ERRORS:', errors);
+
       return;
     }
 
@@ -496,14 +551,20 @@ export class BilanTrimestrielComponent {
       : this.bilanSvr.addBilan(formData);
 
     request$.subscribe({
-      next: () => {
+      next: (res) => {
         this.isSubmitting.set(false);
+
         this.snackBar.open(
-          this.isEditMode() ? 'Bilan modifié avec succès' : 'Bilan envoyé avec succès',
+          res.message || (this.isEditMode()
+            ? 'Bilan modifié avec succès'
+            : 'Bilan envoyé avec succès'),
           'Fermer',
           { duration: 3000, panelClass: 'toast-success' }
         );
-        this.router.navigate(['/mes-bilans']);
+
+        if (res.success !== false) {
+          this.router.navigate(['/mes-bilans']);
+        }
       },
       error: err => {
         this.isSubmitting.set(false);
@@ -514,6 +575,49 @@ export class BilanTrimestrielComponent {
         );
       }
     });
+  }
+
+  getFormErrors(): string[] {
+    const errors: string[] = [];
+
+    const checkControl = (control: AbstractControl, path: string) => {
+      if (control.errors) {
+        Object.keys(control.errors).forEach(errorKey => {
+          errors.push(`${path} : ${this.getErrorMessage(errorKey)}`);
+        });
+      }
+
+      if (control instanceof FormGroup) {
+        Object.keys(control.controls).forEach(key => {
+          checkControl(control.get(key)!, `${path}.${key}`);
+        });
+      }
+
+      if (control instanceof FormArray) {
+        control.controls.forEach((ctrl, index) => {
+          checkControl(ctrl, `${path}[${index}]`);
+        });
+      }
+    };
+
+    checkControl(this.bilanForm, 'form');
+
+    return errors;
+  }
+
+  getErrorMessage(errorKey: string): string {
+    switch (errorKey) {
+      case 'required':
+        return 'Champ obligatoire';
+      case 'min':
+        return 'Valeur trop petite';
+      case 'pattern':
+        return 'Format invalide';
+      case 'duplicateLink':
+        return 'Lien en double';
+      default:
+        return 'Champ invalide';
+    }
   }
 
 
