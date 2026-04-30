@@ -1,4 +1,4 @@
-@if(isLoading){
+@if (isLoading) {
   <app-loading></app-loading>
 }
 
@@ -7,8 +7,7 @@
 </div>
 
 <div class="ccontrats-container">
-
-  <!-- Statistiques -->
+  <!-- ── STATISTIQUES ── -->
   <div class="stats-section">
     <div class="stats-grid">
       <div class="stat-card total">
@@ -22,9 +21,7 @@
       </div>
 
       <div class="stat-card cdi">
-        <div class="stat-icon">
-          <span class="material-icons">lock</span>
-        </div>
+        <div class="stat-icon"><span class="material-icons">lock</span></div>
         <div class="stat-content">
           <h3>{{ nombreCDI }}</h3>
           <p>CDI</p>
@@ -42,9 +39,7 @@
       </div>
 
       <div class="stat-card stage">
-        <div class="stat-icon">
-          <span class="material-icons">school</span>
-        </div>
+        <div class="stat-icon"><span class="material-icons">school</span></div>
         <div class="stat-content">
           <h3>{{ nombreStagiaire }}</h3>
           <p>Stagiaires</p>
@@ -62,22 +57,44 @@
       </div>
 
       <div class="stat-card freelance">
-        <div class="stat-icon">
-          <span class="material-icons">work</span>
-        </div>
+        <div class="stat-icon"><span class="material-icons">work</span></div>
         <div class="stat-content">
           <h3>{{ nombreFreelance }}</h3>
           <p>Freelances</p>
         </div>
       </div>
+
+      <!-- Carte alerte expirés -->
+      <div class="stat-card expires" *ngIf="nombreExpires > 0">
+        <div class="stat-icon"><span class="material-icons">warning</span></div>
+        <div class="stat-content">
+          <h3>{{ nombreExpires }}</h3>
+          <p>Expirés</p>
+        </div>
+      </div>
+
+      <!-- Carte alerte zone critique -->
+      <div class="stat-card alerte" *ngIf="nombreEnAlerte > 0">
+        <div class="stat-icon">
+          <span class="material-icons">notifications_active</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ nombreEnAlerte }}</h3>
+          <p>En alerte</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Recherche -->
+  <!-- ── RECHERCHE ── -->
   <div class="search-section">
     <div class="search-header">
       <h2>
-        <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">search</span>
+        <span
+          class="material-icons"
+          style="vertical-align: middle; margin-right: 0.5rem"
+          >search</span
+        >
         Recherche et Filtres
       </h2>
     </div>
@@ -145,11 +162,15 @@
     </div>
   </div>
 
-  <!-- Tableau -->
+  <!-- ── TABLEAU ── -->
   <div class="table-section">
     <div class="table-header">
       <h2>
-        <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">list_alt</span>
+        <span
+          class="material-icons"
+          style="vertical-align: middle; margin-right: 0.5rem"
+          >list_alt</span
+        >
         Liste des Contrats ({{ contratsFiltered.length }})
       </h2>
       <button class="btn-add" (click)="openAddDialog()">
@@ -166,46 +187,145 @@
             <th>Employé</th>
             <th>Type</th>
             <th>Début</th>
+            <th>Fin</th>
             <th>Statut</th>
+            <th>Rappel</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let contrat of paginatedContrat; trackBy: trackByContrat" [class.expired]="isContractExpired(contrat)">
-            <td data-label="Numéro">{{ contrat.numero }}</td>
+          <tr
+            *ngFor="let contrat of paginatedContrat; trackBy: trackByContrat"
+            [class.row-expired]="isContractExpired(contrat)"
+            [class.row-warning]="getAlerteNiveau(contrat) === 'warning'"
+            [class.row-critical]="getAlerteNiveau(contrat) === 'critical'"
+          >
+            <!-- Numéro -->
+            <td data-label="Numéro">
+              <span class="numero-contrat">{{ contrat.numero }}</span>
+            </td>
+
+            <!-- Employé + badge alerte -->
             <td data-label="Employé">
-              {{ contrat.employe?.nom }} {{contrat.employe?.prenom}} - {{ contrat.employe?.matricule || 'non défini' }}
-              <span *ngIf="isContractExpired(contrat)" class="expired-badge">
-                <span class="material-icons" style="font-size: 0.875rem; vertical-align: middle;">warning</span>
-                Expiré
-              </span>
+              <div class="employe-cell">
+                <span class="employe-nom">
+                  {{ contrat.employe?.nom }} {{ contrat.employe?.prenom }}
+                </span>
+                <span class="employe-matricule">
+                  {{ contrat.employe?.matricule || "non défini" }}
+                </span>
+                <!-- Badge alerte dynamique -->
+                <span
+                  *ngIf="getAlerteNiveau(contrat)"
+                  class="alerte-badge alerte-{{ getAlerteNiveau(contrat) }}"
+                >
+                  <span
+                    class="material-icons"
+                    style="font-size: 12px; vertical-align: middle"
+                  >
+                    {{ isContractExpired(contrat) ? "error" : "schedule" }}
+                  </span>
+                  {{ getAlerteBadge(contrat) }}
+                </span>
+              </div>
             </td>
+
+            <!-- Type -->
             <td data-label="Type">
-              <span [class]="getTypeClass(contrat.type.nom)">{{ contrat.type.nom }}</span>
+              <span [class]="getTypeClass(contrat.type?.nom)">{{
+                contrat.type?.nom
+              }}</span>
             </td>
-            <td data-label="Début">{{ contrat.debut }}</td>
+
+            <!-- Début -->
+            <td data-label="Début">{{ contrat.debut | date: "dd/MM/yyyy" }}</td>
+            <td data-label="Début">{{ contrat.fin | date: "dd/MM/yyyy" }}</td>
+
+            <!-- Statut -->
             <td data-label="Statut">
-              <span [class]="getStatusClass(contrat.statut)">{{getStatuLabel(contrat.statut)}}</span>
+              <span [class]="getStatusClass(contrat.statut)">{{
+                getStatuLabel(contrat.statut)
+              }}</span>
             </td>
-            <td data-label="Actions">
-              <a [routerLink]="['/detail-contrat/', contrat.slug]">
-                <button class="btn btn-sm btn-outline-primary me-1 p-2 border-0" title="Voir" type="button">
-                  <span class="material-icons">visibility</span>
+
+            <!-- Rappel toggle — visible uniquement en zone critique -->
+            <td data-label="Rappel">
+              <ng-container *ngIf="canToggleRappel(contrat); else pasDeRappel">
+                <button
+                  class="btn-rappel"
+                  [class.rappel-actif]="contrat.rappel_actif"
+                  [class.rappel-inactif]="!contrat.rappel_actif"
+                  [disabled]="togglingSlug === contrat.slug"
+                  (click)="toggleRappel(contrat)"
+                  [title]="
+                    contrat.rappel_actif
+                      ? 'Désactiver les rappels email'
+                      : 'Réactiver les rappels email'
+                  "
+                >
+                  <span class="material-icons">
+                    {{
+                      togglingSlug === contrat.slug
+                        ? "hourglass_empty"
+                        : contrat.rappel_actif
+                          ? "notifications_active"
+                          : "notifications_off"
+                    }}
+                  </span>
+                  <span class="rappel-label">
+                    {{
+                      togglingSlug === contrat.slug
+                        ? "..."
+                        : contrat.rappel_actif
+                          ? "Actif"
+                          : "Inactif"
+                    }}
+                  </span>
                 </button>
-              </a>
-              <button (click)="openEditDialog(contrat)" class="btn btn-sm btn-outline me-1 p-2 border-0" title="Modifier" type="button">
-                <span class="material-icons">edit</span>
-              </button>
-              <button (click)="openDeleteModal(contrat)" class="btn btn-sm btn-outline-danger me-1 p-2 border-0" title="Supprimer" type="button">
-                <span class="material-icons">delete</span>
-              </button>
+              </ng-container>
+              <ng-template #pasDeRappel>
+                <span class="rappel-na">—</span>
+              </ng-template>
+            </td>
+
+            <!-- Actions -->
+            <td data-label="Actions">
+              <div class="actions-cell">
+                <a [routerLink]="['/detail-contrat/', contrat.slug]">
+                  <button
+                    class="action-btn btn-voir"
+                    title="Voir le détail du contrat"
+                    type="button"
+                  >
+                    <span class="material-icons">visibility</span>
+                  </button>
+                </a>
+
+                <button
+                  (click)="openEditDialog(contrat)"
+                  class="action-btn btn-edit"
+                  title="Modifier le contrat"
+                  type="button"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+
+                <button
+                  (click)="openDeleteModal(contrat)"
+                  class="action-btn btn-delete"
+                  title="Supprimer le contrat"
+                  type="button"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
             </td>
           </tr>
 
           <tr *ngIf="contratsFiltered.length === 0" class="no-data">
-            <td colspan="6">
+            <td colspan="7">
               <div class="no-data-message">
-                <span class="material-icons no-data-icon" style="font-size: 4rem; color: #d1d5db;">inbox</span>
+                <span class="material-icons no-data-icon">inbox</span>
                 <p>Aucun contrat trouvé</p>
                 <small>Essayez de modifier vos critères de recherche</small>
               </div>
@@ -214,18 +334,19 @@
         </tbody>
       </table>
 
+      <!-- Pagination -->
       <div class="pagination" *ngIf="totalPages > 1">
         <button (click)="prevPage()" [disabled]="currentPage === 1">
           <span class="material-icons">chevron_left</span>
           Précédent
         </button>
-
-        <button *ngFor="let page of [].constructor(totalPages); let i = index"
-                (click)="goToPage(i + 1)"
-                [class.active]="currentPage === i + 1">
+        <button
+          *ngFor="let page of [].constructor(totalPages); let i = index"
+          (click)="goToPage(i + 1)"
+          [class.active]="currentPage === i + 1"
+        >
           {{ i + 1 }}
         </button>
-
         <button (click)="nextPage()" [disabled]="currentPage === totalPages">
           Suivant
           <span class="material-icons">chevron_right</span>
@@ -235,10 +356,18 @@
   </div>
 </div>
 
+<!-- Confirm delete -->
 <app-confirm-delete-dialog
   *ngIf="showConfirmModal"
   [title]="'Suppression de contrat ?'"
-  [message]="'Voulez-vous vraiment supprimer le contrat de ' + itemToDelete?.employe.nom + ' ' + itemToDelete?.employe.prenom + ' ?'"
+  [message]="
+    'Voulez-vous vraiment supprimer le contrat de ' +
+    itemToDelete?.employe.nom +
+    ' ' +
+    itemToDelete?.employe.prenom +
+    ' ?'
+  "
   (confirm)="confirmDelete()"
   (cancel)="closeModal()"
-></app-confirm-delete-dialog>
+>
+</app-confirm-delete-dialog>

@@ -5,12 +5,11 @@ import { environment } from '../../environments/environment.developpement';
 import { BehaviorSubject, tap } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-
   private userSubject = new BehaviorSubject<any>(
-    JSON.parse(localStorage.getItem('user_token') || '{}')
+    JSON.parse(localStorage.getItem('user_token') || 'null'),
   );
 
   user$ = this.userSubject.asObservable();
@@ -19,22 +18,23 @@ export class AuthService {
 
   constructor(
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   // Simulation du login pour l'instant (avant Laravel)
   login(data: any) {
-    return this.http.post<any>(`${environment.apiUrl}login`, data)
-      .pipe(
-        tap(res => {
-          if (res.token && res.user) {
-            const userData = { ...res.user };
-            delete userData.mdp;
-            localStorage.setItem(this.TOKEN_KEY, res.token);
-            localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
-          }
-        })
-      );
+    return this.http.post<any>(`${environment.apiUrl}login`, data).pipe(
+      tap((res) => {
+        if (res.token && res.user) {
+          const userData = { ...res.user };
+          delete userData.mdp;
+          localStorage.setItem(this.TOKEN_KEY, res.token);
+          localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
+
+          this.userSubject.next(userData);
+        }
+      }),
+    );
   }
 
   forgotPassword(data: { email: string }) {
@@ -47,7 +47,6 @@ export class AuthService {
   changePhoto(data: any) {
     return this.http.post(`${environment.apiUrl}change-photo`, data);
   }
-
 
   // === MISE À JOUR LOCALE ===
   updateUserPhoto(photo: string) {
@@ -69,7 +68,6 @@ export class AuthService {
   }
 
   logout(): void {
-
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.router.navigate(['connexion']);
@@ -90,22 +88,26 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
-  autoRegister(data:any){
+  autoRegister(data: any) {
     return this.http.post(`${environment.apiUrl}auto-register`, data);
   }
 
   isDG(): boolean {
     const role = this.getRole();
-    return  role === 'rh'|| role === 'directeur';
+    return role === 'rh' || role === 'directeur';
   }
 
-  isOnlyDG():boolean{
+  isOnlyDG(): boolean {
     const role = this.getRole();
     return role === 'directeur';
   }
 
   isEmploye(): boolean {
-    return this.getRole() === 'employé' || this.getRole() === 'employe'|| this.getRole() === 'Employé';
+    return (
+      this.getRole() === 'employé' ||
+      this.getRole() === 'employe' ||
+      this.getRole() === 'Employé'
+    );
   }
 
   getRole(): string {

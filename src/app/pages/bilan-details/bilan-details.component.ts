@@ -82,7 +82,6 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    console.log('🔄 Component initialized');
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
@@ -99,19 +98,15 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   }
 
   loadBilanDetails(slug: string): void {
-    console.log('🔄 START loadBilanDetails', slug);
     this.loading = true;
 
     this.bilanSvr.getBilanBySlug(slug)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('✅ Data received:', data);
           this.bilan = data;
-          console.log('🔍 Processing details...');
 
           this.detailClean = this.bilan.details.filter((detail: any) => {
-            console.log('Filtering detail:', detail.cle);
             return detail.cle !== 'prospections' &&
               detail.cle !== 'suivis_dossiers' &&
               detail.cle !== 'recouvrements' &&
@@ -122,9 +117,7 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
               !['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].includes(detail.cle);
           });
 
-          console.log('✅ Details filtered:', this.detailClean);
           this.loading = false;
-          console.log('✅ END loadBilanDetails');
         },
         error: (err) => {
           console.error('❌ Error:', err);
@@ -140,13 +133,10 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
    * Toggle l'expansion d'un détail
    */
   toggleDetailExpansion(slug: string): void {
-    console.log(`🔄 Toggling expansion for: ${slug}`);
     if (this.expandedDetails.has(slug)) {
       this.expandedDetails.delete(slug);
-      console.log(`➖ Collapsed: ${slug}`);
     } else {
       this.expandedDetails.add(slug);
-      console.log(`➕ Expanded: ${slug}`);
     }
   }
 
@@ -162,22 +152,18 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
    */
   loadHtmlContent(detail: any): void {
     const slug = detail.slug;
-    console.log(`📄 Loading HTML content for: ${detail.cle} (${slug})`);
 
     // Si déjà dans le cache, on expand juste
     if (this.sanitizedCache.has(slug)) {
       this.expandedDetails.add(slug);
-      console.log(`✅ Using cached content for: ${slug}`);
       return;
     }
 
     // Utilisez setTimeout pour éviter de bloquer le thread principal
     setTimeout(() => {
-      console.log(`🔄 Sanitizing HTML for: ${slug}`);
       const sanitized = this.sanitizer.bypassSecurityTrustHtml(detail.valeur);
       this.sanitizedCache.set(slug, sanitized);
       this.expandedDetails.add(slug);
-      console.log(`✅ HTML content loaded and cached for: ${slug}`);
     }, 0);
   }
 
@@ -193,7 +179,6 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
     }
 
     // Sinon, sanitize et mettez en cache
-    console.log(`🔄 First-time sanitizing for: ${slug}`);
     const sanitized = this.sanitizer.bypassSecurityTrustHtml(detail.valeur);
     this.sanitizedCache.set(slug, sanitized);
     return sanitized;

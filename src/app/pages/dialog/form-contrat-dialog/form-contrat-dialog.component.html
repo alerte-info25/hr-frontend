@@ -1,10 +1,15 @@
-<h2 mat-dialog-title>Créer un contrat</h2>
+<h2 mat-dialog-title>
+  {{ data ? "Modifier le contrat" : "Créer un contrat" }}
+</h2>
+
 <mat-dialog-content>
   <form [formGroup]="form" class="form-grid">
-
     <mat-form-field appearance="outline">
       <mat-label>Numéro du contrat</mat-label>
       <input matInput formControlName="numero" placeholder="Ex : CT2025-001" />
+      <mat-error *ngIf="form.get('numero')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
     </mat-form-field>
 
     <mat-form-field appearance="outline">
@@ -14,62 +19,144 @@
           {{ emp.prenom }} {{ emp.nom }}
         </mat-option>
       </mat-select>
+      <mat-error *ngIf="form.get('id_employe')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Type de contrat</mat-label>
-      <mat-select formControlName="id_type" (selectionChange)="onTypeChange($event.value)">
+      <mat-select
+        formControlName="id_type"
+        (selectionChange)="onTypeChange($event.value)"
+      >
         <mat-option *ngFor="let type of typesContrat" [value]="type.slug">
-          {{ type.nom }} ({{ type.duree }} mois)
+          {{ type.nom }} ({{ type.duree ? type.duree + " mois" : "CDI" }})
         </mat-option>
       </mat-select>
+      <mat-error *ngIf="form.get('id_type')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Date de début</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="debut" (dateChange)="updateFin()" />
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
-
-    <!-- <mat-form-field appearance="outline">
-      <mat-label>Date de fin</mat-label>
-      <input matInput [value]="dateFin | date:'dd/MM/yyyy'" disabled />
-    </mat-form-field> -->
-    <mat-form-field appearance="outline">
-      <mat-label>Date de fin</mat-label>
       <input
         matInput
-        [value]="dateFin ? (dateFin | date:'dd/MM/yyyy') : 'Indéterminée'"
-        disabled
+        [matDatepicker]="pickerDebut"
+        formControlName="debut"
+        (dateChange)="onDebutChange()"
       />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="pickerDebut"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #pickerDebut></mat-datepicker>
+      <mat-error *ngIf="form.get('debut')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
     </mat-form-field>
 
+    <!-- BLOC DATE DE FIN -->
+    <div class="fin-bloc" [class.full-width]="false">
+      <!-- Mode CDI : lecture seule -->
+      <mat-form-field appearance="outline" *ngIf="isCDI">
+        <mat-label>Date de fin</mat-label>
+        <input matInput value="Indéterminée (CDI)" disabled />
+      </mat-form-field>
+
+      <!-- Mode CDD/Stage : auto ou manuel -->
+      <ng-container *ngIf="!isCDI">
+        <!-- Saisie manuelle -->
+        <mat-form-field appearance="outline" *ngIf="modeFinManuel">
+          <mat-label>Date de fin (manuelle)</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerFin"
+            formControlName="fin"
+            (dateChange)="onFinManuelChange()"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerFin"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerFin></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Calcul auto -->
+        <mat-form-field appearance="outline" *ngIf="!modeFinManuel">
+          <mat-label>Date de fin (calculée)</mat-label>
+          <input matInput [value]="finAffichee" disabled />
+        </mat-form-field>
+
+        <!-- Bouton toggle -->
+        <div class="fin-toggle">
+          <button type="button" mat-stroked-button (click)="toggleModeManuel()">
+            <mat-icon>{{
+              modeFinManuel ? "calculate" : "edit_calendar"
+            }}</mat-icon>
+            {{
+              modeFinManuel
+                ? "Utiliser le calcul automatique"
+                : "Saisir manuellement"
+            }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
 
     <mat-form-field appearance="outline">
-      <mat-label>Salaire</mat-label>
-      <input matInput type="number" formControlName="salaire" placeholder="Ex : 250000" />
+      <mat-label>Salaire (FCFA)</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="salaire"
+        placeholder="Ex : 250000"
+      />
+      <mat-error *ngIf="form.get('salaire')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
+      <mat-error *ngIf="form.get('salaire')?.hasError('min')"
+        >Valeur invalide</mat-error
+      >
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Heures / jour</mat-label>
-      <input matInput type="number" formControlName="nbheure" placeholder="Ex : 08" />
+      <input
+        matInput
+        type="number"
+        formControlName="nbheure"
+        placeholder="Ex : 8"
+      />
+      <mat-error *ngIf="form.get('nbheure')?.hasError('required')"
+        >Champ obligatoire</mat-error
+      >
+      <mat-error *ngIf="form.get('nbheure')?.hasError('min')"
+        >Minimum 1 heure</mat-error
+      >
     </mat-form-field>
 
     <mat-form-field appearance="outline" *ngIf="data">
       <mat-label>Statut</mat-label>
       <mat-select formControlName="statut">
-        <mat-option [value]="'1'">Actif</mat-option>
-        <mat-option [value]="'2'">Inactif</mat-option>
-        <mat-option [value]="'3'">Suspendu</mat-option>
-        <mat-option [value]="'4'">Terminé</mat-option>
+        <mat-option value="1">Actif</mat-option>
+        <mat-option value="2">Inactif</mat-option>
+        <mat-option value="3">Suspendu</mat-option>
+        <mat-option value="4">Terminé</mat-option>
       </mat-select>
     </mat-form-field>
-
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-stroked-button mat-dialog-close>Annuler</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Enregistrer</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="save()"
+    [disabled]="form.invalid"
+  >
+    Enregistrer
+  </button>
 </mat-dialog-actions>

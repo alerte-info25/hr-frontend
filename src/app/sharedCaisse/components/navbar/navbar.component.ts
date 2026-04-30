@@ -32,6 +32,10 @@ export class NavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Lire directement le currentUser en synchrone d'abord
+    this.userData = this.authSvr.currentUser;
+
+    // Puis écouter les changements futurs
     this.authSvr.user$.subscribe((user) => {
       this.userData = user;
     });

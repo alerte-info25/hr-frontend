@@ -267,7 +267,6 @@ export class BilanTrimestrielComponent {
           commentaire: bilan.commentaire
         });
         const detailsObject = this.mapDetailsArrayToObject(bilan.details);
-        // console.log('DETAILS OBJ:', detailsObject);
         this.patchDetails(detailsObject);
         this.isLoading.set(false);
       },

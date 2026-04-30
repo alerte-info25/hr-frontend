@@ -426,7 +426,7 @@
         <ng-template mat-tab-label>
           <mat-icon class="tab-icon">history</mat-icon>
           Historique
-          <span class="tab-badge">{{ bilanData.historique?.length || 0 }}</span>
+          <span class="tab-badge">{{ bilanData.historique.length || 0 }}</span>
         </ng-template>
 
         <div class="tab-content">
@@ -441,11 +441,11 @@
                 <div class="stat-item">
                   <mat-icon>edit</mat-icon>
                   <div class="stat-info">
-                    <span class="stat-number">{{ bilanData.statistiques?.nombre_total_modifications || 0 }}</span>
+                    <span class="stat-number">{{ bilanData.statistiques.nombre_total_modifications || 0 }}</span>
                     <span class="stat-label">Modifications</span>
                   </div>
                 </div>
-                <div class="stat-item" *ngIf="bilanData.statistiques?.derniere_modification">
+                <div class="stat-item" *ngIf="bilanData.statistiques.derniere_modification">
                   <mat-icon>update</mat-icon>
                   <div class="stat-info">
                     <span class="stat-number small">{{ bilanData.statistiques.derniere_modification }}</span>
@@ -456,7 +456,7 @@
 
               <mat-divider></mat-divider>
 
-              <div class="fields-modified" *ngIf="bilanData.statistiques?.champs_modifies && bilanData.statistiques.champs_modifies.length > 0">
+              <div class="fields-modified" *ngIf="bilanData.statistiques.champs_modifies && bilanData.statistiques.champs_modifies.length > 0">
                 <h4>Champs modifiés</h4>
                 <mat-chip-set>
                   <mat-chip *ngFor="let champ of bilanData.statistiques.champs_modifies">

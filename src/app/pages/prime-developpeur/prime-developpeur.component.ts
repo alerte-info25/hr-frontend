@@ -120,7 +120,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('Création des graphiques...');
 
     // Créer les graphiques
     this.createEvolutionChart();
@@ -138,7 +137,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
     const labels = this.data.evolution_paiements.map(e => e.mois_label);
     const values = this.data.evolution_paiements.map(e => Number(e.total));
 
-    console.log('Création graphique évolution avec labels:', labels, 'et values:', values);
 
     this.evolutionChart = new Chart(ctx, {
       type: 'line',
@@ -201,7 +199,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
       }
     });
 
-    console.log('Graphique évolution créé avec succès');
   }
 
   createStatutChart(): void {
@@ -213,7 +210,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
 
     const repartition = this.data.repartition_par_statut;
 
-    console.log('Création graphique statut avec données:', repartition);
 
     this.statutChart = new Chart(ctx, {
       type: 'doughnut',
@@ -258,7 +254,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
       }
     });
 
-    console.log('Graphique statut créé avec succès');
   }
 
   createModeChart(): void {
@@ -271,7 +266,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
     const labels = this.data.paiements_par_mode.map(m => this.getModeLabel(m.mode));
     const values = this.data.paiements_par_mode.map(m => Number(m.total));
 
-    console.log('Création graphique mode avec labels:', labels, 'et values:', values);
 
     this.modeChart = new Chart(ctx, {
       type: 'bar',
@@ -330,7 +324,6 @@ export class PrimeDeveloppeurComponent implements OnInit, OnDestroy {
       }
     });
 
-    console.log('Graphique mode créé avec succès');
   }
 
   getModeLabel(mode: string): string {

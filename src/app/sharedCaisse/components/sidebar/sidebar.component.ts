@@ -122,16 +122,16 @@ export class SidebarComponent implements OnInit {
     //   icon: 'fa-solid fa-file-invoice-dollar',
     //   route: '/caisse/rapports/recouvrements',
     // },
-    {
-      label: 'Bilan par bureau',
-      icon: 'fa-solid fa-chart-bar',
-      route: '/caisse/rapports/bilan-bureaux',
-    },
-    {
-      label: 'Bilan par exercice',
-      icon: 'fa-solid fa-chart-column',
-      route: '/caisse/rapports/bilan-exercice',
-    },
+    // {
+    //   label: 'Bilan par bureau',
+    //   icon: 'fa-solid fa-chart-bar',
+    //   route: '/caisse/rapports/bilan-bureaux',
+    // },
+    // {
+    //   label: 'Bilan par exercice',
+    //   icon: 'fa-solid fa-chart-column',
+    //   route: '/caisse/rapports/bilan-exercice',
+    // },
   ];
 
   userData: any = null;

@@ -26,19 +26,6 @@
   <!-- Navigation de la sidebar -->
   <nav class="sidebar-nav">
     <ul class="sidebar">
-      <!-- Dashboard -->
-      <li
-        class="sidebar-menu-item"
-        *ngIf="isAdmin()"
-        data-tooltip="Dashboard"
-        routerLink="/applications"
-        routerLinkActive="active"
-      >
-        <div class="menu-content">
-          <i class="fa-solid fa-house menu-icon"></i>
-          <span class="menu-text" *ngIf="isSidebarOpen">Accueil</span>
-        </div>
-      </li>
 
       <li
         class="sidebar-menu-item"
@@ -93,6 +80,18 @@
           </div>
         </li>
       }
+
+      <li
+        class="sidebar-menu-item"
+        data-tooltip="Caisse"
+        routerLink="/caisse"
+        routerLinkActive="active"
+      >
+        <div class="menu-content">
+          <mat-icon class="menu-icon">warehouse</mat-icon>
+          <span class="menu-text" *ngIf="isSidebarOpen">Nos matériels</span>
+        </div>
+      </li>
 
       <!-- Utilisateurs -->
       <li
