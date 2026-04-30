@@ -156,13 +156,27 @@ export class PermisComponent {
   }
 
   // Ouvrir le modal pour voir et répondre
+  // ouvrirModal(permission: any) {
+  //   this.dialog.open(PermissionDetailDialogComponent, {
+  //     width: '2000px',
+  //     data: permission,
+  //     disableClose: true
+  //   });
+  // }
   ouvrirModal(permission: any) {
-    this.dialog.open(PermissionDetailDialogComponent, {
-      width: '2000px',
+    const dialogRef = this.dialog.open(PermissionDetailDialogComponent, {
+      width: '900px',
       data: permission,
       disableClose: true
     });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.chargerToutesPermissions();
+      }
+    });
   }
+
 
   voirDetails(permission: any): void {
     this.permissionSelectionnee = permission;
