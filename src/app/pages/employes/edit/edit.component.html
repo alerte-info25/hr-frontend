@@ -310,6 +310,20 @@
               {{ getFieldError(professionalInfoForm, 'id_fonction') }}
             </div>
           </div>
+
+          <div class="form-group">
+            <label for="id_bureau"><span class="material-icons">work</span> Bureau *</label>
+            <select
+              id="id_bureau"
+              formControlName="id_bureau"
+              [class.error]="isFieldInvalid(professionalInfoForm, 'id_bureau')">
+              <option value="">Sélectionnez son bureau</option>
+              <option *ngFor="let bureau of bureau" [value]="bureau.slug">{{ bureau.nom }}- {{bureau.acronyme}}</option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid(professionalInfoForm, 'id_bureau')">
+              {{ getFieldError(professionalInfoForm, 'id_bureau') }}
+            </div>
+          </div>
         </div>
 
         <!-- <div class="form-group full-width">

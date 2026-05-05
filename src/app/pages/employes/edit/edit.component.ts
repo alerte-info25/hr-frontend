@@ -9,6 +9,7 @@ import { ServicesService } from '../../../services/services.service';
 import { EmployesService } from '../../../services/employes.service';
 import { NATIONALITES } from '../../../../data/nationnalite';
 import { PAYS } from '../../../../data/pays';
+import { BureauService } from '../../../services/bureau.service';
 export interface Employee {
   id?: number;
   nom: string;
@@ -26,6 +27,7 @@ export interface Employee {
   typePiece: string;
   service: string;
   fonction: string;
+  bureau: string;
   numeroPiece: string;
   photo?: File | null;
 }
@@ -52,6 +54,7 @@ export class EditComponent {
   professionalInfoForm!: FormGroup;
   fonctions:any[]=[];
   services:any[]=[];
+  bureau:any[]=[];
   selectedPhoto: File | null = null;
   photoPreview: string | null = null;
   currentPhotoUrl: string | null = null;
@@ -73,6 +76,7 @@ export class EditComponent {
     private employeSvr: EmployesService,
     private svrService: ServicesService,
     private fonctionSvr: FonctionsService,
+    private bureauSvr: BureauService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -80,6 +84,7 @@ export class EditComponent {
     this.initializeForms();
     this.getServiceListe();
     this.getFonctionListe();
+    this.getBureauListe();
     this.loadEmployeeData();
   }
   goBack() {
@@ -107,6 +112,7 @@ export class EditComponent {
       numeroSocial: [''],
       id_service: [''],
       id_fonction: [''],
+      id_bureau: [''],
       emailProfessionnel: [''],
       photo: [null]
     });
@@ -119,6 +125,18 @@ export class EditComponent {
       },
       error: (err) => {
         console.error('Erreur de chargement des fonction', err);
+        this.isLoading = false;
+      }
+    })
+  }
+  getBureauListe(){
+    this.bureauSvr.getList().subscribe({
+      next: (data) => {
+        this.bureau = data
+        this.isLoading = false
+      },
+      error: (err) => {
+        console.error('Erreur de chargement des bureau', err);
         this.isLoading = false;
       }
     })
@@ -167,6 +185,7 @@ export class EditComponent {
           emailProfessionnel: employee.emailProfessionnel,
           id_service: employee.id_service,
           id_fonction: employee.id_fonction,
+          id_bureau: employee.id_bureau,
           photo: null
         });
 

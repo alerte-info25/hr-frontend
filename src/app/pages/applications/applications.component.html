@@ -5,6 +5,12 @@
     Employés
   </button>
 
+  <!-- Bureaux -->
+  <button class="menu-btn" (click)="goTo('/bureaux')">
+    <i class="fas fa-building"></i>
+    Bureaux
+  </button>
+
   <!-- Services -->
   <button class="menu-btn" *ngIf="hasRight('services')" (click)="goTo('/services')">
     <i class="fas fa-briefcase"></i>
@@ -50,12 +56,6 @@
     <i class="fas fa-calendar-check"></i>
     Types de congés
   </button>
-
-  <!-- Bureaux -->
-  <!-- <button class="menu-btn" *ngIf="hasRight('employe')" (click)="goTo('/bureaux')">
-    <i class="fas fa-building"></i>
-    Bureaux
-  </button> -->
 
   <!-- Tâches -->
   <!-- <button class="menu-btn" *ngIf="hasRight('taches')" (click)="goTo('/taches')">

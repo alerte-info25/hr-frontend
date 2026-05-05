@@ -86,6 +86,11 @@
     </div>
 
     <div class="detail-item">
+      <strong><span class="material-icons">business</span> Bureau :</strong>
+      <span> {{ theEmployee?.bureau?.acronyme || 'non défini' }}</span>
+    </div>
+
+    <div class="detail-item"> 
       <strong><span class="material-icons">work</span> Fonction :</strong>
       <span> {{ theEmployee?.fonction?.nom || 'non défini' }}</span>
     </div>

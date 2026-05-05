@@ -12,7 +12,15 @@
     </div>
     <div class="role-actions">
       <button class="btn-edit" (click)="openEditDialog(bureau)">Modifier</button>
-      <button class="btn-delete" (click)="deleteRole(bureau)">Supprimer</button>
+      <button class="btn-delete" (click)="openDeleteModal(bureau)">Supprimer</button>
     </div>
   </div>
 </div>
+
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Suppression de bureau '"
+  [message]="'Voulez-vous vraiment supprimer le bureau ' + itemToDelete?.nom + ' ?'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>
