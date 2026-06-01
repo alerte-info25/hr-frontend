@@ -214,10 +214,10 @@
           <div class="bilan-header">
             <div class="employee-info">
               <div class="avatar">
-                {{ bilan.employe.prenom.charAt(0) }}{{ bilan.employe.nom.charAt(0) }}
+                {{ getEmployeInitials(bilan) }}
               </div>
               <div>
-                <h3>{{ bilan.employe.prenom }} {{ bilan.employe.nom }}</h3>
+                <h3>{{ bilan.employe?.prenom || 'Inconnu' }} {{ bilan.employe?.nom || '' }}</h3>
                 <p class="service-tag">
                   <mat-icon>business</mat-icon>
                   {{ bilan?.service?.nom || 'Prestataire externe' }}
@@ -291,10 +291,10 @@
         <div *ngFor="let bilan of filteredBilans" class="bilan-list-item" @scaleIn>
           <div class="list-item-main">
             <div class="avatar-small">
-              {{ bilan.employe.prenom.charAt(0).toUpperCase() }}{{ bilan.employe.nom.charAt(0).toUpperCase() }}
+              {{ getEmployeInitials(bilan) }}
             </div>
             <div class="list-item-info">
-              <h4>{{ bilan.employe.prenom }} {{ bilan.employe.nom }}</h4>
+              <h4>{{ bilan.employe?.prenom || 'Inconnu' }} {{ bilan.employe?.nom || '' }}</h4>
               <span class="service-label">{{ bilan?.service?.nom || 'Prestataire externe' }}</span>
             </div>
           </div>
@@ -344,7 +344,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()" @scaleIn>
     <div class="modal-header">
       <div>
-        <h2>Détails du bilan - {{ selectedBilan.employe.prenom }} {{ selectedBilan.employe.nom }}</h2>
+        <h2>Détails du bilan - {{ selectedBilan.employe?.prenom || 'Inconnu'}} {{ selectedBilan.employe?.nom  || ''}}</h2>
         <p class="modal-subtitle">
           {{ selectedBilan?.service?.nom || 'Prestataire externe' }} • T{{ selectedBilan.trimestre }} {{ selectedBilan.annee }}
         </p>
@@ -394,6 +394,7 @@
             </div>
           </ng-container>
         </div>
+
         <!-- Détails des indicateurs -->
         <div class="modal-section" *ngIf="selectedBilan.comparaison?.details">
           <h3><mat-icon>list_alt</mat-icon> Détails des indicateurs</h3>
@@ -429,7 +430,6 @@
             </div>
           </ng-container>
         </div>
-      </div>
       <!-- Commentaire -->
       <div class="modal-section" *ngIf="selectedBilan.commentaire">
         <h3><mat-icon>comment</mat-icon> Commentaire</h3>
@@ -453,10 +453,6 @@
         <mat-icon>print</mat-icon>
         Imprimer
       </button>
-      <!-- <button mat-raised-button color="primary" (click)="goToDetails(selectedBilan)">
-        <mat-icon aria-hidden="true">visibility</mat-icon>
-        <span>Détails du bilan</span>
-      </button> -->
     </div>
   </div>
 </div>

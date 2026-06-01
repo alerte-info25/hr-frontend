@@ -230,6 +230,12 @@ export class BilanTrimestrielComponent {
       chiffre_affaire: details.chiffre_affaire,
       resultats_perspectives: details.resultats_perspectives
     });
+    if (this.isDCM() && details.rh_activites && details.admin_activites) {
+        this.bilanForm.patchValue({
+            rh_activites: details.rh_activites,
+            admin_activites: details.admin_activites
+        });
+    }
   }
   patchComptable(details: any) {
     const mois = this.getMoisDuTrimestre(this.bilanForm.get('trimestre')?.value);
@@ -294,6 +300,9 @@ export class BilanTrimestrielComponent {
     return result;
   }
 
+  isDCM(): boolean {
+    return this.authSvr.isDCM();
+  }
 
 
   initForm(): void {
@@ -341,6 +350,10 @@ export class BilanTrimestrielComponent {
     this.bilanForm.addControl('nombre_clients', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('chiffre_affaire', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('resultats_perspectives', this.fb.control('', Validators.required));
+    if (this.isDCM()) {
+      this.bilanForm.addControl('rh_activites', this.fb.control('', Validators.required));
+      this.bilanForm.addControl('admin_activites', this.fb.control('', Validators.required));
+    }
   }
 
   initDeveloppeurFields(): void {
@@ -639,6 +652,10 @@ export class BilanTrimestrielComponent {
       details.nombre_clients = formValue.nombre_clients;
       details.chiffre_affaire = formValue.chiffre_affaire;
       details.resultats_perspectives = formValue.resultats_perspectives;
+      if (this.isDCM()) {
+          details.rh_activites = formValue.rh_activites;
+          details.admin_activites = formValue.admin_activites;
+      }
     } else if (serviceCode === 'développement') {
       details.projets = formValue.projets;
     } else if (serviceCode === 'comptabilité') {

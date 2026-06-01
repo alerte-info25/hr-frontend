@@ -100,6 +100,13 @@ export class DetailsEmployeComponent {
         return 'Autre';
     }
   }
+  getResponsableLabel(value: number): string {
+    return value === 1 ? 'Oui' : 'Non';
+  }
+
+  getResponsableClass(value: number): string {
+    return value === 1 ? 'responsable-yes' : 'responsable-no';
+  }
   closeModal() {
     this.showConfirmModal = false;
     this.itemToDelete = null;

@@ -1,0 +1,61 @@
+<!-- sidebar.component.html -->
+<div class="app-sidebar" [ngClass]="getSidebarClasses()">
+  <!-- Header de la sidebar -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo" [class.logo-collapsed]="!isSidebarOpen">
+      <a href="index.html" class="header-logo">
+        <img
+          class="main-logo"
+          src="assets/images/logo/logo-alerteInfo.png"
+          alt="logo"
+        />
+        <img
+          class="dark-logo"
+          src="assets/images/logo/logo-alerteInfo.png"
+          alt="logo"
+        />
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigation de la sidebar -->
+  <nav class="sidebar-nav">
+    <ul class="sidebar">
+      <li
+        class="sidebar-menu-item"
+        *ngFor="let menu of filteredMenuList"
+        [routerLink]="menu.route"
+        routerLinkActive="active"
+        [attr.data-tooltip]="menu.name"
+      >
+        <div class="menu-content">
+          <mat-icon class="menu-icon">{{ menu.icon }}</mat-icon>
+          <span class="menu-text" *ngIf="isSidebarOpen">
+            {{ menu.name }}
+          </span>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Footer de la sidebar -->
+  <div class="sidebar-footer">
+    <div class="sidebar-user-info">
+      <div class="user-avatar">
+        <img
+          [src]="
+            userData?.employe?.photo_url ?? 'assets/images/avatar/my-avatar.png'
+          "
+          alt="User"
+          class="avatar-img"
+        />
+      </div>
+      <div class="user-details" *ngIf="isSidebarOpen">
+        <h4 class="user-name">
+          {{ userData?.employe?.nom }} {{ userData?.employe?.prenom }}
+        </h4>
+        <span class="user-role">{{ userData?.role?.libelle }}</span>
+      </div>
+    </div>
+  </div>
+</div>

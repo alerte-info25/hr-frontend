@@ -1,0 +1,273 @@
+// ─── Variables ─────────────────────────────────────────────────────────────
+$bg:          #0e2044;
+$blue:        #60a5fa;
+$blue-dim:    rgba(96, 165, 250, 0.12);
+$blue-faint:  rgba(96, 165, 250, 0.07);
+$green:       #34d399;
+$green-dim:   rgba(52, 211, 153, 0.12);
+$mono:        'Courier New', Courier, monospace;
+
+// ─── Overlay ───────────────────────────────────────────────────────────────
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: $bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  overflow: hidden;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// ─── Grille de fond ────────────────────────────────────────────────────────
+.grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient($blue-faint 1px, transparent 1px),
+    linear-gradient(90deg, $blue-faint 1px, transparent 1px);
+  background-size: 36px 36px;
+  animation: gridPulse 8s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+// ─── Ligne de scan ─────────────────────────────────────────────────────────
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: rgba(96, 165, 250, 0.35);
+  z-index: 1;
+  animation: scan 3.5s linear infinite;
+}
+
+@keyframes scan {
+  0%   { top: -4px; }
+  100% { top: 110%; }
+}
+
+// ─── Conteneur principal ───────────────────────────────────────────────────
+.loading-container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Icône serveurs ────────────────────────────────────────────────────────
+.server-icon {
+  margin-bottom: 4px;
+  svg { display: block; }
+}
+
+.rack-body {
+  fill: #122d5a;
+  &--green { stroke: $blue; stroke-width: 1.5; }
+  &--blue  { fill: #0f2e26; stroke: $green; stroke-width: 1.5; }
+}
+
+.rack-slot {
+  fill: rgba(96, 165, 250, 0.12);
+  &--blue { fill: rgba(52, 211, 153, 0.12); }
+}
+
+.led {
+  fill: $blue;
+  &--green { fill: $green; }
+  &--1 { animation: blink 1.2s ease-in-out infinite; }
+  &--2 { animation: blink 1.9s ease-in-out infinite; }
+  &--3 { animation: blink 0.9s ease-in-out infinite; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
+// ─── Spinner double anneau ─────────────────────────────────────────────────
+.spinner-wrap {
+  width: 88px;
+  height: 88px;
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+
+  &--outer {
+    inset: 0;
+    border: 2px solid $blue-dim;
+    border-top-color: $blue;
+    animation: spinCW 1.4s linear infinite;
+  }
+
+  &--inner {
+    inset: 16px;
+    border: 2px solid $green-dim;
+    border-bottom-color: $green;
+    animation: spinCCW 2s linear infinite;
+  }
+}
+
+@keyframes spinCW  { to { transform: rotate(360deg); } }
+@keyframes spinCCW { to { transform: rotate(-360deg); } }
+
+// ─── Textes ────────────────────────────────────────────────────────────────
+.text-block {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.app-name {
+  font-family: $mono;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: $blue;
+  margin: 0 0 10px;
+
+  span { color: $green; }
+}
+
+.cmd-line {
+  font-family: $mono;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: rgba(96, 165, 250, 0.55);
+  margin: 0;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.cursor {
+  display: inline-block;
+  animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 1; }
+}
+
+// ─── Barre de progression ──────────────────────────────────────────────────
+.progress-wrap {
+  width: 300px;
+  margin-bottom: 32px;
+}
+
+.progress-track {
+  height: 5px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: $blue;
+  border-radius: 3px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-pct {
+  display: block;
+  text-align: right;
+  margin-top: 6px;
+  font-family: $mono;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: rgba(96, 165, 250, 0.4);
+}
+
+// ─── Indicateurs de statut ─────────────────────────────────────────────────
+.status-row {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.25;
+  transition: opacity 0.5s ease;
+
+  &--active {
+    opacity: 1;
+
+    .status-dot {
+      background: $blue;
+      animation: dotGlow 1.6s ease-in-out infinite;
+    }
+  }
+
+  &--blue.status-item--active .status-dot {
+    background: $green;
+    animation: dotGlowGreen 1.6s ease-in-out infinite;
+  }
+
+  span {
+    font-family: $mono;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: $blue;
+  }
+
+  &--blue span { color: $green; }
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.3);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  transition: background 0.5s ease;
+}
+
+@keyframes dotGlow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.35); }
+}
+
+@keyframes dotGlowGreen {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.35); }
+}
+
+// ─── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 480px) {
+  .app-name      { font-size: 1.2rem; letter-spacing: 3px; }
+  .progress-wrap { width: 240px; }
+  .status-row    { gap: 20px; }
+}

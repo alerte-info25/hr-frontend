@@ -1,0 +1,231 @@
+<div class="employes-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="material-icons">people</span>
+        Gestion des Employés
+      </h1>
+      <p class="page-subtitle">{{ employes.length }} employés enregistrés</p>
+    </div>
+    <button
+      class="btn-sync"
+      (click)="syncEmployes()"
+      [disabled]="isSyncing">
+      <span class="material-icons" [class.spinning]="isSyncing">sync</span>
+      {{ isSyncing ? 'Synchronisation...' : 'Synchroniser' }}
+    </button>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Rechercher par nom, matricule, email ou service..."
+        class="search-input">
+      <span class="material-icons clear-search" *ngIf="searchTerm" (click)="searchTerm=''; onSearchChange()">close</span>
+    </div>
+
+    <div class="filter-group">
+      <button
+        class="filter-btn"
+        [class.active]="filterActif === 'all'"
+        (click)="filterActif = 'all'; onFilterChange()">
+        Tous
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="filterActif === 'actif'"
+        (click)="filterActif = 'actif'; onFilterChange()">
+        <span class="status-dot active"></span>
+        Actifs
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="filterActif === 'inactif'"
+        (click)="filterActif = 'inactif'; onFilterChange()">
+        <span class="status-dot inactive"></span>
+        Inactifs
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des employés...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredEmployes.length === 0" class="empty-state">
+    <span class="material-icons">people_outline</span>
+    <h3>Aucun employé trouvé</h3>
+    <p *ngIf="searchTerm || filterActif !== 'all'">Essayez de modifier vos filtres</p>
+    <p *ngIf="!searchTerm && filterActif === 'all'">Aucun employé n'est encore enregistré</p>
+  </div>
+
+  <!-- Employes Grid -->
+  <div *ngIf="!isLoading && filteredEmployes.length > 0" class="employes-grid">
+    <div class="employe-card" *ngFor="let employe of filteredEmployes" (click)="openDetails(employe)">
+      <div class="card-header">
+        <div class="employe-avatar">
+          <div *ngIf="!employe.photo_url" class="avatar-initials">
+            {{ getInitials(employe.nom_complet) }}
+          </div>
+          <img *ngIf="employe.photo_url" [src]="employe.photo_url" [alt]="employe.nom_complet" class="avatar-img">
+        </div>
+        <div class="card-status">
+          <span class="status-badge" [class]="getStatusClass(employe.is_actif)">
+            {{ getStatusText(employe.is_actif) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="employe-name">{{ employe.nom_complet }}</h3>
+        <p class="employe-matricule">Matricule: {{ employe.matricule || 'Non défini' }}</p>
+
+        <div class="employe-info">
+          <div class="info-item">
+            <span class="material-icons">work</span>
+            <span>{{ employe.fonction_nom || 'Fonction non définie' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="material-icons">business</span>
+            <span>{{ employe.service_nom || 'Service non défini' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="material-icons">business</span>
+            <span>{{ employe.bureau?.acronyme || 'Bureau non défini' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn-details">
+          Voir détails
+          <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && filteredEmployes.length > 0 && totalPages > 1" class="pagination">
+    <button
+      class="page-btn"
+      (click)="changePage(currentPage - 1)"
+      [disabled]="currentPage === 1">
+      <span class="material-icons">chevron_left</span>
+    </button>
+
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of [].constructor(totalPages); let i = index"
+        class="page-number"
+        [class.active]="currentPage === i + 1"
+        (click)="changePage(i + 1)">
+        {{ i + 1 }}
+      </button>
+    </div>
+
+    <button
+      class="page-btn"
+      (click)="changePage(currentPage + 1)"
+      [disabled]="currentPage === totalPages">
+      <span class="material-icons">chevron_right</span>
+    </button>
+  </div>
+
+  <!-- Modal Details -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeModal()">
+        <span class="material-icons">close</span>
+      </button>
+
+      <div *ngIf="selectedEmploye" class="modal-body">
+        <div class="modal-header">
+          <div class="modal-avatar">
+            <div *ngIf="!selectedEmploye.photo_url" class="avatar-initials large">
+              {{ getInitials(selectedEmploye.nom_complet) }}
+            </div>
+            <img *ngIf="selectedEmploye.photo_url" [src]="selectedEmploye.photo_url" [alt]="selectedEmploye.nom_complet">
+          </div>
+          <div class="modal-title">
+            <h2>{{ selectedEmploye.nom_complet }}</h2>
+            <span class="status-badge" [class]="getStatusClass(selectedEmploye.is_actif)">
+              {{ getStatusText(selectedEmploye.is_actif) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="material-icons">badge</span>
+            <div>
+              <label>Matricule</label>
+              <p>{{ selectedEmploye.matricule || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <span class="material-icons">email</span>
+            <div>
+              <label>Email professionnel</label>
+              <p>{{ selectedEmploye.email_professionnel || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <span class="material-icons">work</span>
+            <div>
+              <label>Fonction</label>
+              <p>{{ selectedEmploye.fonction_nom || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <span class="material-icons">business</span>
+            <div>
+              <label>Service</label>
+              <p>{{ selectedEmploye.service_nom || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <span class="material-icons">assignment_ind</span>
+            <div>
+              <label>Rôle</label>
+              <p>{{ selectedEmploye.role_nom || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <span class="material-icons">meeting_room</span>
+            <div>
+              <label>Bureau</label>
+              <p>{{ selectedEmploye.bureau?.acronyme || 'Non défini' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-item full-width">
+            <span class="material-icons">update</span>
+            <div>
+              <label>Dernière synchronisation</label>
+              <p>{{ formatDate(selectedEmploye.synced_at) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-close" (click)="closeModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

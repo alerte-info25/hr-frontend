@@ -831,3 +831,225 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: 2px solid $warning-color;
   outline-offset: 2px;
 }
+// Style pour le toggle switch moderne
+.responsable-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  .responsable-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .responsable-icon {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .material-icons {
+        font-size: 28px;
+        color: white;
+      }
+    }
+
+    .responsable-info {
+      flex: 1;
+
+      h4 {
+        color: white;
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        font-size: 0.85rem;
+      }
+    }
+
+    .toggle-switch {
+      .switch-label {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+
+        .switch-input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+
+          &:checked + .switch-slider {
+            background-color: #4caf50;
+          }
+
+          &:checked + .switch-slider:before {
+            transform: translateX(26px);
+          }
+        }
+
+        .switch-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: 0.4s;
+          border-radius: 34px;
+
+          &:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+          }
+        }
+      }
+    }
+  }
+
+  .responsable-details {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+    .details-badge {
+      background: rgba(76, 175, 80, 0.2);
+      border-radius: 12px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+
+      .material-icons {
+        font-size: 18px;
+      }
+    }
+
+    .responsable-privileges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+
+      .privilege-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: translateX(5px);
+        }
+
+        .material-icons {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+}
+
+// Animation d'apparition
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.responsable-details {
+  animation: slideDown 0.3s ease-out;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .responsable-card {
+    padding: 1rem;
+
+    .responsable-header {
+      .responsable-info {
+        h4 {
+          font-size: 1rem;
+        }
+
+        p {
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    .responsable-details {
+      .responsable-privileges {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+.responsable-privileges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+
+  .privilege-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+
+    .material-icons {
+      font-size: 16px;
+    }
+
+    // Classe pour prendre toute la largeur
+    &.full-width {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+
+      .material-icons {
+        flex-shrink: 0;
+      }
+    }
+  }
+}

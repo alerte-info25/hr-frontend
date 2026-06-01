@@ -11,7 +11,7 @@
             {{ isEditMode() ? 'Modifier le bilan trimestriel' : 'Ajouter un bilan trimestriel' }}
           </h1>
           <p class="page-subtitle">
-            {{ employe()?.prenom }} {{ employe()?.nom }} - {{ employe()?.service?.nom || 'Prestataire externe' }}
+            {{ employe()?.prenom || '' }} {{ employe()?.nom || '' }} - {{ employe()?.service?.nom || 'Prestataire externe' }}
           </p>
         </div>
       </div>
@@ -300,6 +300,39 @@
                 [modules]="editorModules">
               </p-editor>
             </div>
+
+            <!-- NOUVEAUX CHAMPS POUR DCM -->
+            <ng-container *ngIf="isDCM()">
+              <p-divider></p-divider>
+
+              <div class="section-header">
+                <mat-icon class="section-icon">people</mat-icon>
+                <h2>Activités Ressources Humaines</h2>
+              </div>
+
+              <div class="form-field">
+                <label for="rh_activites">Activités RH <span class="required">*</span></label>
+                <p-editor
+                  formControlName="rh_activites"
+                  [style]="{'height':'200px'}"
+                  [modules]="editorModules">
+                </p-editor>
+              </div>
+
+              <div class="section-header">
+                <mat-icon class="section-icon">business</mat-icon>
+                <h2>Activités Administratives</h2>
+              </div>
+
+              <div class="form-field">
+                <label for="admin_activites">Activités administratives <span class="required">*</span></label>
+                <p-editor
+                  formControlName="admin_activites"
+                  [style]="{'height':'200px'}"
+                  [modules]="editorModules">
+                </p-editor>
+              </div>
+            </ng-container>
 
             <p-divider></p-divider>
           </ng-container>

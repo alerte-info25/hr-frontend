@@ -1,0 +1,140 @@
+@if (isLoading()) {
+  <app-infras-loading></app-infras-loading>
+}
+
+<div class="categories-container">
+  <!-- Header avec statistiques -->
+  <div class="categories-header">
+    <div class="header-content">
+      <div class="title-section">
+        <span class="material-icons header-icon">category</span>
+        <div>
+          <h1>Gestion des catégories</h1>
+          <p>Organisez et gérez vos catégories d'équipements</p>
+        </div>
+      </div>
+      <button class="btn-add" (click)="openAddDialog()">
+        <span class="material-icons">add</span>
+        <span>Nouvelle catégorie</span>
+      </button>
+    </div>
+
+    <!-- Barre de recherche -->
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher une catégorie..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+        class="search-input"
+      />
+      @if (searchTerm()) {
+        <button class="clear-search" (click)="clearSearch()">
+          <span class="material-icons">close</span>
+        </button>
+      }
+    </div>
+
+    <!-- Cartes statistiques -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="material-icons">apps</span>
+        <div class="stat-info">
+          <h3>{{ stats().total }}</h3>
+          <p>Total catégories</p>
+        </div>
+      </div>
+      <!-- <div class="stat-card">
+        <span class="material-icons">computer</span>
+        <div class="stat-info">
+          <h3>{{ stats().informatique }}</h3>
+          <p>Informatique</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-icons">chair</span>
+        <div class="stat-info">
+          <h3>{{ stats().mobilier }}</h3>
+          <p>Mobilier</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-icons">security</span>
+        <div class="stat-info">
+          <h3>{{ stats().securite }}</h3>
+          <p>Sécurité</p>
+        </div>
+      </div> -->
+    </div>
+  </div>
+
+  <!-- Grille des catégories -->
+  @if (filteredCategories().length > 0) {
+    <div class="categories-grid">
+      @for (categorie of filteredCategories(); track categorie.id) {
+        <div class="category-card" >
+          <div class="card-header">
+            <!-- <div class="category-icon" [style.background]="getTypeColor(categorie.type) + '15'">
+              <span class="material-icons" [style.color]="getTypeColor(categorie.type)">
+                {{ getTypeIcon(categorie.type) }}
+              </span>
+            </div>
+            <div class="category-badge" [style.background]="getTypeColor(categorie.type) + '10'">
+              <span class="badge-text" [style.color]="getTypeColor(categorie.type)">
+                {{ categorie.type | titlecase }}
+              </span>
+            </div> -->
+          </div>
+
+          <div class="card-body">
+            <h3 class="category-name">{{ categorie.nom }}</h3>
+            <p class="category-description">{{ categorie.description | slice:0:100 }}{{ categorie.description.length > 100 ? '...' : '' }}</p>
+          </div>
+
+          <div class="card-footer">
+            <button class="btn-edit" (click)="openEditDialog(categorie)">
+              <span class="material-icons">edit</span>
+              <span>Modifier</span>
+            </button>
+            <button class="btn-delete" (click)="openDeleteModal(categorie)">
+              <span class="material-icons">delete</span>
+              <span>Supprimer</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <span class="material-icons">category</span>
+      </div>
+      <h3 class="empty-title">Aucune catégorie disponible</h3>
+      <p class="empty-description">
+        {{ searchTerm() ? 'Aucune catégorie ne correspond à votre recherche.' : 'Commencez par créer votre première catégorie pour organiser vos équipements.' }}
+      </p>
+      @if (!searchTerm()) {
+        <button class="btn-primary" (click)="openAddDialog()">
+          <span class="material-icons">add</span>
+          <span>Créer une catégorie</span>
+        </button>
+      } @else {
+        <button class="btn-secondary" (click)="clearSearch()">
+          <span class="material-icons">clear</span>
+          <span>Effacer la recherche</span>
+        </button>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal de confirmation -->
+@if (showConfirmModal()) {
+  <app-confirm-delete-dialog
+    [title]="'Suppression de catégorie'"
+    [message]="'Voulez-vous vraiment supprimer la catégorie ' + itemToDelete()?.nom + ' ?'"
+    (confirm)="confirmDelete()"
+    (cancel)="closeModal()"
+  ></app-confirm-delete-dialog>
+}

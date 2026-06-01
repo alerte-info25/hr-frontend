@@ -1,0 +1,70 @@
+<div class="loading-overlay" [class.visible]="isVisible">
+
+  <!-- Grille de fond -->
+  <div class="grid-bg"></div>
+
+  <!-- Ligne de scan animée -->
+  <div class="scan-line"></div>
+
+  <div class="loading-container">
+
+    <!-- Icône serveurs -->
+    <div class="server-icon">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="8" width="56" height="16" rx="4" class="rack-body rack-body--green"/>
+        <rect x="8" y="29" width="56" height="16" rx="4" class="rack-body rack-body--green"/>
+        <rect x="8" y="50" width="56" height="16" rx="4" class="rack-body rack-body--blue"/>
+        <rect x="15" y="13" width="22" height="5" rx="1.5" class="rack-slot"/>
+        <rect x="15" y="34" width="22" height="5" rx="1.5" class="rack-slot"/>
+        <rect x="15" y="55" width="22" height="5" rx="1.5" class="rack-slot rack-slot--blue"/>
+        <circle cx="52" cy="16" r="3.5" class="led led--1"/>
+        <circle cx="59" cy="16" r="3.5" class="led led--2"/>
+        <circle cx="52" cy="37" r="3.5" class="led led--3"/>
+        <circle cx="59" cy="37" r="3.5" class="led led--2"/>
+        <circle cx="52" cy="58" r="3.5" class="led led--blue led--1"/>
+        <circle cx="59" cy="58" r="3.5" class="led led--blue led--3"/>
+      </svg>
+    </div>
+
+    <!-- Spinner double anneau -->
+    <div class="spinner-wrap">
+      <div class="ring ring--outer"></div>
+      <div class="ring ring--inner"></div>
+    </div>
+
+    <!-- Textes -->
+    <div class="text-block">
+      <h2 class="app-name">Infrastructures<span>MANAGER</span></h2>
+      <p class="cmd-line">&gt; {{ loadingSubtitle }}<span class="cursor">_</span></p>
+    </div>
+
+    <!-- Barre de progression -->
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="progress"></div>
+      </div>
+      <span class="progress-pct">{{ progress }}%</span>
+    </div>
+
+    <!-- Indicateurs de statut -->
+    <div class="status-row">
+      <div class="status-item" [class.status-item--active]="currentStep >= 1">
+        <div class="status-dot"></div>
+        <span>Equipements</span>
+      </div>
+      <div class="status-item" [class.status-item--active]="currentStep >= 2">
+        <div class="status-dot"></div>
+        <span>Bureaux</span>
+      </div>
+      <div class="status-item status-item--blue" [class.status-item--active]="currentStep >= 3">
+        <div class="status-dot"></div>
+        <span>Zones</span>
+      </div>
+      <div class="status-item" [class.status-item--active]="currentStep >= 4">
+        <div class="status-dot"></div>
+        <span>Mouvements</span>
+      </div>
+    </div>
+
+  </div>
+</div>

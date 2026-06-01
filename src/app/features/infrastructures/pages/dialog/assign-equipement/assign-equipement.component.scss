@@ -1,0 +1,651 @@
+// ─── Tokens ────────────────────────────────────────────────────────────────
+$primary:       #4f46e5;
+$primary-light: #eef2ff;
+$primary-mid:   #818cf8;
+$surface:       #ffffff;
+$surface-2:     #f8fafc;
+$surface-3:     #f1f5f9;
+$border:        #e2e8f0;
+$border-focus:  #4f46e5;
+$text-1:        #0f172a;
+$text-2:        #475569;
+$text-3:        #94a3b8;
+$error:         #ef4444;
+$error-light:   #fef2f2;
+$warning:       #f59e0b;
+$success:       #10b981;
+$radius-sm:     8px;
+$radius-md:     12px;
+$radius-lg:     16px;
+$shadow-sm:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+$shadow-md:     0 4px 16px rgba(79,70,229,.10), 0 1px 4px rgba(0,0,0,.06);
+$shadow-lg:     0 8px 32px rgba(79,70,229,.13), 0 2px 8px rgba(0,0,0,.08);
+
+// ─── Dialog host ───────────────────────────────────────────────────────────
+:host {
+  display: block;
+  font-family: 'DM Sans', 'Nunito', system-ui, sans-serif;
+}
+
+// ─── Entrance animation ────────────────────────────────────────────────────
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dashDraw {
+  0%   { stroke-dasharray: 1, 126; stroke-dashoffset: 0;  }
+  50%  { stroke-dasharray: 100, 126; stroke-dashoffset: -25; }
+  100% { stroke-dasharray: 100, 126; stroke-dashoffset: -126; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Root container ────────────────────────────────────────────────────────
+.assign-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: $surface;
+  border-radius: $radius-lg;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow: hidden;
+  animation: slideUp .35s cubic-bezier(.22,.68,0,1.2) both;
+
+  &.is-loading {
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+// ─── Loading overlay ───────────────────────────────────────────────────────
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(4px);
+  animation: fadeIn .2s ease both;
+
+  .loader-ring {
+    width: 52px;
+    height: 52px;
+    animation: spinnerRotate 1.4s linear infinite;
+
+    svg {
+      width: 100%;
+      height: 100%;
+
+      circle {
+        stroke: $primary;
+        stroke-linecap: round;
+        animation: dashDraw 1.4s ease-in-out infinite;
+      }
+    }
+  }
+}
+
+// ─── Header ────────────────────────────────────────────────────────────────
+.dialog-header {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid $border;
+  overflow: hidden;
+
+  .header-decoration {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, $primary-light 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .header-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 1;
+  }
+
+  .header-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, $primary 0%, $primary-mid 100%);
+    box-shadow: 0 4px 12px rgba(79,70,229,.35);
+    flex-shrink: 0;
+
+    mat-icon {
+      color: #fff;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dialog-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: $text-1;
+    letter-spacing: -.3px;
+    line-height: 1.2;
+  }
+
+  .dialog-subtitle {
+    margin: 0;
+    font-size: 12.5px;
+    color: $text-2;
+    line-height: 1.4;
+  }
+
+  .close-btn {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: $text-3;
+    cursor: pointer;
+    transition: background .18s, color .18s, transform .18s;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) {
+      background: $surface-3;
+      color: $text-1;
+      transform: rotate(90deg);
+    }
+
+    &:disabled { opacity: .45; cursor: not-allowed; }
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  }
+}
+
+// ─── Equipment banner ──────────────────────────────────────────────────────
+.equipement-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 12px 14px;
+  background: $surface-2;
+  border: 1px solid $border;
+  border-left: 3px solid $primary;
+  border-radius: $radius-md;
+  animation: sectionReveal .3s .1s ease both;
+
+  .banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: $primary-light;
+    flex-shrink: 0;
+
+    mat-icon {
+      color: $primary;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+
+    .banner-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: $text-3;
+    }
+
+    .banner-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: $text-1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .banner-badge {
+    span {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: $primary-light;
+      color: $primary;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+  }
+}
+
+// ─── Form ──────────────────────────────────────────────────────────────────
+.assign-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ─── Scrollable body ───────────────────────────────────────────────────────
+.form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 4px;
+
+  // Scrollbar custom
+  scrollbar-width: thin;
+  scrollbar-color: rgba($primary, .25) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($primary, .25);
+    border-radius: 10px;
+    transition: background .2s;
+
+    &:hover {
+      background: rgba($primary, .45);
+    }
+  }
+
+  // Shadow de défilement en haut
+  background:
+    linear-gradient($surface 30%, transparent) center top / 100% 18px no-repeat,
+    linear-gradient(transparent, $surface 70%) center bottom / 100% 18px no-repeat,
+    radial-gradient(ellipse at top, rgba(0,0,0,.06), transparent 60%) center top / 100% 10px no-repeat,
+    radial-gradient(ellipse at bottom, rgba(0,0,0,.06), transparent 60%) center bottom / 100% 10px no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.form-section {
+  margin-top: 16px;
+  animation: sectionReveal .3s ease both;
+
+  &:nth-child(1) { animation-delay: .15s; }
+  &:nth-child(2) { animation-delay: .22s; }
+  &:nth-child(3) { animation-delay: .29s; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $border;
+    color: $text-2;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      color: $primary;
+    }
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// ─── Field group ───────────────────────────────────────────────────────────
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: opacity .2s;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  &.field-disabled {
+    opacity: .6;
+
+    .select-wrapper { cursor: not-allowed; }
+  }
+
+  &.field-error {
+    .select-wrapper,
+    .textarea-wrapper {
+      border-color: $error !important;
+      background: $error-light;
+    }
+  }
+}
+
+.field-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text-2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .required-star {
+    color: $error;
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .optional-tag {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: $text-3;
+    background: $surface-3;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+}
+
+// ─── Select wrapper ────────────────────────────────────────────────────────
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+
+  &:focus-within {
+    border-color: $border-focus;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+    background: $surface;
+  }
+
+  &:hover:not(:focus-within) {
+    border-color: darken($border, 8%);
+  }
+
+  .field-icon {
+    position: absolute;
+    left: 10px;
+    color: $text-3;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+    transition: color .18s;
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 8px;
+    color: $text-3;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    transition: color .18s, transform .2s;
+  }
+
+  &:focus-within {
+    .field-icon { color: $primary; }
+    .select-arrow { color: $primary; transform: rotate(180deg); }
+  }
+}
+
+.field-select {
+  width: 100%;
+  padding: 9px 34px 9px 32px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13.5px;
+  color: $text-1;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+
+  option { color: $text-1; }
+  option[value=""] { color: $text-3; }
+
+  &:disabled { cursor: not-allowed; color: $text-3; }
+}
+
+// ─── Textarea wrapper ──────────────────────────────────────────────────────
+.textarea-wrapper {
+  position: relative;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  transition: border-color .18s, box-shadow .18s;
+
+  &:focus-within {
+    border-color: $border-focus;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+  }
+
+  &:hover:not(:focus-within) {
+    border-color: darken($border, 8%);
+  }
+}
+
+.field-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13.5px;
+  color: $text-1;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.55;
+  box-sizing: border-box;
+
+  &::placeholder { color: $text-3; }
+}
+
+// ─── Hint / Error messages ─────────────────────────────────────────────────
+.error-msg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: $error;
+  font-weight: 500;
+  animation: fadeIn .2s ease;
+}
+
+.hint-msg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: $text-3;
+  animation: fadeIn .2s ease;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+// ─── Dialog actions ────────────────────────────────────────────────────────
+.dialog-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid $border;
+  background: $surface;
+  animation: sectionReveal .3s .35s ease both;
+}
+
+// ─── Buttons ───────────────────────────────────────────────────────────────
+.btn-cancel {
+  padding: 9px 20px;
+  border: 1.5px solid $border;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $text-2;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, transform .15s;
+
+  &:hover:not(:disabled) {
+    background: $surface-3;
+    border-color: darken($border, 8%);
+    color: $text-1;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-confirm {
+  padding: 9px 22px;
+  border: none;
+  border-radius: $radius-sm;
+  background: linear-gradient(135deg, $primary 0%, #6366f1 100%);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79,70,229,.35);
+  transition: filter .18s, transform .15s, box-shadow .18s, opacity .18s;
+
+  .btn-content {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    mat-icon {
+      font-size: 17px;
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 16px rgba(79,70,229,.45);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); filter: brightness(.98); }
+
+  &:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: none;
+    transform: none;
+  }
+}
+
+// ─── Button spinner ────────────────────────────────────────────────────────
+.btn-spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinnerRotate .7s linear infinite;
+}
+
+// ─── Material dialog overrides ─────────────────────────────────────────────
+::ng-deep {
+  .mat-mdc-dialog-container {
+    --mdc-dialog-container-shape: 16px;
+    overflow: hidden;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    padding: 0 !important;
+    overflow: visible !important;
+    box-shadow: $shadow-lg !important;
+  }
+}

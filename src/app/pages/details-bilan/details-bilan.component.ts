@@ -138,7 +138,7 @@ export class DetailsBilanComponent {
     if (details.courses) return 'coursier';
     if (details.projets) return 'dev';
     if (details.articles || details.nombre_articles) return 'journ';
-    if (details.prospections || details.suivis_dossiers) return 'com';
+    if (details.prospections || details.suivis_dossiers || details.rh_activites || details.admin_activites) return 'com';
     if (details.activites_mensuelles) return 'compta';
 
     return 'unknown';

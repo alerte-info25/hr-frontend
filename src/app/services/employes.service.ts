@@ -26,4 +26,7 @@ export class EmployesService {
   deleteEmployes(slug: string): Observable<any> {
     return this.http.delete<any>(`${environment.apiUrl}employes/${slug}`);
   }
+  responsableEmploye(slug: string){
+    return this.http.delete<any>(`${environment.apiUrl}employes-responsablee/${slug}`);
+  }
 }

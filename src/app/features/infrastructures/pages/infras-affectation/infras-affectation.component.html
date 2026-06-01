@@ -1,0 +1,382 @@
+<div class="historique-container">
+  <!-- En-tête -->
+  <div class="historique-header">
+    <div class="header-title">
+      <span class="material-icons header-icon">history</span>
+      <h1>Historique des affectations</h1>
+    </div>
+    <button class="btn-refresh" (click)="refresh()">
+      <span class="material-icons">refresh</span>
+    </button>
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="stats-grid" @fadeInOut>
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <span class="material-icons">inventory_2</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total affectations</span>
+      </div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.actives }}</span>
+        <span class="stat-label">Actives</span>
+      </div>
+    </div>
+    <div class="stat-card transferee">
+      <div class="stat-icon">
+        <span class="material-icons">swap_horiz</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.transferees }}</span>
+        <span class="stat-label">Transférées</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre de filtres améliorée -->
+  <div class="filters-bar">
+    <div class="search-wrapper">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </div>
+
+    <!-- Filtre Bureau (visible seulement pour DG) -->
+    <div class="filter-wrapper" *ngIf="isDG">
+      <span class="material-icons filter-icon">business</span>
+      <select class="filter-select" [(ngModel)]="selectedBureau" (change)="onBureauChange()">
+        <option value="">Tous les bureaux</option>
+        <option *ngFor="let bureau of bureaux" [value]="bureau.rh_slug">
+          {{ bureau.acronyme }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Filtre Zone -->
+    <div class="filter-wrapper">
+      <span class="material-icons filter-icon">location_on</span>
+      <select class="filter-select" [(ngModel)]="selectedZone" (change)="onZoneChange()">
+        <option value="">Toutes les pièces</option>
+        <option *ngFor="let zone of zones" [value]="zone.slug">
+          {{ zone.nom }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Filtre Statut -->
+    <div class="filter-wrapper">
+      <span class="material-icons filter-icon">label</span>
+      <select class="filter-select" [(ngModel)]="filterStatut" (change)="onFilterChange()">
+        <option value="all">Tous les statuts</option>
+        <option value="active">Actives</option>
+        <option value="transferee">Transférées</option>
+      </select>
+    </div>
+
+    <button class="btn-reset" (click)="resetFilters()" title="Réinitialiser les filtres">
+      <span class="material-icons">clear_all</span>
+    </button>
+
+    <button class="btn-export" (click)="exportData()">
+      <span class="material-icons">download</span>
+      Exporter
+    </button>
+  </div>
+
+  <!-- Indicateur de filtres actifs -->
+  <div class="active-filters" *ngIf="searchTerm || filterStatut !== 'all' || selectedBureau || selectedZone">
+    <span class="active-filters-label">Filtres actifs :</span>
+    <span class="filter-tag" *ngIf="searchTerm">
+      Recherche: "{{ searchTerm }}"
+      <span class="remove-filter" (click)="searchTerm=''; onSearchChange()">×</span>
+    </span>
+    @if(isDG){
+    <span class="filter-tag" *ngIf="selectedBureau">
+      Bureau: {{ getBureauNomBySlug(selectedBureau) }}
+      <span class="remove-filter" (click)="selectedBureau=''; onBureauChange()">×</span>
+    </span>
+    }
+    <span class="filter-tag" *ngIf="selectedZone">
+      Pièce: {{ getZoneNomBySlug(selectedZone) }}
+      <span class="remove-filter" (click)="selectedZone=''; onZoneChange()">×</span>
+    </span>
+    <span class="filter-tag" *ngIf="filterStatut !== 'all'">
+      Statut: {{ getStatutLabel(filterStatut) }}
+      <span class="remove-filter" (click)="filterStatut='all'; onFilterChange()">×</span>
+    </span>
+  </div>
+
+  <!-- Tableau des affectations -->
+  <div class="table-wrapper">
+    <div *ngIf="isLoading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Chargement des affectations...</p>
+    </div>
+
+    <table class="affectations-table" *ngIf="!isLoading">
+      <thead>
+        <tr>
+          <th>Équipement</th>
+          <th>Bureau</th>
+          <th>Pièce</th>
+          <th>Employé</th>
+          <th>Date affectation</th>
+          <th>Statut</th>
+          <th>Affecter par</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let affectation of filteredAffectations" @cardAnimation>
+          <td>
+            <div class="cell-equipement">
+              <span class="material-icons">computer</span>
+              <span>{{ getEquipementNom(affectation) }}</span>
+            </div>
+           </td>
+           <td>
+            <div class="cell-bureau">
+              <span class="material-icons">business</span>
+              <span>{{ getBureauNom(affectation) }}</span>
+            </div>
+           </td>
+           <td>
+            <div class="cell-zone">
+              <span class="material-icons">location_on</span>
+              <span>{{ getZoneNom(affectation) }}</span>
+            </div>
+           </td>
+           <td>
+            <div class="cell-employe">
+              <span class="material-icons">person</span>
+              <span>{{ getEmployeNom(affectation) }}</span>
+            </div>
+           </td>
+           <td>{{ formatDate(affectation.date_affectation) }}</td>
+           <td>
+            <span class="statut-badge" [class]="getStatutClass(affectation.statut)">
+              <span class="material-icons">{{ getStatutIcon(affectation.statut) }}</span>
+              {{ getStatutLabel(affectation.statut) }}
+            </span>
+           </td>
+           <td>
+            <div class="cell-employe">
+              <span class="material-icons">person</span>
+              <span>{{ getAffecteurNom(affectation) }}</span>
+            </div>
+           </td>
+           <td>
+            <button class="action-details" [title]="'Voir détails'" (click)="openDetailsModal(affectation)">
+              <span class="material-icons">visibility</span>
+            </button>
+           </td>
+         </tr>
+        <tr *ngIf="filteredAffectations.length === 0">
+          <td colspan="8" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Aucune affectation trouvée</p>
+           </td>
+         </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
+    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+      <span class="material-icons">chevron_left</span>
+    </button>
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of [].constructor(totalPages); let i = index"
+        class="page-num"
+        [class.active]="currentPage === i + 1"
+        (click)="goToPage(i + 1)"
+      >
+        {{ i + 1 }}
+      </button>
+    </div>
+    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+      <span class="material-icons">chevron_right</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal Détails Affectation -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <!-- En-tête du modal -->
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <div class="modal-icon">
+          <span class="material-icons">assignment_ind</span>
+        </div>
+        <div>
+          <h2>Détails de l'affectation</h2>
+          <p class="modal-subtitle">Informations complètes sur l'affectation</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeDetailsModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Contenu du modal -->
+    <div class="modal-body" *ngIf="selectedAffectation">
+
+      <!-- Section Statut -->
+      <div class="detail-section statut-section">
+        <div class="statut-badge-large" [class]="getStatutClass(selectedAffectation.statut)">
+          <span class="material-icons">{{ getStatutIcon(selectedAffectation.statut) }}</span>
+          {{ getStatutLabel(selectedAffectation.statut) }}
+        </div>
+      </div>
+
+      <!-- Grille des informations -->
+      <div class="details-grid">
+
+        <!-- Équipement -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">computer</span>
+            <h3>Équipement</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Désignation</label>
+              <p>{{ getEquipementNom(selectedAffectation) }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.equipement?.code_interne">
+              <label>Code interne</label>
+              <p>{{ selectedAffectation.equipement.code_interne }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.equipement?.marque">
+              <label>Marque</label>
+              <p>{{ selectedAffectation.equipement.marque }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">location_on</span>
+            <h3>Pièce</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Nom de la zone</label>
+              <p>{{ getZoneNom(selectedAffectation) }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.zone?.description">
+              <label>Description</label>
+              <p>{{ selectedAffectation.zone.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employé -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">person</span>
+            <h3>Employé</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Nom complet</label>
+              <p>{{ getEmployeNom(selectedAffectation) }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.user_rh?.email">
+              <label>Email</label>
+              <p>{{ selectedAffectation.user_rh.email }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.user_rh?.telephone">
+              <label>Téléphone</label>
+              <p>{{ selectedAffectation.user_rh.telephone }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bureau -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">business</span>
+            <h3>Bureau</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Nom du bureau</label>
+              <p>{{ getBureauNom(selectedAffectation) }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.bureau?.nom">
+              <label>Pays</label>
+              <p>{{ selectedAffectation.bureau.nom }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">event</span>
+            <h3>Dates</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Date d'affectation</label>
+              <p>
+                <span class="material-icons small-icon">calendar_today</span>
+                {{ formatDate(selectedAffectation.date_affectation) }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations supplémentaires -->
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <span class="material-icons">info</span>
+            <h3>Informations</h3>
+          </div>
+          <div class="detail-card-body">
+            <div class="detail-item">
+              <label>Motif</label>
+              <p>{{ selectedAffectation.motif || 'Non spécifié' }}</p>
+            </div>
+            <div class="detail-item" *ngIf="selectedAffectation.affecter_par">
+              <label>Affecter par</label>
+              <p>{{ selectedAffectation.affecter_par.nom_complet }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer du modal -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetailsModal()">
+        <span class="material-icons">close</span>
+        Fermer
+      </button>
+      <button class="btn-primary" (click)="closeDetailsModal()">
+        <span class="material-icons">check</span>
+        OK
+      </button>
+    </div>
+  </div>
+</div>

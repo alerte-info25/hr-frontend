@@ -1,0 +1,111 @@
+.dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    mat-dialog-content {
+      padding: 24px;
+      max-height: 70vh;
+    }
+    .details-header {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .type-badge, .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .type-badge .material-icons, .status-badge .material-icons {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    .type-sortie { background: #e0f2fe; color: #0284c7; }
+    .type-retour { background: #dcfce7; color: #16a34a; }
+    .type-transfert { background: #fef9c3; color: #ca8a04; }
+    .type-maintenance { background: #f1f5f9; color: #475569; }
+    .type-reforme { background: #fee2e2; color: #dc2626; }
+    .status-valide { background: #dcfce7; color: #15803d; }
+    .status-attente { background: #fff3e3; color: #b45309; }
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .detail-item {
+      border-bottom: 1px solid #eef2f6;
+      padding-bottom: 12px;
+    }
+    .full-width {
+      grid-column: span 2;
+    }
+    .detail-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .detail-label .material-icons {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    .detail-value {
+      font-size: 0.95rem;
+      color: #0f172a;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .code-interne {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .etat-badge {
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+    .arrow {
+      color: #94a3b8;
+      font-weight: bold;
+    }
+    .motif, .notes {
+      font-style: italic;
+      color: #334155;
+    }
+    .date-valid {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-left: 8px;
+    }
+    @media (max-width: 640px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+      .full-width {
+        grid-column: span 1;
+      }
+    }

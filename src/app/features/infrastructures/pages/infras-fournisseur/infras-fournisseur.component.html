@@ -1,0 +1,156 @@
+@if(isLoading){
+  <app-infras-loading></app-infras-loading>
+}
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-text">
+      <div class="header-badge">
+        <span class="material-icons">storefront</span>
+        <span>Partenaires</span>
+      </div>
+      <h2>Fournisseurs</h2>
+      <p>Gérez vos partenaires et fournisseurs en un seul endroit</p>
+    </div>
+
+    <button class="btn-add" (click)="openAddDialog()">
+      <span class="material-icons">add</span>
+      Nouveau fournisseur
+    </button>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher par nom ou email..."
+        [(ngModel)]="search"
+        class="search-input"
+      />
+      @if(search) {
+        <button class="clear-btn" (click)="search = ''">
+          <span class="material-icons">close</span>
+        </button>
+      }
+    </div>
+
+    <div class="stats-pill">
+      <span class="material-icons">group</span>
+      {{ filteredFournisseurs.length }} fournisseur{{ filteredFournisseurs.length > 1 ? 's' : '' }}
+    </div>
+  </div>
+
+  <!-- GRID -->
+  @if(!isLoading) {
+    <div class="grid">
+
+      @for (f of filteredFournisseurs; track f.id; let i = $index) {
+        <div class="card" [style.animation-delay]="i * 60 + 'ms'">
+
+          <div class="card-header">
+            <div class="avatar">
+              <span class="material-icons">store</span>
+            </div>
+
+            <div class="info">
+              <h3>{{ f.nom }}</h3>
+            </div>
+
+            <div class="card-actions-top">
+              <button class="icon-btn edit-icon" (click)="openEditDialog(f)" matTooltip="Modifier">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="icon-btn delete-icon" (click)="openDeleteModal(f)" matTooltip="Supprimer">
+                <span class="material-icons">delete_outline</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="card-body">
+            <div class="info-row">
+              <div class="info-icon email-icon">
+                <span class="material-icons">email</span>
+              </div>
+              <div class="info-content">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ f.email || 'Non défini' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-icon phone-icon">
+                <span class="material-icons">phone</span>
+              </div>
+              <div class="info-content">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value">{{ f.telephone || 'Non défini' }}</span>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <div class="info-icon address-icon">
+                <span class="material-icons">location_on</span>
+              </div>
+              <div class="info-content">
+                <span class="info-label">Adresse</span>
+                <span class="info-value">{{ f.adresse || 'Non défini' }}</span>
+              </div>
+            </div>
+
+            @if(f.notes || f.note) {
+              <div class="notes-box">
+                <span class="material-icons notes-icon">notes</span>
+                <p class="notes-text">{{ f.notes || f.note }}</p>
+              </div>
+            }
+          </div>
+
+          <div class="card-footer">
+            <button class="btn-edit" (click)="openEditDialog(f)">
+              <span class="material-icons">edit</span>
+              Modifier
+            </button>
+            <button class="btn-delete" (click)="openDeleteModal(f)">
+              <span class="material-icons">delete_outline</span>
+              Supprimer
+            </button>
+          </div>
+
+        </div>
+      }
+
+      @empty {
+        <div class="empty-state">
+          <div class="empty-illustration">
+            <span class="material-icons">inventory_2</span>
+          </div>
+          <h3>Aucun fournisseur trouvé</h3>
+          <p>{{ search ? 'Aucun résultat pour "' + search + '"' : 'Ajoutez vos premiers fournisseurs pour commencer' }}</p>
+          @if(!search) {
+            <button class="btn-add" (click)="openAddDialog()">
+              <span class="material-icons">add</span>
+              Ajouter un fournisseur
+            </button>
+          }
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<app-confirm-delete-dialog
+  *ngIf="showConfirmModal"
+  [title]="'Supprimer ce fournisseur'"
+  [message]="'Voulez-vous vraiment supprimer le fournisseur ' + itemToDelete?.nom + ' ? Cette action est irréversible.'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()"
+></app-confirm-delete-dialog>

@@ -1,0 +1,258 @@
+<div class="dialog-container" @dialogAnimation>
+
+  <!-- HEADER avec gradient -->
+  <div class="dialog-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <span class="material-icons">{{getIconByCategorieName(data.categorie.nom)}}</span>
+      </div>
+      <div class="header-text">
+        <h2>{{ data.designation }}</h2>
+        <div class="header-badge">
+          <span class="material-icons">tag</span>
+          <span>{{ data.code_interne }}</span>
+        </div>
+      </div>
+    </div>
+    <button class="close-btn" (click)="close()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <!-- BODY -->
+  <div class="dialog-body">
+
+    <!-- État principal (carte de statut) -->
+    <div class="status-card" [class]="data.etat">
+      <div class="status-icon">
+        <span class="material-icons">{{ getEtatIcon(data.etat) }}</span>
+      </div>
+      <div class="status-info">
+        <div class="status-label">Statut actuel</div>
+        <div class="status-value">{{ getEtatLabel(data.etat) }}</div>
+      </div>
+    </div>
+
+    <!-- SECTION 1 : Informations générales -->
+    <div class="detail-section" @fadeInUp>
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">info</span>
+        </div>
+        <h3>Informations générales</h3>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">
+            <span class="material-icons">category</span>
+          </div>
+          <div class="info-content">
+            <label>Catégorie</label>
+            <p>{{ data.categorie?.nom || 'Non définie' }}</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <span class="material-icons">location_on</span>
+          </div>
+          <div class="info-content">
+            <label>Pièce</label>
+            <p>{{ data.zone?.nom || 'Non définie' }}</p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <span class="material-icons">business</span>
+          </div>
+          <div class="info-content">
+            <label>Bureau</label>
+            <p>{{ data.bureau?.acronyme || 'Non défini' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 : Détails techniques -->
+    <div class="detail-section" @fadeInUp>
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">settings</span>
+        </div>
+        <h3>Détails techniques</h3>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-item" *ngIf="data.marque">
+          <span class="material-icons">branding_watermark</span>
+          <div>
+            <label>Marque</label>
+            <p>{{ data.marque }}</p>
+          </div>
+        </div>
+
+        <div class="tech-item" *ngIf="data.modele">
+          <span class="material-icons">aspect_ratio</span>
+          <div>
+            <label>Modèle</label>
+            <p>{{ data.modele }}</p>
+          </div>
+        </div>
+
+        <div class="tech-item" *ngIf="data.numero_serie">
+          <span class="material-icons">confirmation_number</span>
+          <div>
+            <label>N° série</label>
+            <p class="serial-number">{{ data.numero_serie }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-card" *ngIf="data.configuration">
+        <div class="config-header">
+          <span class="material-icons">computer</span>
+          <span>Configuration</span>
+        </div>
+        <div class="config-content">
+          <pre>{{ data.configuration }}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION : Prix d'achat -->
+    <div class="detail-section" @fadeInUp *ngIf="data.prix_achat">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">attach_money</span>
+        </div>
+        <h3>Informations financières</h3>
+      </div>
+
+      <div class="warranty-card">
+        <div class="warranty-icon">
+          <span class="material-icons">shopping_bag</span>
+        </div>
+        <div class="warranty-info">
+          <label>Prix d'achat</label>
+          <div class="warranty-date" style="font-size: 1.5rem; font-weight: 600;">
+            {{ data.prix_achat | number:'1.0-0' }} FCFA
+          </div>
+          <!-- <div class="warranty-status" *ngIf="data.date_achat">
+            Acheté le {{ data.date_achat | date:'dd/MM/yyyy' }}
+          </div> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 : Garantie -->
+    <div class="detail-section" @fadeInUp *ngIf="data.date_garantie_fin">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">verified</span>
+        </div>
+        <h3>Garantie</h3>
+      </div>
+
+      <div class="warranty-card" [class.expired]="data.garantie_expiree">
+        <div class="warranty-icon">
+          <span class="material-icons">
+            {{ data.garantie_expiree ? 'warning' : 'verified' }}
+          </span>
+        </div>
+        <div class="warranty-info">
+          <label>Date de fin de garantie</label>
+          <div class="warranty-date">
+            {{ data.date_garantie_fin | date:'dd/MM/yyyy' }}
+          </div>
+          <div class="warranty-status" *ngIf="data.garantie_expiree">
+            Garantie expirée
+          </div>
+          <div class="warranty-status active" *ngIf="!data.garantie_expiree">
+            Garantie valide
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION : Dernier responsable - Version enrichie -->
+    <div class="detail-section" @fadeInUp *ngIf="hasDernierResponsable()">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">person</span>
+        </div>
+        <h3>Dernier responsable</h3>
+      </div>
+
+      <div class="responsable-card-enhanced">
+        <div class="responsable-avatar">
+          <span class="material-icons">account_circle</span>
+        </div>
+        <div class="responsable-details">
+          <div class="responsable-header">
+            <h4>{{ getDernierResponsableNom() }}</h4>
+            <span class="responsable-badge">Actuel</span>
+          </div>
+
+          <div class="responsable-info-grid">
+            <!-- <div class="info-item" *ngIf="data.dernier_responsable?.matricule">
+              <span class="material-icons">confrmation_number</span>
+              <div>
+                <label>Matricule</label>
+                <p>{{ data.dernier_responsable.matricule }}</p>
+              </div>
+            </div> -->
+
+            <div class="info-item">
+              <span class="material-icons">event</span>
+              <div>
+                <label>Date d'affectation</label>
+                <p>{{ getDerniereAffectationDate() }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 : Notes -->
+    <div class="detail-section" @fadeInUp *ngIf="data.notes">
+      <div class="section-header">
+        <div class="section-icon">
+          <span class="material-icons">description</span>
+        </div>
+        <h3>Notes</h3>
+      </div>
+
+      <div class="notes-card">
+        <div class="notes-icon">
+          <span class="material-icons">format_quote</span>
+        </div>
+        <div class="notes-content">
+          <p>{{ data.notes }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucune note -->
+    <div class="empty-notes" @fadeInUp *ngIf="!data.notes">
+      <span class="material-icons">note_add</span>
+      <p>Aucune note disponible</p>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="dialog-footer">
+    <button class="btn-secondary" (click)="close()">
+      <span class="material-icons">close</span>
+      Fermer
+    </button>
+    <button class="btn-primary" (click)="close()">
+      <span class="material-icons">check</span>
+      OK
+    </button>
+  </div>
+
+</div>

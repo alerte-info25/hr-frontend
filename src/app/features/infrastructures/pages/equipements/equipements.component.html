@@ -1,0 +1,358 @@
+@if(isLoading()) {
+  <app-infras-loading></app-infras-loading>
+}
+
+<div class="equipements-container">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-info">
+      <div class="header-icon-wrapper">
+        <span class="material-icons header-icon">devices</span>
+      </div>
+      <div>
+        <h1>Gestion des équipements</h1>
+        <p>Gérez et suivez l'ensemble de votre parc informatique et bureautique</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="stats-badge">
+        <span class="material-icons">inventory_2</span>
+        <strong>{{ filteredEquipements().length }}</strong>
+        <span>équipement{{ filteredEquipements().length > 1 ? 's' : '' }}</span>
+      </div>
+      <button class="btn-primary" (click)="openAddDialog()">
+        <span class="material-icons">add</span>
+        Nouvel équipement
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTRES AVANCÉS -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <div class="filters-title">
+        <span class="material-icons">filter_alt</span>
+        <h3>Filtres</h3>
+        @if(activeFiltersCount() > 0) {
+          <span class="filters-count">{{ activeFiltersCount() }}</span>
+        }
+      </div>
+      @if(activeFiltersCount() > 0) {
+        <button class="reset-filters" (click)="resetFilters()">
+          <span class="material-icons">clear_all</span>
+          Réinitialiser
+        </button>
+      }
+    </div>
+
+    <div class="filters-grid">
+      <!-- Recherche -->
+      <div class="filter-group">
+        <label>
+          <span class="material-icons">search</span>
+          Recherche
+        </label>
+        <input
+          type="text"
+          class="filter-input"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          placeholder="Code, désignation, marque..."
+        />
+      </div>
+
+      <!-- Catégorie -->
+      <div class="filter-group">
+        <label>
+          <span class="material-icons">category</span>
+          Catégorie
+        </label>
+        <select class="filter-select" [value]="selectedCategorie()" (change)="selectedCategorie.set($any($event.target).value)">
+          <option value="">Toutes les catégories</option>
+          @for(cat of categories(); track cat.slug) {
+            <option [value]="cat.slug">{{ cat.nom }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- État -->
+      <div class="filter-group">
+        <label>
+          <span class="material-icons">circle</span>
+          État
+        </label>
+        <select class="filter-select" [value]="selectedEtat()" (change)="selectedEtat.set($any($event.target).value)">
+          <option value="">Tous les états</option>
+          @for(etat of etatsDisponibles; track etat.value) {
+            <option [value]="etat.value">{{ etat.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Bureau -->
+       @if(isDG()) {
+        <div class="filter-group">
+          <label>
+            <span class="material-icons">business</span>
+            Bureau
+          </label>
+          <select class="filter-select" [value]="selectedBureau()" (change)="selectedBureau.set($any($event.target).value)">
+            <option value="">Tous les bureaux</option>
+            @for(bureau of bureaux(); track bureau.id) {
+              <option [value]="bureau.rh_slug">{{ bureau.acronyme }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- Zone -->
+      <div class="filter-group">
+        <label>
+          <span class="material-icons">location_on</span>
+          Pièce
+        </label>
+        <select class="filter-select" [value]="selectedZone()" (change)="selectedZone.set($any($event.target).value)">
+          <option value="">Toutes les pièces</option>
+          @for(zone of zones(); track zone.id) {
+            <option [value]="zone.slug">{{ zone.nom }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS RAPIDES -->
+  <div class="quick-stats">
+    <div class="stat-card">
+      <span class="material-icons">devices</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats().total }}</span>
+        <span class="stat-label">Total équipements</span>
+      </div>
+    </div>
+    <div class="stat-card stat-neuf">
+      <span class="material-icons">fiber_new</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats().parEtat.neuf }}</span>
+        <span class="stat-label">Neufs</span>
+      </div>
+    </div>
+    <div class="stat-card stat-bon">
+      <span class="material-icons">check_circle</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats().parEtat.seconde_main }}</span>
+        <span class="stat-label">Seconde main</span>
+      </div>
+    </div>
+    <div class="stat-card stat-panne">
+      <span class="material-icons">warning</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats().parEtat.en_panne }}</span>
+        <span class="stat-label">En panne</span>
+      </div>
+    </div>
+    <div class="stat-card stat-reforme">
+      <span class="material-icons">delete_forever</span>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats().parEtat.reforme }}</span>
+        <span class="stat-label">Hors service</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU DES ÉQUIPEMENTS -->
+  <div class="table-container">
+    @if(filteredEquipements().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <span class="material-icons">inventory_2</span>
+        </div>
+        <h3>Aucun équipement trouvé</h3>
+        <p>
+          @if(activeFiltersCount() > 0) {
+            Aucun équipement ne correspond à vos critères de recherche.
+          } @else {
+            Commencez par ajouter votre premier équipement.
+          }
+        </p>
+        @if(activeFiltersCount() > 0) {
+          <button class="btn-secondary" (click)="resetFilters()">
+            <span class="material-icons">clear_all</span>
+            Réinitialiser les filtres
+          </button>
+        } @else {
+          <button class="btn-primary" (click)="openAddDialog()">
+            <span class="material-icons">add</span>
+            Ajouter un équipement
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="equipements-table">
+          <thead>
+            <tr>
+              <th (click)="toggleSort('code_interne')" class="sortable">
+                Code
+                <span class="material-icons sort-icon">{{ getSortIcon('code_interne') }}</span>
+              </th>
+              <th (click)="toggleSort('designation')" class="sortable">
+                Désignation
+                <span class="material-icons sort-icon">{{ getSortIcon('designation') }}</span>
+              </th>
+              <th (click)="toggleSort('categorie')" class="sortable">
+                Catégorie
+                <span class="material-icons sort-icon">{{ getSortIcon('categorie') }}</span>
+              </th>
+              <th (click)="toggleSort('etat')" class="sortable">
+                État
+                <span class="material-icons sort-icon">{{ getSortIcon('etat') }}</span>
+              </th>
+              <th (click)="toggleSort('bureau')" class="sortable">
+                Bureau
+                <span class="material-icons sort-icon">{{ getSortIcon('bureau') }}</span>
+              </th>
+              <th (click)="toggleSort('zone')" class="sortable">
+                Pièce
+                <span class="material-icons sort-icon">{{ getSortIcon('zone') }}</span>
+              </th>
+              <th (click)="toggleSort('dernier_responsable')" class="sortable">
+                Dernier Responsable
+                <span class="material-icons sort-icon">{{ getSortIcon('dernier_responsable') }}</span>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(eq of paginatedEquipements(); track eq.id) {
+              <tr class="data-row">
+                <td>
+                  <span class="code-badge">{{ eq.code_interne }}</span>
+                </td>
+                <td>
+                  <div class="equipment-info">
+                    <strong class="equipment-name">{{ eq.designation }}</strong>
+                    <span class="equipment-sub">{{ eq.marque }} - {{ eq.modele }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="category-tag">{{ eq.categorie?.nom || '-' }}</span>
+                </td>
+                <td>
+                  <span class="etat-badge" [class]="getEtatBadgeClass(eq.etat)">
+                    <span class="etat-dot" [style.background]="getEtatColor(eq.etat)"></span>
+                    {{ getEtatLabel(eq.etat) }}
+                  </span>
+                </td>
+                <td>
+                  @if(eq.bureau?.acronyme) {
+                    <div class="bureau-info">
+                      <span class="material-icons">business</span>
+                      {{ eq.bureau.acronyme }}
+                    </div>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td>
+                  @if(eq.zone?.nom) {
+                    <div class="zone-info">
+                      <span class="material-icons">location_on</span>
+                      {{ eq.zone.nom }}
+                    </div>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td>
+                  @if(eq.dernier_responsable?.nom_complet) {
+                    <div class="zone-info">
+                      <span class="material-icons">location_on</span>
+                      {{ eq.dernier_responsable.nom_complet }}
+                    </div>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <button class="action-btn view" (click)="openView(eq)" title="Détails">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="action-btn edit" (click)="openEditDialog(eq)" title="Modifier">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    @if(isDG() || isResponsable()) {
+                    <button class="action-btn assign" (click)="openAffectation(eq)" title="Affecter">
+                      <span class="material-icons">assignment_ind</span>
+                    </button>
+                    }
+                    <button class="action-btn movement"(click)="openCreateMouvement(eq)"title="Mouvement">
+                      <span class="material-icons">swap_horiz</span>
+                    </button>
+                    @if(isDG() || isResponsable()) {
+                    <button class="action-btn delete" (click)="openDeleteModal(eq)" title="Supprimer">
+                      <span class="material-icons">delete</span>
+                    </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+  <!-- PAGINATION -->
+  @if(totalPages() > 1) {
+    <div class="pagination-container">
+      <div class="pagination-info">
+        {{ paginationInfo() }}
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          class="page-btn"
+          [disabled]="currentPage() === 1"
+          (click)="currentPage.set(currentPage() - 1)">
+          <span class="material-icons">chevron_left</span>
+        </button>
+
+        @for(page of [].constructor(totalPages()); track $index) {
+          <button
+            class="page-btn"
+            [class.active]="currentPage() === $index + 1"
+            (click)="currentPage.set($index + 1)">
+            {{ $index + 1 }}
+          </button>
+        }
+
+        <button
+          class="page-btn"
+          [disabled]="currentPage() === totalPages()"
+          (click)="currentPage.set(currentPage() + 1)">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+
+      <select class="per-page-select" [value]="itemsPerPage()" (change)="itemsPerPage.set(+$any($event.target).value)">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
+    </div>
+  }
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+@if(showConfirmModal()) {
+  <app-confirm-delete-dialog
+    [title]="'Suppression d\'équipement'"
+    [message]="'Voulez-vous vraiment supprimer l\'équipement ' + itemToDelete()?.designation + ' ?'"
+    (confirm)="confirmDelete()"
+    (cancel)="closeModal()"
+  ></app-confirm-delete-dialog>
+}

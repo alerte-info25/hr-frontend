@@ -1,0 +1,383 @@
+<div
+  class="dialog-overlay"
+  *ngIf="isVisible"
+  [class.dialog-overlay--open]="isAnimatingIn"
+  (click)="onOverlayClick($event)"
+  role="presentation"
+>
+  <div
+    class="dialog"
+    [class.dialog--open]="isAnimatingIn"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="dialogTitle"
+  >
+
+    <!-- ══ HEADER ══════════════════════════════════════════════ -->
+    <div class="dialog__header">
+      <div class="dialog__header-left">
+        <div class="dialog__icon-wrap">
+          <span class="material-icons-round">{{ dialogIcon }}</span>
+        </div>
+        <div class="dialog__titles">
+          <h2 class="dialog__title">{{ dialogTitle }}</h2>
+          <p class="dialog__subtitle">{{ dialogSubtitle }}</p>
+        </div>
+      </div>
+
+      <button class="dialog__close" (click)="requestClose()" aria-label="Fermer le dialog">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Code interne (mode édition uniquement) -->
+    <div class="dialog__code-banner" *ngIf="isEditMode && form.code_interne">
+      <span class="material-icons-round">qr_code</span>
+      <span class="dialog__code-value">{{ form.code_interne }}</span>
+      <span class="dialog__code-label">Code interne</span>
+    </div>
+
+    <!-- ══ TABS ════════════════════════════════════════════════ -->
+    <div class="dialog__tabs" role="tablist">
+      <button
+        class="dialog__tab"
+        [class.dialog__tab--active]="activeTab === 'general'"
+        (click)="switchTab('general')"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'general'"
+      >
+        <span class="material-icons-round">info</span>
+        Général
+      </button>
+      <button
+        class="dialog__tab"
+        [class.dialog__tab--active]="activeTab === 'technique'"
+        (click)="switchTab('technique')"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'technique'"
+      >
+        <span class="material-icons-round">memory</span>
+        Technique
+      </button>
+      <button
+        class="dialog__tab"
+        [class.dialog__tab--active]="activeTab === 'notes'"
+        (click)="switchTab('notes')"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'notes'"
+      >
+        <span class="material-icons-round">notes</span>
+        Notes
+      </button>
+    </div>
+
+    <!-- ══ BODY ════════════════════════════════════════════════ -->
+    <div class="dialog__body">
+
+      <!-- ── ONGLET GÉNÉRAL ─────────────────────────────────── -->
+      <div
+        class="dialog__panel"
+        [class.dialog__panel--active]="activeTab === 'general'"
+        role="tabpanel"
+      >
+
+        <p class="section-label">
+          <span class="material-icons-round">label</span>
+          Identification
+        </p>
+
+        <div class="form-grid">
+
+          <div class="field field--full">
+            <label class="field__label" for="designation">
+              <span class="material-icons-round">badge</span>
+              Désignation
+              <span class="field__required" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="designation"
+              class="field__input"
+              type="text"
+              [(ngModel)]="form.designation"
+              name="designation"
+              placeholder="ex : Ordinateur portable Dell XPS 15"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="categorie_slug">
+              <span class="material-icons-round">category</span>
+              Catégorie
+              <span class="field__required" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="categorie_slug"
+              class="field__select"
+              [(ngModel)]="form.categorie_slug"
+              name="categorie_slug"
+            >
+              <option value="">Sélectionner…</option>
+              <option *ngFor="let cat of categories" [value]="cat.slug">
+                {{ cat.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="zone_slug">
+              <span class="material-icons-round">location_on</span>
+              Pièce
+            </label>
+            <select
+              id="zone_slug"
+              class="field__select"
+              [(ngModel)]="form.zone_slug"
+              name="zone_slug"
+            >
+              <option value="">Sélectionner…</option>
+              <option *ngFor="let zone of zones" [value]="zone.slug">
+                {{ zone.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field field--full">
+            <label class="field__label" for="bureau_slug">
+              <span class="material-icons-round">apartment</span>
+              Bureau (réf. RH)
+            </label>
+            <input
+              id="bureau_slug"
+              class="field__input"
+              type="text"
+              [(ngModel)]="form.bureau_slug"
+              name="bureau_slug"
+              placeholder="ex : bureau-rh-042"
+              autocomplete="off"
+            />
+          </div>
+
+        </div>
+
+        <!-- État -->
+        <p class="section-label">
+          <span class="material-icons-round">build_circle</span>
+          État de l'équipement
+        </p>
+
+        <div class="etat-grid">
+          <label
+            *ngFor="let opt of etats"
+            class="etat-card"
+            [class]="'etat-card ' + opt.cssClass"
+            [class.etat-card--selected]="form.etat === opt.value"
+          >
+            <input
+              type="radio"
+              [value]="opt.value"
+              [(ngModel)]="form.etat"
+              name="etat"
+              class="etat-card__input"
+            />
+            <span class="material-icons-round etat-card__icon">{{ opt.icon }}</span>
+            <span class="etat-card__label">{{ opt.label }}</span>
+          </label>
+        </div>
+
+        <!-- Garantie -->
+        <p class="section-label">
+          <span class="material-icons-round">verified_user</span>
+          Garantie
+        </p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="date_garantie_fin">
+              <span class="material-icons-round">event</span>
+              Fin de garantie
+            </label>
+            <input
+              id="date_garantie_fin"
+              class="field__input"
+              type="date"
+              [(ngModel)]="form.date_garantie_fin"
+              name="date_garantie_fin"
+            />
+            <div class="garantie-badge" *ngIf="garantieExpired !== null">
+              <span
+                class="garantie-pill"
+                [class.garantie-pill--ok]="!garantieExpired"
+                [class.garantie-pill--expired]="garantieExpired"
+              >
+                <span class="material-icons-round">
+                  {{ garantieExpired ? 'shield' : 'verified_user' }}
+                </span>
+                {{ garantieExpired ? 'Garantie expirée' : 'Garantie active' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── ONGLET TECHNIQUE ───────────────────────────────── -->
+      <div
+        class="dialog__panel"
+        [class.dialog__panel--active]="activeTab === 'technique'"
+        role="tabpanel"
+      >
+
+        <p class="section-label">
+          <span class="material-icons-round">devices</span>
+          Identification matérielle
+        </p>
+
+        <div class="form-grid">
+
+          <div class="field">
+            <label class="field__label" for="marque">
+              <span class="material-icons-round">business</span>
+              Marque
+            </label>
+            <input
+              id="marque"
+              class="field__input"
+              type="text"
+              [(ngModel)]="form.marque"
+              name="marque"
+              placeholder="ex : Dell, HP, Apple…"
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="modele">
+              <span class="material-icons-round">devices_other</span>
+              Modèle
+            </label>
+            <input
+              id="modele"
+              class="field__input"
+              type="text"
+              [(ngModel)]="form.modele"
+              name="modele"
+              placeholder="ex : XPS 15 9530"
+            />
+          </div>
+
+          <div class="field field--full">
+            <label class="field__label" for="numero_serie">
+              <span class="material-icons-round">pin</span>
+              Numéro de série
+            </label>
+            <input
+              id="numero_serie"
+              class="field__input field__input--mono"
+              type="text"
+              [(ngModel)]="form.numero_serie"
+              name="numero_serie"
+              placeholder="ex : SN-XXXXXXX"
+            />
+          </div>
+
+        </div>
+
+        <p class="section-label">
+          <span class="material-icons-round">settings</span>
+          Configuration technique
+        </p>
+
+        <div class="field">
+          <label class="field__label" for="configuration">
+            <span class="material-icons-round">description</span>
+            Spécifications (texte libre)
+          </label>
+          <textarea
+            id="configuration"
+            class="field__textarea"
+            [(ngModel)]="form.configuration"
+            name="configuration"
+            placeholder="ex : Intel Core i7 13e gen, 16 Go RAM, 512 Go SSD NVMe, GPU RTX 4060…"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="info-chips">
+          <span class="info-chip">
+            <span class="material-icons-round">info</span>
+            Champs facultatifs
+          </span>
+          <span class="info-chip">
+            <span class="material-icons-round">lock</span>
+            Slug auto-généré par Laravel
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ── ONGLET NOTES ───────────────────────────────────── -->
+      <div
+        class="dialog__panel"
+        [class.dialog__panel--active]="activeTab === 'notes'"
+        role="tabpanel"
+      >
+
+        <p class="section-label">
+          <span class="material-icons-round">sticky_note_2</span>
+          Observations internes
+        </p>
+
+        <div class="field">
+          <label class="field__label" for="notes">
+            <span class="material-icons-round">edit_note</span>
+            Notes
+          </label>
+          <textarea
+            id="notes"
+            class="field__textarea field__textarea--tall"
+            [(ngModel)]="form.notes"
+            name="notes"
+            placeholder="Remarques, historique, informations complémentaires sur cet équipement…"
+            rows="7"
+          ></textarea>
+        </div>
+
+        <div class="info-notice">
+          <span class="material-icons-round">info</span>
+          <p>
+            Ces notes sont visibles uniquement par les gestionnaires.
+            Elles n'apparaissent pas dans les rapports publics.
+          </p>
+        </div>
+
+      </div>
+
+    </div><!-- /dialog__body -->
+
+    <!-- ══ FOOTER ══════════════════════════════════════════════ -->
+    <div class="dialog__footer">
+      <span class="dialog__footer-meta">
+        <span class="material-icons-round">schedule</span>
+        {{ footerDate }}
+      </span>
+
+      <div class="dialog__footer-actions">
+        <button class="btn btn--cancel" type="button" (click)="requestClose()">
+          Annuler
+        </button>
+        <button
+          class="btn btn--save"
+          type="button"
+          (click)="onSave()"
+          [class.btn--saving]="isSaving"
+          [class.btn--saved]="saveSuccess"
+          [disabled]="isSaving || saveSuccess"
+        >
+          <span class="material-icons-round btn__icon">{{ saveIcon }}</span>
+          {{ saveLabel }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

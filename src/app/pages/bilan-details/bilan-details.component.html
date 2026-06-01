@@ -41,7 +41,7 @@
           </div>
         </div>
 
-        <div class="hero-actions" >
+        <div class="hero-actions">
           <button mat-mini-fab color="primary" matTooltip="Imprimer" (click)="printBilan()">
             <mat-icon>print</mat-icon>
           </button>
@@ -51,9 +51,6 @@
           <button mat-mini-fab color="primary" matTooltip="Partager" (click)="shareBilan()">
             <mat-icon>share</mat-icon>
           </button>
-          <!-- <button mat-mini-fab color="accent" matTooltip="Modifier" (click)="editBilan()">
-            <mat-icon>edit</mat-icon>
-          </button> -->
         </div>
       </div>
     </div>
@@ -88,10 +85,10 @@
     </div>
 
     <!-- Tab Content: Overview -->
-    <div class="tab-content" *ngIf="activeTab === 'overview'" [@sectionAnimation]="bilan.details?.length">
+    <!-- <div class="tab-content" *ngIf="activeTab === 'overview'" [@sectionAnimation]="bilan.details?.length"> -->
 
       <!-- Introduction Section -->
-      <div class="content-section intro-section">
+      <!-- <div class="content-section intro-section">
         <div class="section-header">
           <div class="section-icon">
             <mat-icon>subject</mat-icon>
@@ -104,71 +101,79 @@
         <div class="section-content">
           <div class="rich-text-content" [innerHTML]="sanitize(bilan.introduction)"></div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Quick Overview Cards -->
-      <div class="overview-grid"
-      >
+      <!-- <div class="overview-grid">
         <div class="overview-card"
             *ngFor="let detail of detailClean; let i = index"
             (mouseenter)="onCardHover(i)"
             (mouseleave)="onCardLeave()"
-            [@cardHover]="hoveredCard === i ? 'hovered' : 'normal'"
-
-            >
+            [@cardHover]="hoveredCard === i ? 'hovered' : 'normal'"> -->
 
           <!-- Header -->
-          <div class="overview-card-header" >
+          <!-- <div class="overview-card-header">
             <div class="overview-icon"
               [style.background]="'linear-gradient(135deg, ' + getTrimestreColor(bilan.trimestre) + ' 0%, rgba(102, 126, 234, 0.7) 100%)'">
               <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
             </div>
             <h3>{{ getDetailLabel(detail.cle) }}</h3>
-          </div>
+          </div> -->
 
           <!-- Content -->
-          <div class="overview-card-content">
+          <!-- <div class="overview-card-content"> -->
 
             <!-- Articles / médias -->
-            <div *ngIf="isArticlesDetail(detail)" class="quick-stat">
+            <!-- <div *ngIf="isArticlesDetail(detail)" class="quick-stat">
               <span class="quick-number">{{ detail.valeur.length }}</span>
               <span class="quick-label">élément(s) produit(s)</span>
-            </div>
+            </div> -->
 
             <!-- Affichage des liens articles / vidéos -->
-            <div *ngIf="isArticlesDetail(detail)" class="links-section">
+            <!-- <div *ngIf="isArticlesDetail(detail)" class="links-section">
               <div *ngFor="let item of detail.valeur; let idx = index" class="link-card">
                 <a [href]="item.lien" target="_blank">
                   <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
                   <span>{{ item.type | titlecase }}</span>
                 </a>
               </div>
-            </div>
+            </div> -->
 
             <!-- Projets details -->
-            <div *ngIf="isProjetsDetail(detail.valeur)" class="quick-stat">
+            <!-- <div *ngIf="isProjetsDetail(detail.valeur)" class="quick-stat">
               <span class="quick-number">{{ detail.valeur.length }}</span>
               <span class="quick-label">projet(s)</span>
-            </div>
+            </div> -->
+
+            <!-- Activités RH et Admin (texte HTML) -->
+            <!-- <div *ngIf="isRhAdminDetail(detail)" class="html-preview">
+              <div class="rich-text-preview"
+                   [innerHTML]="getPreviewText(detail.valeur, 100)">
+              </div>
+              <button mat-button color="primary" class="view-more-btn"
+                      (click)="setActiveTab('details'); scrollToDetail(detail.slug)">
+                <mat-icon>visibility</mat-icon>
+                Voir en détail
+              </button>
+            </div> -->
 
             <!-- Autres détails simples (nombre / texte) -->
-            <div *ngIf="isSimpleDetail(detail)" class="quick-stat">
+            <!-- <div *ngIf="isSimpleDetail(detail) && !isRhAdminDetail(detail)" class="quick-stat">
               <span class="quick-number">{{ detail.valeur }}</span>
               <span class="quick-label">{{ getDetailLabel(detail.cle) }}</span>
-            </div>
+            </div> -->
 
             <!-- Fallback -->
-            <div *ngIf="!isArticlesDetail(detail) && !isProjetsDetail(detail.valeur) && !isSimpleDetail(detail)" class="quick-stat">
+            <!-- <div *ngIf="!isArticlesDetail(detail) && !isProjetsDetail(detail.valeur) && !isSimpleDetail(detail) && !isRhAdminDetail(detail)" class="quick-stat">
               <span class="quick-label">Voir les détails</span>
             </div>
 
           </div>
         </div>
-      </div>
-
+      </div> -->
 
       <!-- Commentaire Section -->
-      <div class="content-section comment-section" *ngIf="bilan.commentaire">
+      <!-- <div class="content-section comment-section" *ngIf="bilan.commentaire">
         <div class="section-header">
           <div class="section-icon">
             <mat-icon>comment</mat-icon>
@@ -182,60 +187,55 @@
           <div class="rich-text-content" [innerHTML]="sanitize(bilan.commentaire)"></div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <!-- Tab Content: Details -->
-    <!-- <div class="tab-content" *ngIf="activeTab === 'details'" [@sectionAnimation]="bilan.details?.length">
-
+    <!-- <div class="tab-content" *ngIf="activeTab === 'details'">
       <div class="details-grid">
-        <div class="detail-section" *ngFor="let detail of bilan.details">
-          <div class="detail-header-modern">
+        <div class="detail-section"
+             *ngFor="let detail of bilan.details; let i = index"
+             [attr.data-detail-slug]="detail.slug">
+          <div class="detail-header-modern" (click)="toggleDetailExpansion(detail.slug)" style="cursor: pointer;">
             <div class="detail-icon-modern">
               <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
             </div>
             <h3 class="detail-title-modern">{{ getDetailLabel(detail.cle) }}</h3>
+            <mat-icon class="expand-icon" style="margin-left: auto;">
+              {{ isDetailExpanded(detail.slug) ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
           </div>
 
-          <div class="detail-body-modern">
-            <div class="detail-body-modern"> -->
-              <!-- Articles / médias -->
-              <!-- <div *ngIf="isArticlesDetail(detail)" class="journalist-content">
+          <div class="detail-body-modern" *ngIf="isDetailExpanded(detail.slug)"> -->
 
-                <div class="count-badge">
-                  <mat-icon>numbers</mat-icon>
-                  <span><strong>{{ detail.valeur.length }}</strong> lien(s)</span>
-                </div>
+            <!-- Articles / médias -->
+            <!-- <div *ngIf="isArticlesDetail(detail)" class="journalist-content">
+              <div class="count-badge">
+                <mat-icon>numbers</mat-icon>
+                <span><strong>{{ detail.valeur.length }}</strong> lien(s)</span>
+              </div>
 
-                <div class="links-section">
-                  <h4 class="subsection-title">
-                    <mat-icon>link</mat-icon>
-                    Liens des éléménts produits
-                  </h4>
+              <div class="links-section">
+                <h4 class="subsection-title">
+                  <mat-icon>link</mat-icon>
+                  Liens des éléments produits
+                </h4>
 
-                  <div class="links-grid">
-                    <a *ngFor="let item of detail.valeur; let i = index"
-                      [href]="item.lien"
-                      target="_blank"
-                      class="link-card">
-                      <div class="link-number">{{ i + 1 }}</div>
-                      <div class="link-content">
-                        <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
-                        <span>{{ item.type | titlecase }}</span>
-                      </div>
-                    </a>
-                  </div>
+                <div class="links-grid">
+                  <a *ngFor="let item of detail.valeur; let idx = index"
+                    [href]="item.lien"
+                    target="_blank"
+                    class="link-card">
+                    <div class="link-number">{{ idx + 1 }}</div>
+                    <div class="link-content">
+                      <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
+                      <span>{{ item.type | titlecase }}</span>
+                    </div>
+                  </a>
                 </div>
               </div> -->
+            </div>
 
-              <!-- Autres détails simples -->
-              <!-- <div *ngIf="isSimpleDetail(detail)" class="simple-detail">
-                <span class="detail-label">{{ getDetailLabel(detail.cle) }}</span>
-                <span class="detail-value">{{ detail.valeur }}</span>
-              </div> -->
-
-            <!-- </div> -->
-
-            <!-- Développeur: projets -->
+            <!-- Projets -->
             <!-- <div *ngIf="isProjetsDetail(detail.valeur)" class="projects-content">
               <div class="projects-timeline">
                 <div class="project-card" *ngFor="let projet of detail.valeur; let last = last">
@@ -272,139 +272,8 @@
               </div>
             </div> -->
 
-            <!-- Coursiers
-            <div *ngIf="isCourierDetail(detail)" class="courier-content">
-              <h3>Courses du trimestre</h3> -->
-
-              <!-- Statistique rapide -->
-              <!-- <p><strong>Nombre de jours travaillés:</strong> {{ getCourierStats(detail).totalDays }}</p> -->
-
-              <!-- <table class="courier-table mat-elevation-z2">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Heure arrivée</th>
-                    <th>Heure départ</th>
-                    <th>Tâches effectuées</th>
-                    <th>Lieu</th>
-                    <th>Observation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let course of detail.valeur">
-                    <td>{{ course.date | date:'dd/MM/yyyy' }}</td>
-                    <td>{{ course.heure_arrive }}</td>
-                    <td>{{ course.heure_depart }}</td>
-                    <td>{{ course.tache_effectuer }}</td>
-                    <td>{{ course.lieu }}</td>
-                    <td>{{ course.observation }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div> -->
-            <!-- HTML Content -->
-            <!-- <div *ngIf="isHtmlString(detail.valeur)" class="html-content">
-              <div class="rich-text-content" [innerHTML]="sanitize(detail.valeur)"></div>
-            </div> -->
-
-            <!-- Number -->
-            <!-- <div *ngIf="isNumber(detail.valeur)" class="number-content">
-              <span class="big-number">{{ detail.valeur }}</span>
-            </div> -->
-
-            <!-- Simple text -->
-            <!-- <div *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur)" class="text-content">
-              <p>{{ detail.valeur }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> -->
-    <!-- Tab Content: Details -->
-    <div class="tab-content" *ngIf="activeTab === 'details'">
-      <div class="details-grid">
-        <div class="detail-section" *ngFor="let detail of bilan.details; let i = index">
-          <div class="detail-header-modern" (click)="toggleDetailExpansion(detail.slug)" style="cursor: pointer;">
-            <div class="detail-icon-modern">
-              <mat-icon>{{ getDetailIcon(detail.cle) }}</mat-icon>
-            </div>
-            <h3 class="detail-title-modern">{{ getDetailLabel(detail.cle) }}</h3>
-
-            <mat-icon class="expand-icon" style="margin-left: auto;">
-              {{ isDetailExpanded(detail.slug) ? 'expand_less' : 'expand_more' }}
-            </mat-icon>
-          </div>
-
-          <!-- ⬇️ LE PROBLÈME EST PROBABLEMENT ICI -->
-          <div class="detail-body-modern" *ngIf="isDetailExpanded(detail.slug)">
-
-            <!-- Articles / médias -->
-            <div *ngIf="isArticlesDetail(detail)" class="journalist-content">
-              <div class="count-badge">
-                <mat-icon>numbers</mat-icon>
-                <span><strong>{{ detail.valeur.length }}</strong> lien(s)</span>
-              </div>
-
-              <div class="links-section">
-                <h4 class="subsection-title">
-                  <mat-icon>link</mat-icon>
-                  Liens des éléments produits
-                </h4>
-
-                <div class="links-grid">
-                  <a *ngFor="let item of detail.valeur; let idx = index"
-                    [href]="item.lien"
-                    target="_blank"
-                    class="link-card">
-                    <div class="link-number">{{ idx + 1 }}</div>
-                    <div class="link-content">
-                      <mat-icon>{{ item.type === 'video' ? 'videocam' : 'article' }}</mat-icon>
-                      <span>{{ item.type | titlecase }}</span>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- Projets -->
-            <div *ngIf="isProjetsDetail(detail.valeur)" class="projects-content">
-              <div class="projects-timeline">
-                <div class="project-card" *ngFor="let projet of detail.valeur; let last = last">
-                  <div class="project-header-modern">
-                    <div class="project-icon">
-                      <mat-icon>code</mat-icon>
-                    </div>
-                    <div class="project-info">
-                      <h4 class="project-name">{{ projet.nom }}</h4>
-                      <span class="project-status"
-                            [class.status-completed]="projet.statut === 'termine'"
-                            [class.status-ongoing]="projet.statut === 'en_cours'">
-                        <mat-icon>{{ projet.statut === 'termine' ? 'check_circle' : 'pending' }}</mat-icon>
-                        {{ projet.statut === 'termine' ? 'Terminé' : 'En cours' }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="project-tasks" *ngIf="projet.taches?.length > 0">
-                    <h5 class="tasks-title">
-                      <mat-icon>task_alt</mat-icon>
-                      Tâches réalisées
-                    </h5>
-                    <ul class="tasks-list">
-                      <li *ngFor="let tache of projet.taches" class="task-item">
-                        <mat-icon class="task-check">check</mat-icon>
-                        <span>{{ tache }}</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div class="timeline-connector" *ngIf="!last"></div>
-                </div>
-              </div>
-            </div>
-
             <!-- Coursiers -->
-            <div *ngIf="isCourierDetail(detail)" class="courier-content">
+            <!-- <div *ngIf="isCourierDetail(detail)" class="courier-content">
               <h3>Courses du trimestre</h3>
 
               <p><strong>Nombre de jours travaillés:</strong> {{ getCourierStats(detail).totalDays }}</p>
@@ -431,14 +300,30 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
+            </div> -->
 
-            <!-- HTML Content - ⬇️ C'EST PROBABLEMENT ICI LE PROBLÈME -->
-            <div *ngIf="isHtmlString(detail.valeur)" class="html-content">
-              <!-- AVANT (avec erreur i) -->
-              <!-- <div class="rich-text-content" [innerHTML]="getSanitizedContent(detail, i)"></div> -->
+            <!-- Activités RH et Admin (HTML Content) -->
+            <!-- <div *ngIf="isRhAdminDetail(detail)" class="rh-admin-content">
+              <div class="html-content">
+                <button
+                  *ngIf="!isDetailExpanded(detail.slug)"
+                  mat-raised-button
+                  color="primary"
+                  (click)="loadHtmlContent(detail)">
+                  <mat-icon>visibility</mat-icon>
+                  Afficher le contenu
+                </button>
 
-              <!-- APRÈS (corrigé) -->
+                <div
+                  *ngIf="isDetailExpanded(detail.slug)"
+                  class="rich-text-content"
+                  [innerHTML]="getSanitizedContent(detail)">
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Autres HTML Content -->
+            <!-- <div *ngIf="isHtmlString(detail.valeur) && !isRhAdminDetail(detail)" class="html-content">
               <button
                 *ngIf="!isDetailExpanded(detail.slug)"
                 mat-raised-button
@@ -453,24 +338,24 @@
                 class="rich-text-content"
                 [innerHTML]="getSanitizedContent(detail)">
               </div>
-            </div>
+            </div> -->
 
             <!-- Number -->
-            <div *ngIf="isNumber(detail.valeur)" class="number-content">
+            <!-- <div *ngIf="isNumber(detail.valeur)" class="number-content">
               <span class="big-number">{{ detail.valeur }}</span>
-            </div>
+            </div> -->
 
             <!-- Simple text -->
-            <div *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur)" class="text-content">
+            <!-- <div *ngIf="isString(detail.valeur) && !isHtmlString(detail.valeur) && !isRhAdminDetail(detail)" class="text-content">
               <p>{{ detail.valeur }}</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Tab Content: Timeline -->
-    <div class="tab-content" *ngIf="activeTab === 'timeline'" [@fadeIn]>
+    <!-- <div class="tab-content" *ngIf="activeTab === 'timeline'" [@fadeIn]>
       <div class="timeline-container">
         <div class="timeline-header">
           <h2>Historique du bilan</h2>
@@ -499,3 +384,4 @@
       </div>
     </div>
   </div>
+</div> -->

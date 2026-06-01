@@ -1,0 +1,168 @@
+<div class="dialog-header">
+      <h2 mat-dialog-title>Détails du mouvement</h2>
+      <button mat-icon-button (click)="close()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <mat-dialog-content>
+      <!-- En-tête avec type et statut -->
+      <div class="details-header">
+        <div class="type-badge" [class]="getTypeClass(data.type)">
+          <span class="material-icons">{{ getTypeIcon(data.type) }}</span>
+          {{ getTypeLabel(data.type) }}
+        </div>
+        <div class="status-badge" [class.status-valide]="data.valider === 1" [class.status-attente]="data.valider === 0">
+          <span class="material-icons">{{ data.valider === 1 ? 'check_circle' : 'pending' }}</span>
+          {{ data.valider === 1 ? 'Validé' : 'En attente' }}
+        </div>
+      </div>
+
+      <!-- Grille d'informations -->
+      <div class="details-grid">
+        <!-- Équipement -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">computer</span>
+            <span>Équipement</span>
+          </div>
+          <div class="detail-value">
+            <strong>{{ data.equipement?.designation || data.equipement?.nom || 'N/A' }}</strong>
+            <span class="code-interne" *ngIf="data.equipement?.code_interne">
+              ({{ data.equipement.code_interne }})
+            </span>
+          </div>
+        </div>
+
+        <!-- Bureau source -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">business</span>
+            <span>Bureau source</span>
+          </div>
+          <div class="detail-value">
+            {{ data.bureau_source?.acronyme || data.bureau_source_slug || 'Non spécifié' }}
+          </div>
+        </div>
+
+        <!-- Zone source -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">place</span>
+            <span>Pièce source</span>
+          </div>
+          <div class="detail-value">
+            {{ data.zone_source?.nom || 'Non spécifiée' }}
+          </div>
+        </div>
+
+        <!-- Destination (selon type) -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">location_on</span>
+            <span>Destination</span>
+          </div>
+          <div class="detail-value">
+            <ng-container [ngSwitch]="data.type">
+              <ng-container *ngSwitchCase="'sortie_terrain'">
+                {{ data.destination_libre || 'Non précisée' }}
+              </ng-container>
+              <ng-container *ngSwitchCase="'retour_terrain'">
+                {{ data.zone_source?.nom || 'N/A' }} (retour)
+              </ng-container>
+              <ng-container *ngSwitchCase="'reforme'">
+                {{ data.bureau_dest?.acronyme || data.bureau_dest_slug }} -
+                {{ data.zone_source?.nom || 'N/A' }}
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                {{ data.bureau_dest?.acronyme || data.destination_libre || 'N/A' }}
+              </ng-container>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Date mouvement -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">event</span>
+            <span>Date du mouvement</span>
+          </div>
+          <div class="detail-value">
+            {{ formatDateTime(data.date_mouvement) }}
+          </div>
+        </div>
+
+        <!-- Date retour prévue (si sortie) -->
+        <div class="detail-item" *ngIf="data.type === 'sortie_terrain' && data.date_retour_prevue">
+          <div class="detail-label">
+            <span class="material-icons">calendar_today</span>
+            <span>Retour prévu</span>
+          </div>
+          <div class="detail-value">
+            {{ formatDate(data.date_retour_prevue) }}
+          </div>
+        </div>
+
+        <!-- Employé responsable -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">person</span>
+            <span>Responsable</span>
+          </div>
+          <div class="detail-value">
+            {{ data.user?.nom_complet || 'N/A' }}
+          </div>
+        </div>
+
+        <!-- Validateur (si validé) -->
+        <div class="detail-item" *ngIf="data.valider === 1 && data.valideur">
+          <div class="detail-label">
+            <span class="material-icons">verified_user</span>
+            <span>Validé par</span>
+          </div>
+          <div class="detail-value">
+            {{ data.valideur.nom_complet }}
+            <span class="date-valid" *ngIf="data.updated_at">
+              le {{ formatDateTime(data.updated_at) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- État avant / après -->
+        <div class="detail-item">
+          <div class="detail-label">
+            <span class="material-icons">settings</span>
+            <span>État</span>
+          </div>
+          <div class="detail-value">
+            <span class="etat-badge">{{ data.etat_avant || 'N/A' }}</span>
+            <span class="arrow">→</span>
+            <span class="etat-badge">{{ data.etat_apres || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <!-- Motif -->
+        <div class="detail-item full-width" *ngIf="data.motif">
+          <div class="detail-label">
+            <span class="material-icons">description</span>
+            <span>Motif</span>
+          </div>
+          <div class="detail-value motif">
+            {{ data.motif }}
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="detail-item full-width" *ngIf="data.notes">
+          <div class="detail-label">
+            <span class="material-icons">note</span>
+            <span>Notes</span>
+          </div>
+          <div class="detail-value notes">
+            {{ data.notes }}
+          </div>
+        </div>
+      </div>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="close()">Fermer</button>
+    </mat-dialog-actions>

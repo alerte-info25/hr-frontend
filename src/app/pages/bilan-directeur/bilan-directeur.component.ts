@@ -249,6 +249,21 @@ export class BilanDirecteurComponent implements OnInit {
     );
   }
 
+  getEmployeInitials(bilan: any): string {
+    if (!bilan || !bilan.employe) {
+      return 'I'; // Valeur par défaut
+    }
+
+    const prenomInitial = bilan.employe.prenom?.charAt(0) || '';
+    const nomInitial = bilan.employe.nom?.charAt(0) || '';
+
+    if (!prenomInitial && !nomInitial) {
+      return 'I';
+    }
+
+    return prenomInitial + nomInitial;
+  }
+
   sanitize(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -316,7 +331,6 @@ export class BilanDirecteurComponent implements OnInit {
 
     doc.save(`tableau-de-bord-${this.selectedYear}-T${this.selectedTrimestre}.pdf`);
   }
-
 
   exportToExcel(): void {
     if (!this.filteredBilans.length) return;

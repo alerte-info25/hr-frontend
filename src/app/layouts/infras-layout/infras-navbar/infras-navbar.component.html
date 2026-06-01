@@ -1,0 +1,79 @@
+<header class="navbar">
+  <!-- Left side -->
+  <div class="navbar-left">
+    <!-- Toggle Button -->
+    <button class="menu-toggle" (click)="onToggleSidebar()" matTooltip="Réduire/Agrandir" matTooltipPosition="below">
+      <div class="hamburger" [class.is-active]="sidebarCollapsed">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+
+    <!-- Breadcrumb / Page title -->
+    <div class="page-info">
+      <span class="page-label">Gestion des Infrastructures</span>
+      <div class="breadcrumb">
+        <mat-icon class="bc-icon">home</mat-icon>
+        <span>/</span>
+        <span class="bc-active">Tableau de bord</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="navbar-right">
+
+    <!-- Quick Actions -->
+    <button class="action-btn" matTooltip="Nouvel équipement" matTooltipPosition="below" routerLink="/equipements/new">
+      <mat-icon>add_box</mat-icon>
+    </button>
+
+    <!-- Zone indicator -->
+    <div class="zone-pill">
+      <mat-icon>location_on</mat-icon>
+      <span>Abidjan</span>
+    </div>
+
+    <!-- Vertical divider -->
+    <div class="v-divider"></div>
+
+    <!-- User menu -->
+    <div class="action-wrapper">
+      <button class="user-btn" (click)="toggleUserMenu()">
+        <div class="avatar">
+          <span>AD</span>
+        </div>
+        <div class="user-info">
+          <span class="user-name">Admin DSI</span>
+          <span class="user-role">Super Admin</span>
+        </div>
+        <mat-icon class="user-chevron" [class.rotated]="showUserMenu">expand_more</mat-icon>
+      </button>
+
+      <div *ngIf="showUserMenu" @dropDown class="dropdown user-dropdown">
+        <div class="user-dropdown-header">
+          <div class="avatar-lg"><span>AD</span></div>
+          <div>
+            <p class="ud-name">Admin DSI</p>
+            <p class="ud-email">admin.infratrack.ci</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" routerLink="/profile">
+          <mat-icon>person</mat-icon> Mon profil
+        </a>
+        <a class="dropdown-item" routerLink="/settings">
+          <mat-icon>settings</mat-icon> Paramètres
+        </a>
+        <a class="dropdown-item" routerLink="/logs">
+          <mat-icon>history</mat-icon> Journal d'activité
+        </a>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger">
+          <mat-icon>logout</mat-icon> Déconnexion
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

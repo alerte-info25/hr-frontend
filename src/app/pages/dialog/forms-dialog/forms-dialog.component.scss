@@ -1,24 +1,442 @@
-.checkbox-wrapper {
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$primary-light: #eff6ff;
+$danger-color: #ef4444;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$border-color: #e5e7eb;
+$text-primary: #111827;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
+$bg-gray: #f9fafb;
+$bg-white: #ffffff;
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+$shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Animation d'entrée
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Style du dialog
+::ng-deep .mat-mdc-dialog-container {
+  --mdc-dialog-container-shape: 24px !important;
+
+  .mat-mdc-dialog-surface {
+    background: $bg-white;
+    border-radius: 24px !important;
+    box-shadow: $shadow-xl !important;
+    overflow: hidden !important;
+  }
+}
+
+// Header
+.mat-mdc-dialog-title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: $text-primary !important;
+  padding: 24px 24px 16px 24px !important;
+  margin: 0 !important;
+  background: linear-gradient(135deg, $bg-white 0%, $bg-gray 100%);
+  border-bottom: 2px solid $border-color;
   display: flex;
   align-items: center;
-  padding: 6px 0;
+  gap: 12px;
 
-  .custom-checkbox {
-    font-weight: 500;
-    font-size: 15px;
-    color: #333;
-    --mdc-checkbox-selected-icon-color: #1976d2; /* Couleur principale */
-    --mdc-checkbox-selected-focus-icon-color: #1565c0;
-    --mdc-checkbox-unselected-icon-color: #9e9e9e;
-    --mdc-checkbox-disabled-selected-icon-color: #cfcfcf;
+  &::before {
+    content: '✨';
+    font-size: 28px;
+    animation: fadeIn 0.5s ease-out;
+  }
+}
 
-    ::ng-deep .mdc-checkbox__background {
-      border-radius: 6px !important; /* bords arrondis */
-      transition: all 0.25s ease;
-    }
+// Content
+.mat-mdc-dialog-content {
+  padding: 24px !important;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: $bg-white;
 
-    &:hover ::ng-deep .mdc-checkbox__background {
-      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+  // Scrollbar stylisée
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-gray;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 10px;
+
+    &:hover {
+      background: $text-muted;
     }
   }
 }
+
+// Champs de formulaire
+.mat-mdc-form-field {
+  width: 100%;
+  margin-bottom: 4px;
+  animation: slideInLeft 0.3s ease-out;
+  animation-fill-mode: both;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.05}s;
+    }
+  }
+}
+
+::ng-deep {
+  .mat-mdc-form-field-wrapper {
+    background: $bg-white;
+  }
+
+  .mat-mdc-form-field-flex {
+    transition: $transition;
+  }
+
+  .mat-mdc-form-field:hover .mat-mdc-form-field-flex {
+    transform: translateY(-1px);
+  }
+
+  .mat-mdc-form-field-appearance-outline .mat-mdc-form-field-outline {
+    color: $border-color;
+    transition: $transition;
+  }
+
+  .mat-mdc-form-field.mat-focused .mat-mdc-form-field-outline {
+    color: $primary-color !important;
+  }
+
+  .mat-mdc-label {
+    color: $text-secondary !important;
+    font-weight: 500 !important;
+  }
+
+  .mat-mdc-input-element {
+    color: $text-primary !important;
+    font-size: 14px !important;
+  }
+}
+
+// Erreurs
+.mat-mdc-error {
+  color: $danger-color !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  &::before {
+    content: '⚠️';
+    font-size: 12px;
+  }
+}
+
+// Checkbox personnalisée
+.checkbox-wrapper {
+  margin: 16px 0;
+  padding: 12px;
+  background: $bg-gray;
+  border-radius: 12px;
+  transition: $transition;
+
+  &:hover {
+    background: $primary-light;
+    transform: translateX(4px);
+  }
+
+  .custom-checkbox {
+    --mdc-checkbox-selected-icon-color: $primary-color;
+    --mdc-checkbox-selected-focus-icon-color: $primary-color;
+    --mdc-checkbox-selected-hover-icon-color: $primary-color;
+
+    .mdc-label {
+      color: $text-primary;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+  }
+}
+
+// Upload de fichiers
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 8px;
+
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: $danger-color;
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed $border-color;
+  border-radius: 12px;
+  background: $bg-gray;
+  cursor: pointer;
+  transition: $transition;
+  font-size: 14px;
+
+  &:hover {
+    border-color: $primary-color;
+    background: $primary-light;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    background: $primary-light;
+  }
+}
+
+// Prévisualisation image
+div[style*="margin-top:10px; max-width: 150px;"] {
+  margin-top: 12px !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+  animation: fadeIn 0.3s ease-out;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    transition: $transition;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Actions du dialog
+.mat-mdc-dialog-actions {
+  padding: 16px 24px 24px 24px !important;
+  margin: 0 !important;
+  background: $bg-white;
+  border-top: 1px solid $border-color;
+  gap: 12px;
+
+  button {
+    min-width: 100px;
+    padding: 8px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: $transition;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    // Bouton Annuler
+    &[type="button"] {
+      background: transparent;
+      color: $text-secondary;
+      border: 1px solid $border-color;
+
+      &:hover {
+        background: $bg-gray;
+        color: $text-primary;
+        transform: translateY(-1px);
+        box-shadow: $shadow-sm;
+      }
+    }
+
+    // Bouton Submit
+    &[type="submit"], &[color="primary"] {
+      background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+      color: white;
+      border: none;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: $shadow-lg;
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  ::ng-deep .mat-mdc-dialog-container {
+    .mat-mdc-dialog-surface {
+      border-radius: 16px !important;
+    }
+  }
+
+  .mat-mdc-dialog-title {
+    font-size: 20px !important;
+    padding: 20px 20px 12px 20px !important;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 20px !important;
+  }
+
+  .mat-mdc-dialog-actions {
+    padding: 12px 20px 20px 20px !important;
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  input[type="file"] {
+    font-size: 12px;
+  }
+}
+
+// Animation de chargement pour le submit
+button[type="submit"]:active {
+  transform: scale(0.98);
+}
+
+// Tooltip personnalisé si utilisé
+::ng-deep .mat-mdc-tooltip {
+  background: $text-primary !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+}
+
+// Style pour les champs readonly
+input[readonly] {
+  background-color: $bg-gray;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+// Style pour les selects
+::ng-deep {
+  .mat-mdc-select-panel {
+    background: $bg-white;
+    border-radius: 12px !important;
+    box-shadow: $shadow-lg !important;
+    max-height: 300px;
+
+    .mat-mdc-option {
+      transition: $transition;
+
+      &:hover {
+        background: $primary-light !important;
+      }
+
+      &.mat-selected {
+        background: $primary-light !important;
+        color: $primary-color !important;
+      }
+    }
+  }
+
+  .mat-mdc-option .mdc-list-item__primary-text {
+    font-size: 14px !important;
+  }
+}
+
+// Badge pour les champs requis
+.mat-mdc-form-field-required-marker {
+  color: $danger-color !important;
+}
+
+// Animation au survol des champs
+.mat-mdc-form-field:hover {
+  .mat-mdc-form-field-outline {
+    color: $primary-color;
+    opacity: 0.5;
+  }
+}
+
+// Style pour les groupes de champs (si plusieurs colonnes)
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+// Indicateur de progression (optionnel)
+.progress-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, $primary-color, $success-color);
+  animation: slideIn 1s ease-out;
+}
+
+// Style pour le texte d'information
+.form-hint {
+  font-size: 12px;
+  color: $text-muted;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '💡';
+    font-size: 14px;
+  }
+}
+
+// Amélioration du template HTML (optionnel)
+// Ajoutez ces classes dans votre HTML pour de meilleurs résultats

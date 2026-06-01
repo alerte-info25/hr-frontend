@@ -30,6 +30,26 @@
       <span>{{ theEmployee?.prenom || '' }}</span>
     </div>
 
+    <div class="detail-item responsable-item" [class.is-responsable]="theEmployee?.responsable_equipement === 1">
+      <strong>
+        <span class="material-icons">engineering</span>
+        Responsable Équipements :
+      </strong>
+      <div class="responsable-badge" *ngIf="theEmployee?.responsable_equipement === 1">
+        <span class="badge success">
+          <span class="material-icons">verified</span>
+          Oui
+        </span>
+        <span class="responsable-note">(Peut gérer les mouvements d'équipements)</span>
+      </div>
+      <div class="responsable-badge" *ngIf="theEmployee?.responsable_equipement === 0 || !theEmployee?.responsable_equipement">
+        <span class="badge secondary">
+          <span class="material-icons">close</span>
+          Non
+        </span>
+      </div>
+    </div>
+
     <div class="detail-item">
       <strong><span class="material-icons">wc</span> Genre :</strong>
       <span>{{ getLabelGenre(theEmployee?.genre) || '' }}</span>
@@ -90,7 +110,7 @@
       <span> {{ theEmployee?.bureau?.acronyme || 'non défini' }}</span>
     </div>
 
-    <div class="detail-item"> 
+    <div class="detail-item">
       <strong><span class="material-icons">work</span> Fonction :</strong>
       <span> {{ theEmployee?.fonction?.nom || 'non défini' }}</span>
     </div>

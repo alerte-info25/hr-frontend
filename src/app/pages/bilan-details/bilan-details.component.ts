@@ -65,9 +65,9 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   activeTab = 'overview';
   hoveredCard: number | null = null;
 
-  // ⬇️ AJOUTEZ CES NOUVELLES PROPRIÉTÉS
-  expandedDetails: Set<string> = new Set(); // Pour tracker les détails expanded
-  sanitizedCache: Map<string, SafeHtml> = new Map(); // Cache pour le HTML sanitizé
+  // Propriétés pour l'expansion des détails
+  expandedDetails: Set<string> = new Set();
+  sanitizedCache: Map<string, SafeHtml> = new Map();
 
   private destroy$ = new Subject<void>();
 
@@ -98,26 +98,47 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   }
 
   loadBilanDetails(slug: string): void {
+    console.log('🔵 Début chargement');
     this.loading = true;
-
+    console.log('Bilan load begin')
     this.bilanSvr.getBilanBySlug(slug)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.bilan = data;
 
+          // Filtrer les détails pour l'affichage dans l'onglet Overview
           this.detailClean = this.bilan.details.filter((detail: any) => {
-            return detail.cle !== 'prospections' &&
-              detail.cle !== 'suivis_dossiers' &&
-              detail.cle !== 'recouvrements' &&
-              detail.cle !== 'resultats_perspectives' &&
-              detail.cle !== 'articles' &&
-              detail.cle !== 'course' &&
-              detail.cle !== 'courses' &&
-              !['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].includes(detail.cle);
+            // Clés à exclure
+            const excludedKeys = [
+              'prospections',
+              'suivis_dossiers',
+              'recouvrements',
+              'resultats_perspectives',
+              'articles',
+              'course',
+              'courses',
+              'rh_activites',
+              'admin_activites'
+            ];
+
+            // Mois de l'année
+            const moisAnnee = [
+              'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+              'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+            ];
+
+            // INCLURE rh_activites et admin_activites explicitement
+            if (detail.cle === 'rh_activites' || detail.cle === 'admin_activites') {
+              return true;
+            }
+
+            return !excludedKeys.includes(detail.cle) && !moisAnnee.includes(detail.cle);
           });
 
           this.loading = false;
+          console.log('📊 Détails transformés:', this.bilan.details);
+          console.log('📊 DetailClean:', this.detailClean);
         },
         error: (err) => {
           console.error('❌ Error:', err);
@@ -126,12 +147,6 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
         }
       });
   }
-
-  // ⬇️ AJOUTEZ CES NOUVELLES MÉTHODES
-
-  /**
-   * Toggle l'expansion d'un détail
-   */
   toggleDetailExpansion(slug: string): void {
     if (this.expandedDetails.has(slug)) {
       this.expandedDetails.delete(slug);
@@ -140,9 +155,6 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Vérifie si un détail est expanded
-   */
   isDetailExpanded(slug: string): boolean {
     return this.expandedDetails.has(slug);
   }
@@ -159,7 +171,7 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Utilisez setTimeout pour éviter de bloquer le thread principal
+    // Utiliser setTimeout pour éviter de bloquer le thread principal
     setTimeout(() => {
       const sanitized = this.sanitizer.bypassSecurityTrustHtml(detail.valeur);
       this.sanitizedCache.set(slug, sanitized);
@@ -173,24 +185,122 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   getSanitizedContent(detail: any): SafeHtml {
     const slug = detail.slug;
 
-    // Si déjà dans le cache, retournez
+    // Si déjà dans le cache, retourner
     if (this.sanitizedCache.has(slug)) {
       return this.sanitizedCache.get(slug)!;
     }
 
-    // Sinon, sanitize et mettez en cache
+    // Sinon, sanitizer et mettre en cache
     const sanitized = this.sanitizer.bypassSecurityTrustHtml(detail.valeur);
     this.sanitizedCache.set(slug, sanitized);
     return sanitized;
   }
 
-  // ⬆️ FIN DES NOUVELLES MÉTHODES
+  /**
+   * Extrait un aperçu du texte HTML (supprime les balises)
+   */
+  getPreviewText(html: string, maxLength: number = 100): string {
+    if (!html) return '';
 
-  // Statistiques rapides pour les coursiers
+    // Créer un élément temporaire pour extraire le texte
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const text = tempDiv.textContent || tempDiv.innerText || '';
+
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+
+  /**
+   * Scrolle jusqu'à un détail spécifique dans l'onglet détails
+   */
+  scrollToDetail(slug: string): void {
+    this.setActiveTab('details');
+    setTimeout(() => {
+      const element = document.querySelector(`[data-detail-slug="${slug}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
+  // ==================== MÉTHODES DE DÉTECTION ====================
+
+  /**
+   * Vérifie si le détail est une activité RH ou Admin
+   */
+  isRhAdminDetail(detail: any): boolean {
+    return detail.cle === 'rh_activites' || detail.cle === 'admin_activites';
+  }
+
+  isJournalistDetail(valeur: any): boolean {
+    return typeof valeur === 'object' && valeur !== null && !Array.isArray(valeur) && valeur.nombre !== undefined;
+  }
+
+  isCourierDetail(detail: any): boolean {
+    return (detail.cle === 'courses' || detail.cle === 'course') && Array.isArray(detail.valeur) && detail.valeur.length > 0;
+  }
+
+  isArticlesDetail(detail: any): boolean {
+    return detail.cle === 'articles' && Array.isArray(detail.valeur) && detail.valeur.length > 0;
+  }
+
+  isSimpleDetail(detail: any): boolean {
+    // Exclure les activités RH et Admin de simple detail
+    if (this.isRhAdminDetail(detail)) return false;
+
+    return !this.isArticlesDetail(detail) &&
+      !this.isProjetsDetail(detail.valeur) &&
+      !this.isCourierDetail(detail) &&
+      (typeof detail.valeur === 'number' || typeof detail.valeur === 'string');
+  }
+
+  isProjetsDetail(valeur: any): boolean {
+    return Array.isArray(valeur) && valeur.length > 0 && valeur[0]?.nom !== undefined;
+  }
+
+  isHtmlString(valeur: any): boolean {
+    return typeof valeur === 'string' && valeur.includes('<');
+  }
+
+  isNumber(valeur: any): boolean {
+    return typeof valeur === 'number';
+  }
+
+  isString(valeur: any): boolean {
+    return typeof valeur === 'string';
+  }
+
+  // ==================== STATISTIQUES ====================
+
   getCourierStats(detail: any): { totalDays: number } {
     if (!this.isCourierDetail(detail)) return { totalDays: 0 };
     return { totalDays: detail.valeur.length };
   }
+
+  getStatistics(): any {
+    if (!this.bilan || !this.bilan.details) return { total: 0, completed: 0, inProgress: 0 };
+
+    let total = 0;
+    let completed = 0;
+    let inProgress = 0;
+
+    this.bilan.details.forEach((detail: any) => {
+      if (this.isJournalistDetail(detail.valeur)) {
+        total += detail.valeur.nombre;
+      } else if (this.isProjetsDetail(detail.valeur)) {
+        detail.valeur.forEach((projet: any) => {
+          total++;
+          if (projet.statut === 'termine') completed++;
+          else inProgress++;
+        });
+      }
+    });
+
+    return { total, completed, inProgress };
+  }
+
+  // ==================== UTILITAIRES ====================
 
   sanitize(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
@@ -223,7 +333,9 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
       'suivis_dossiers': 'assignment',
       'recouvrements': 'payments',
       'resultats_perspectives': 'insights',
-      'projets': 'code'
+      'projets': 'code',
+      'rh_activites': 'people_outline',
+      'admin_activites': 'apartment'
     };
     return icons[cle] || 'description';
   }
@@ -240,42 +352,14 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
       'suivis_dossiers': 'Suivis de dossiers',
       'recouvrements': 'Recouvrements',
       'resultats_perspectives': 'Résultats & Perspectives',
-      'projets': 'Projets développés'
+      'projets': 'Projets développés',
+      'rh_activites': 'Activités Ressources Humaines',
+      'admin_activites': 'Activités Administratives'
     };
     return labels[cle] || cle;
   }
 
-  isJournalistDetail(valeur: any): boolean {
-    return typeof valeur === 'object' && valeur !== null && !Array.isArray(valeur) && valeur.nombre !== undefined;
-  }
-
-  isCourierDetail(detail: any): boolean {
-    return (detail.cle === 'courses' || detail.cle === 'course') && Array.isArray(detail.valeur) && detail.valeur.length > 0;
-  }
-
-  isArticlesDetail(detail: any): boolean {
-    return detail.cle === 'articles' && Array.isArray(detail.valeur) && detail.valeur.length > 0;
-  }
-
-  isSimpleDetail(detail: any): boolean {
-    return !this.isArticlesDetail(detail) && (typeof detail.valeur === 'number' || typeof detail.valeur === 'string');
-  }
-
-  isProjetsDetail(valeur: any): boolean {
-    return Array.isArray(valeur) && valeur.length > 0 && valeur[0]?.nom !== undefined;
-  }
-
-  isHtmlString(valeur: any): boolean {
-    return typeof valeur === 'string' && valeur.includes('<');
-  }
-
-  isNumber(valeur: any): boolean {
-    return typeof valeur === 'number';
-  }
-
-  isString(valeur: any): boolean {
-    return typeof valeur === 'string';
-  }
+  // ==================== NAVIGATION ET ACTIONS ====================
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
@@ -287,28 +371,6 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
 
   onCardLeave(): void {
     this.hoveredCard = null;
-  }
-
-  getStatistics(): any {
-    if (!this.bilan || !this.bilan.details) return { total: 0, completed: 0, inProgress: 0 };
-
-    let total = 0;
-    let completed = 0;
-    let inProgress = 0;
-
-    this.bilan.details.forEach((detail: any) => {
-      if (this.isJournalistDetail(detail.valeur)) {
-        total += detail.valeur.nombre;
-      } else if (this.isProjetsDetail(detail.valeur)) {
-        detail.valeur.forEach((projet: any) => {
-          total++;
-          if (projet.statut === 'termine') completed++;
-          else inProgress++;
-        });
-      }
-    });
-
-    return { total, completed, inProgress };
   }
 
   shareBilan(): void {
@@ -359,5 +421,4 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
       this.snackBar.open('Erreur lors de la génération du PDF', 'Fermer', { duration: 4000 });
     }
   }
-
 }

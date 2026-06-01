@@ -1,3 +1,4 @@
+import { InfrasFournisseurComponent } from './features/infrastructures/pages/infras-fournisseur/infras-fournisseur.component';
 import { Routes } from '@angular/router';
 import { MainComponent } from './layouts/main/main.component';
 import { ApplicationsComponent } from './pages/applications/applications.component';
@@ -56,6 +57,7 @@ import { CongesEmployeComponent } from './pages/conges-employe/conges-employe.co
 import { PrimeDeveloppeurComponent } from './pages/prime-developpeur/prime-developpeur.component';
 import { CaisseLayoutComponent } from './layouts/caisse-layout/caisse-layout.component';
 import { CaisseGuard } from './core/guards/caisse.guard';
+import { InfrasLayoutComponent } from './layouts/infras-layout/infras-layout.component';
 
 export const routes: Routes = [
   {
@@ -472,6 +474,72 @@ export const routes: Routes = [
           ),
       },
     ],
+  },
+  // infrastructures
+  {
+    path: 'infrastructures',
+    component: InfrasLayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'equipements',
+        pathMatch: 'full'
+      },
+      {
+        path: 'equipements',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/equipements/equipements.component')
+            .then(m => m.EquipementsComponent)
+      },
+      {
+        path: 'employes',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/list-employes/list-employes.component')
+            .then(m => m.ListEmployesComponent)
+      },
+      {
+        path: 'mouvements',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/mouvements/mouvements.component')
+            .then(m => m.MouvementsComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/categorie/categorie.component')
+            .then(m => m.CategorieComponent)
+      },
+      {
+        path: 'bureaux',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/infras-bureaux/infras-bureaux.component')
+            .then(m => m.InfrasBureauxComponent)
+      },
+      {
+        path: 'pieces',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/infras-zones/infras-zones.component')
+              .then(m => m.InfrasZonesComponent)
+      },
+      {
+        path: 'fournisseurs',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/infras-fournisseur/infras-fournisseur.component')
+              .then(m => m.InfrasFournisseurComponent)
+      },
+      {
+        path: 'affectations',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/infras-affectation/infras-affectation.component')
+              .then(m => m.InfrasAffectationComponent)
+
+      },
+      {
+        path: '**',
+        redirectTo: 'equipements'
+      }
+    ]
   },
 
   { path: 'connexion', component: LoginComponent, title: 'Connexion' },

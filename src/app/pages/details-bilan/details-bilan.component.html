@@ -249,6 +249,27 @@
                 <div class="html-content" [innerHTML]="bilanData.details.resultats_perspectives"></div>
               </mat-card-content>
             </mat-card>
+
+            <mat-card class="section-card rh-card" *ngIf="hasDetail('rh_activites')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="rh-icon">people_outline</mat-icon>
+                <mat-card-title>Activités Ressources Humaines</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.rh_activites"></div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- NOUVEAU : Activités Administratives pour DCM -->
+            <mat-card class="section-card admin-card" *ngIf="hasDetail('admin_activites')">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="admin-icon">apartment</mat-icon>
+                <mat-card-title>Activités Administratives</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="html-content" [innerHTML]="bilanData.details.admin_activites"></div>
+              </mat-card-content>
+            </mat-card>
           </div>
 
           <!-- DÉVELOPPEURS -->

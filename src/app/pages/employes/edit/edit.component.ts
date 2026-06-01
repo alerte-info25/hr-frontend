@@ -10,6 +10,7 @@ import { EmployesService } from '../../../services/employes.service';
 import { NATIONALITES } from '../../../../data/nationnalite';
 import { PAYS } from '../../../../data/pays';
 import { BureauService } from '../../../services/bureau.service';
+import { AuthService } from '../../../services/auth.service';
 export interface Employee {
   id?: number;
   nom: string;
@@ -28,6 +29,7 @@ export interface Employee {
   service: string;
   fonction: string;
   bureau: string;
+  estResponsable: number;
   numeroPiece: string;
   photo?: File | null;
 }
@@ -38,7 +40,6 @@ export interface Employee {
     FormsModule,
     ReactiveFormsModule,
     MaterialModule,
-    RouterLink
   ],
   templateUrl: './edit.component.html',
   styleUrl: './edit.component.scss'
@@ -59,7 +60,7 @@ export class EditComponent {
   photoPreview: string | null = null;
   currentPhotoUrl: string | null = null;
   photoChanged = false;
-
+  isAdmin: boolean = false;
   nationalites = NATIONALITES
   pays = PAYS
   typesPiece = [
@@ -77,10 +78,15 @@ export class EditComponent {
     private svrService: ServicesService,
     private fonctionSvr: FonctionsService,
     private bureauSvr: BureauService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit() {
+    const ad = this.authSvr.isDG();
+    if(ad){
+      this.isAdmin = true;
+    }
     this.initializeForms();
     this.getServiceListe();
     this.getFonctionListe();
@@ -114,6 +120,7 @@ export class EditComponent {
       id_fonction: [''],
       id_bureau: [''],
       emailProfessionnel: [''],
+      estResponsable: [0],
       photo: [null]
     });
   }
@@ -186,6 +193,7 @@ export class EditComponent {
           id_service: employee.id_service,
           id_fonction: employee.id_fonction,
           id_bureau: employee.id_bureau,
+          estResponsable: employee.responsable_equipement,
           photo: null
         });
 
@@ -265,6 +273,13 @@ export class EditComponent {
     }
   }
 
+  onResponsableChange(event: any) {
+    const value = event.target.checked ? 1 : 0;
+    this.professionalInfoForm.patchValue({
+      estResponsable: value
+    });
+  }
+
   onUpdate() {
     if (this.professionalInfoForm.valid && this.personalInfoForm.valid) {
       this.isLoading = true;
@@ -273,7 +288,7 @@ export class EditComponent {
         id: this.employeeData?.id || this.theEmploye.id,
         ...this.personalInfoForm.value,
         ...this.professionalInfoForm.value,
-
+        estResponsable: this.professionalInfoForm.get('estResponsable')?.value || 0
       };
       if (this.selectedFile) {
       updatedEmployee.photo = this.selectedFile;

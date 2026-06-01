@@ -325,7 +325,58 @@
             </div>
           </div>
         </div>
+        @if(isAdmin){
+        <div class="form-group full-width">
+          <div class="responsable-card">
+            <div class="responsable-header">
+              <div class="responsable-icon">
+                <span class="material-icons">engineering</span>
+              </div>
+              <div class="responsable-info">
+                <h4>Responsable des Équipements</h4>
+                <p>Définir cet employé comme responsable des équipements de son bureau</p>
+              </div>
+              <div class="toggle-switch">
+                <label class="switch-label">
+                  <input
+                    type="checkbox"
+                    formControlName="estResponsable"
+                    [value]="1"
+                    [checked]="professionalInfoForm.get('estResponsable')?.value === 1"
+                    (change)="onResponsableChange($event)"
+                    class="switch-input">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
 
+            <div class="responsable-details" *ngIf="professionalInfoForm.get('estResponsable')?.value === 1">
+              <div class="details-badge">
+                <span class="material-icons">verified_user</span>
+                <span>Cet employé aura les droits de gestion des mouvements</span>
+              </div>
+              <div class="responsable-privileges">
+                <div class="privilege-item">
+                  <span class="material-icons">logout</span>
+                  <span>Valider les sorties</span>
+                </div>
+                <div class="privilege-item">
+                  <span class="material-icons">login</span>
+                  <span>Valider les retours</span>
+                </div>
+                <div class="privilege-item">
+                  <span class="material-icons">delete_sweep</span>
+                  <span>Valider les réformes</span>
+                </div>
+                <div class="privilege-item full-width">
+                  <span class="material-icons">visibility</span>
+                  <span>Marque de son emprunt, visualise tous les mouvements des équipements de son bureau</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
         <!-- <div class="form-group full-width">
           <label for="photo"><span class="material-icons">photo_camera</span> Photo de Profil</label>
           <div class="photo-edit-container">

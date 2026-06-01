@@ -1,0 +1,186 @@
+<div class="assign-dialog" [class.is-loading]="loading()">
+
+  <!-- LOADING OVERLAY -->
+  @if (loading()) {
+    <div class="loading-overlay">
+      <div class="loader-ring">
+        <svg viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+  }
+
+  <!-- HEADER (sticky) -->
+  <div class="dialog-header">
+    <div class="header-decoration"></div>
+    <div class="header-content">
+      <div class="header-icon-wrap">
+        <mat-icon>assignment_ind</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 class="dialog-title">Affectation équipement</h2>
+        <p class="dialog-subtitle">Assigner un équipement à un employé, bureau ou zone</p>
+      </div>
+    </div>
+    <button class="close-btn" [disabled]="loading()" (click)="close()" aria-label="Fermer">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- FORM -->
+  <form [formGroup]="form" (ngSubmit)="submit()" class="assign-form">
+
+    <!-- SCROLLABLE BODY -->
+    <div class="form-scroll">
+
+      <!-- EQUIPEMENT BANNER -->
+      <div class="equipement-banner">
+        <div class="banner-icon">
+          <mat-icon>devices</mat-icon>
+        </div>
+        <div class="banner-info">
+          <span class="banner-label">Équipement sélectionné</span>
+          <span class="banner-name">{{ data.designation || data.equipement?.designation }}</span>
+        </div>
+        <div class="banner-badge">
+          <span>{{ data.code_interne || data.equipement?.code_interne }}</span>
+        </div>
+      </div>
+
+      <!-- SECTION : Attribution -->
+      <div class="form-section">
+        <div class="section-label">
+          <mat-icon>people_alt</mat-icon>
+          <span>Attribution</span>
+        </div>
+        <div class="form-grid">
+          <div class="field-group" [class.field-error]="form.get('user_rh_slug')?.invalid && form.get('user_rh_slug')?.touched">
+            <label class="field-label">Responsable <span class="required-star">*</span></label>
+            <div class="select-wrapper">
+              <mat-icon class="field-icon">person_outline</mat-icon>
+              <select class="field-select" formControlName="user_rh_slug">
+                <option value="">Sélectionner un employé</option>
+                @for (employee of employees(); track employee.rh_slug) {
+                  <option [value]="employee.rh_slug">{{ employee.nom }} {{ employee.prenom }}</option>
+                }
+              </select>
+              <mat-icon class="select-arrow">expand_more</mat-icon>
+            </div>
+          </div>
+          <!-- <div class="field-group" [class.field-error]="form.get('statut')?.invalid && form.get('statut')?.touched">
+            <label class="field-label">Statut <span class="required-star">*</span></label>
+            <div class="select-wrapper">
+              <mat-icon class="field-icon">flag_outline</mat-icon>
+              <select class="field-select" formControlName="statut">
+                <option value="">Sélectionner un statut</option>
+                <option value="active">Active</option>
+                <option value="retournee">Retournée</option>
+                <option value="transferee">Transférée</option>
+              </select>
+              <mat-icon class="select-arrow">expand_more</mat-icon>
+            </div>
+            @if (form.get('statut')?.invalid && form.get('statut')?.touched) {
+              <span class="error-msg">Ce champ est requis</span>
+            }
+          </div> -->
+        </div>
+      </div>
+
+      <!-- SECTION : Localisation -->
+      <div class="form-section">
+        <div class="section-label">
+          <mat-icon>location_on</mat-icon>
+          <span>Localisation</span>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Bureau <span class="required-star">*</span></label>
+            <div class="select-wrapper">
+              <mat-icon class="field-icon">domain</mat-icon>
+              <select class="field-select" formControlName="bureau_slug">
+                <option value="">Sélectionner un bureau</option>
+                @for (bureau of bureaux(); track bureau.slug) {
+                  <option [value]="bureau.rh_slug">{{ bureau.acronyme }}</option>
+                }
+              </select>
+              <mat-icon class="select-arrow">expand_more</mat-icon>
+            </div>
+          </div>
+          <div class="field-group" [class.field-disabled]="!form.get('bureau_slug')?.value">
+            <label class="field-label">Pièce <span class="required-star">*</span></label>
+            <div class="select-wrapper">
+              <mat-icon class="field-icon">map</mat-icon>
+              <select class="field-select" formControlName="zone_slug"
+                [attr.disabled]="!form.get('bureau_slug')?.value ? '' : null">
+                @if (!form.get('bureau_slug')?.value) {
+                  <option value="">Choisir un bureau d'abord</option>
+                } @else {
+                  <option value="">Sélectionner une pièce</option>
+                  @for (zone of filteredZones(); track zone.slug) {
+                    <option [value]="zone.slug">{{ zone.nom }}</option>
+                  }
+                }
+              </select>
+              <mat-icon class="select-arrow">expand_more</mat-icon>
+            </div>
+            @if (!form.get('bureau_slug')?.value) {
+              <span class="hint-msg">
+                <mat-icon>info</mat-icon>
+                Sélectionnez un bureau pour afficher les pièces disponibles
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION : Détails -->
+      <div class="form-section">
+        <div class="section-label">
+          <mat-icon>notes</mat-icon>
+          <span>Détails</span>
+        </div>
+        <div class="form-stack">
+          <div class="field-group full-width" [class.field-error]="form.get('motif')?.invalid && form.get('motif')?.touched">
+            <label class="field-label">Motif <span class="required-star">*</span></label>
+            <div class="textarea-wrapper">
+              <textarea class="field-textarea" formControlName="motif" rows="3"
+                placeholder="Décrivez le motif de cette affectation..."></textarea>
+            </div>
+            @if (form.get('motif')?.invalid && form.get('motif')?.touched) {
+              <span class="error-msg">Ce champ est requis</span>
+            }
+          </div>
+          <div class="field-group full-width">
+            <label class="field-label">Notes <span class="optional-tag">optionnel</span></label>
+            <div class="textarea-wrapper">
+              <textarea class="field-textarea" formControlName="notes" rows="2"
+                placeholder="Notes complémentaires..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-scroll -->
+
+    <!-- FOOTER ACTIONS (sticky) -->
+    <div class="dialog-actions">
+      <button type="button" class="btn-cancel" [disabled]="loading()" (click)="close()">
+        Annuler
+      </button>
+      <button type="submit" class="btn-confirm" [disabled]="loading() || form.invalid">
+        <span class="btn-content">
+          @if (loading()) {
+            <span class="btn-spinner"></span>
+            <span>Traitement en cours…</span>
+          } @else {
+            <mat-icon>check_circle_outline</mat-icon>
+            <span>Confirmer l'affectation</span>
+          }
+        </span>
+      </button>
+    </div>
+
+  </form>
+
+</div>

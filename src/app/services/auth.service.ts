@@ -97,9 +97,19 @@ export class AuthService {
     return role === 'rh' || role === 'directeur';
   }
 
+  isResponsable(): boolean {
+    const user = this.getCurrentUser();
+    return user?.employe?.responsable_equipement === 1;
+  }
+
   isOnlyDG(): boolean {
     const role = this.getRole();
     return role === 'directeur';
+  }
+
+  isDCM(): boolean {
+    const matricule = this.getCurrentUser().employe.matricule;
+    return matricule === 'AI-2026-0003';
   }
 
   isEmploye(): boolean {
