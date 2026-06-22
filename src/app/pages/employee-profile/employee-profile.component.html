@@ -22,7 +22,7 @@
             <mat-icon>work</mat-icon>
             {{ user?.employe?.fonction?.nom || 'Employé' }}
           </p>
-          <p class="profile-matricule" *ngIf="user?.employe?.matricule">
+          <p class="profile-matricule matricule-text" (click)="copyMatricule()" [class.copiable]="true" *ngIf="user?.employe?.matricule">
             <mat-icon>badge</mat-icon>
             {{ user?.employe?.matricule }}
           </p>

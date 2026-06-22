@@ -118,7 +118,7 @@ export class BilanDirecteurComponent implements OnInit {
   ];
 
   indicateurKeys = [
-    'nombre_articles', 'nombre_reportages', 'nombre_interviews', 'nombre_videos', 'nombre_clients', 'chiffre_affaire'
+    'nombre_articles', 'nombre_reportages', 'nombre_interviews', 'nombre_videos', 'nombre_clients', 'chiffre_affaire','nombre_flashes'
   ];
 
   bilanIndicators: { [bilanSlug: string]: { [key: string]: any } } = {};
@@ -282,11 +282,11 @@ export class BilanDirecteurComponent implements OnInit {
   }
 
   getIndicateurLabel(key: string) {
-    const labels: { [key: string]: string } = { nombre_articles: 'Articles', nombre_reportages: 'Reportages', nombre_interviews: 'Interviews', nombre_videos: 'Vidéos', nombre_clients: 'Clients', chiffre_affaire: 'Chiffre d\'affaires' };
+    const labels: { [key: string]: string } = { nombre_articles: 'Articles', nombre_reportages: 'Reportages', nombre_interviews: 'Interviews', nombre_videos: 'Vidéos', nombre_clients: 'Clients', chiffre_affaire: 'Chiffre d\'affaires', nombre_flashes: 'Flashs', };
     return labels[key] || key;
   }
   getIndicateurIcon(key: string) {
-    const icons: { [key: string]: string } = { nombre_articles: 'article', nombre_reportages: 'videocam', nombre_interviews: 'mic', nombre_videos: 'play_circle', nombre_clients: 'groups', chiffre_affaire: 'attach_money' };
+    const icons: { [key: string]: string } = { nombre_articles: 'article', nombre_reportages: 'videocam', nombre_interviews: 'mic', nombre_videos: 'play_circle', nombre_clients: 'groups', chiffre_affaire: 'attach_money', nombre_flashes: 'bolt', };
     return icons[key] || 'info';
   }
 

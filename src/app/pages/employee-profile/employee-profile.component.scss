@@ -184,7 +184,7 @@
         background: #e0c6ff;
         transform: translateY(-2px);
         box-shadow: 0 2px 8px rgba(118, 75, 162, 0.3);
-        cursor: default;
+        cursor: pointer;
       }
     }
   }
@@ -652,5 +652,44 @@
 
   .mat-mdc-raised-button {
     box-shadow: none !important;
+  }
+}
+
+.profile-matricule {
+  .matricule-text {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.copiable {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+        padding: 2px 4px;
+        margin: -2px -4px;
+      }
+
+      &:active {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+.matricule-text {
+  position: relative;
+  &:hover::after {
+    content: 'Cliquer pour copier';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
   }
 }

@@ -116,19 +116,6 @@ export class DetailsBilanComponent {
     ];
     return mois[trimestre] || '';
   }
-
-  getServiceIcon(): string {
-    const type = this.getServiceType();
-    const icons: { [key: string]: string } = {
-      'journ': 'article',
-      'com': 'business_center',
-      'dev': 'code',
-      'compta': 'account_balance',
-      'coursier': 'two_wheeler'
-    };
-    return icons[type] || 'work';
-  }
-
   getServiceType(): string {
     if (!this.bilanData?.details) return 'unknown';
 
@@ -284,6 +271,54 @@ export class DetailsBilanComponent {
       console.error('Erreur lors de l\'export PDF:', error);
       this.snackBar.open('Erreur lors de la génération du PDF', 'Fermer', { duration: 4000 });
     }
+  }
+
+  // Ajoute cette méthode pour obtenir le nombre de flashs
+  getFlashesCount(): number {
+    if (!this.bilanData?.details?.articles) return 0;
+    return this.bilanData.details.articles.filter((item: any) => item.type === 'flash').length;
+  }
+
+  // Modifie la méthode getServiceIcon pour ajouter l'icône flash
+  getServiceIcon(): string {
+    const type = this.getServiceType();
+    const icons: { [key: string]: string } = {
+      'journ': 'article',
+      'com': 'business_center',
+      'dev': 'code',
+      'compta': 'account_balance',
+      'coursier': 'two_wheeler'
+    };
+    return icons[type] || 'work';
+  }
+
+  // Ajoute une méthode pour obtenir l'icône selon le type d'article
+  getArticleIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'article': 'article',
+      'interview': 'mic',
+      'reportage': 'camera',
+      'video': 'videocam',
+      'flash': 'bolt'
+    };
+    return icons[type] || 'link';
+  }
+
+  // Ajoute une méthode pour obtenir la classe CSS selon le type d'article
+  getArticleClass(type: string): string {
+    return `link-item link-type-${type}`;
+  }
+
+  // Ajoute une méthode pour obtenir la couleur du chip selon le type
+  getArticleChipColor(type: string): 'primary' | 'accent' | 'warn' {
+    const colors: { [key: string]: 'primary' | 'accent' | 'warn' } = {
+      'article': 'primary',
+      'interview': 'accent',
+      'reportage': 'primary',
+      'video': 'warn',
+      'flash': 'warn'
+    };
+    return colors[type] || 'primary';
   }
 
 

@@ -6,6 +6,7 @@ import { MaterialModule } from '../../../../material.module';
 import { ChangePhotoComponent } from '../dialog/change-photo/change-photo.component';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-employee-profile',
@@ -20,7 +21,8 @@ export class EmployeeProfileComponent {
   constructor(
     private authSvr: AuthService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -62,5 +64,22 @@ export class EmployeeProfileComponent {
 
   editInfos(){
     this.router.navigate(['edit-employe/',this.slug])
+  }
+
+  copyMatricule() {
+    const matricule = this.user?.employe?.matricule;
+    if (matricule) {
+      navigator.clipboard.writeText(matricule).then(() => {
+        this.snackBar.open('Matricule copié dans le presse-papiers!', 'Fermer', {
+          duration: 2000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom'
+        });
+      }).catch(err => {
+        this.snackBar.open('Erreur lors de la copie', 'Fermer', {
+          duration: 2000
+        });
+      });
+    }
   }
 }

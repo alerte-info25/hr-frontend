@@ -15,6 +15,7 @@ import { MaterialModule } from '../../../../material.module';
 import { BilanService } from '../../services/bilan.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AlerteinfoService } from '../../services/API/alerteinfo.service';
 @Component({
   selector: 'app-bilan-trimestriel',
   imports: [
@@ -106,12 +107,15 @@ export class BilanTrimestrielComponent {
     }
   };
 
+  isImporting = signal(false);
+
   constructor(
     private fb: FormBuilder,
     private authSvr: AuthService,
     private bilanSvr: BilanService,
     private snackBar: MatSnackBar,
     private route: ActivatedRoute,
+    private alerteInfoSvr: AlerteinfoService,
     private router: Router
   ) {
     // Générer les 5 dernières années
@@ -188,7 +192,8 @@ export class BilanTrimestrielComponent {
       nombre_articles: details.nombre_articles,
       nombre_interviews: details.nombre_interviews,
       nombre_reportages: details.nombre_reportages,
-      nombre_videos: details.nombre_videos
+      nombre_videos: details.nombre_videos,
+      nombre_flashes: details.nombre_flashes
     });
 
     details.articles?.forEach((a: any) => {
@@ -289,6 +294,79 @@ export class BilanTrimestrielComponent {
     });
   }
 
+  // Importation
+
+  importFromAlerteInfo(): void {
+    const annee = this.bilanForm.get('annee')?.value;
+    const trimestre = this.bilanForm.get('trimestre')?.value;
+    const rhSlug = this.employe()?.slug;
+
+    if (!annee || !trimestre) {
+      this.snackBar.open('Veuillez d\'abord sélectionner l\'année et le trimestre', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    if (!rhSlug) {
+      this.snackBar.open('rh_slug du journaliste non trouvé. Contactez l\'administrateur.', 'Fermer', { duration: 4000 });
+      return;
+    }
+
+    this.isImporting.set(true);
+
+    this.alerteInfoSvr.getJournalisteStats(rhSlug, annee, trimestre).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const stats = response.data;
+
+          // Remplir les compteurs
+          this.bilanForm.patchValue({
+            nombre_articles: stats.nombre_articles,
+            nombre_interviews: stats.nombre_interviews,
+            nombre_reportages: stats.nombre_reportages,
+            nombre_videos: stats.nombre_videos,
+            nombre_flashes: stats.nombre_flashes
+          });
+
+          // Vider la liste actuelle des articles
+          this.clearFormArray(this.articles);
+
+          // Ajouter tous les liens récupérés
+          stats.articles.forEach((item: any) => {
+            // Types acceptés dans le formulaire
+            const validTypes = ['article', 'interview', 'reportage', 'video', 'flash'];
+            if (validTypes.includes(item.type)) {
+              this.articles.push(
+                this.fb.group({
+                  type: [item.type, Validators.required],
+                  lien: [item.lien, Validators.required]
+                })
+              );
+            }
+          });
+
+          // Message de succès détaillé
+          let message = `Import réussi : ${stats.nombre_articles} articles/dépêches`;
+          if (stats.nombre_interviews > 0) message += `, ${stats.nombre_interviews} interviews`;
+          if (stats.nombre_reportages > 0) message += `, ${stats.nombre_reportages} reportages`;
+          if (stats.nombre_videos > 0) message += `, ${stats.nombre_videos} vidéos`;
+          if (stats.nombre_flashes > 0) message += `, ${stats.nombre_flashes} flashs`;
+
+          this.snackBar.open(message, 'Fermer', { duration: 5000, panelClass: 'toast-success' });
+        }
+        this.isImporting.set(false);
+      },
+      error: (err) => {
+        this.isImporting.set(false);
+        console.error('Erreur import:', err);
+        this.snackBar.open(
+          err.error?.message || 'Erreur lors de l\'import depuis Alerte Info',
+          'Fermer',
+          { duration: 4000, panelClass: 'toast-error' }
+        );
+      }
+    });
+  }
+
 
   mapDetailsArrayToObject(detailsArray: any[]): any {
     const result: any = {};
@@ -340,6 +418,7 @@ export class BilanTrimestrielComponent {
     this.bilanForm.addControl('nombre_interviews', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('nombre_reportages', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('nombre_videos', this.fb.control(0, [Validators.required, Validators.min(0)]));
+    this.bilanForm.addControl('nombre_flashes', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('articles', this.fb.array([]));
   }
 
@@ -643,6 +722,7 @@ export class BilanTrimestrielComponent {
       details.nombre_articles = formValue.nombre_articles;
       details.nombre_interviews = formValue.nombre_interviews;
       details.nombre_reportages = formValue.nombre_reportages;
+      details.nombre_flashes = formValue.nombre_flashes;
       details.nombre_videos = formValue.nombre_videos;
       details.articles = formValue.articles;
     } else if (serviceCode === 'commercial') {

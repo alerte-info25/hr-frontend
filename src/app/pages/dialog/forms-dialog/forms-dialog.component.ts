@@ -95,7 +95,13 @@ export class FormsDialogComponent implements OnInit {
           const formatted = new Date(value).toISOString().slice(0, 19).replace('T', ' ');
           formData.append(field.name, formatted);
         }
-      } else {
+      }else if (field.type === 'datePic') {
+        const value = this.form.get(field.name)?.value;
+        if (value) {
+          const formatted = new Date(value).toISOString().slice(0, 10); // "YYYY-MM-DD"
+          formData.append(field.name, formatted);
+        }
+      }else {
         formData.append(field.name, this.form.get(field.name)?.value);
       }
     });

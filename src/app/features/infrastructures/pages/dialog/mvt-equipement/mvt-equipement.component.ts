@@ -90,7 +90,7 @@ export class MvtEquipementComponent implements OnInit {
     // Récupérer les infos de l'équipement
     this.equipementInfo = {
       designation: this.data.equipement.designation || 'Équipement',
-      bureau_nom: this.data.equipement.bureau?.nom || 'Non défini',
+      bureau_nom: this.data.equipement.bureau?.acronyme || 'Non défini',
       bureau_slug: this.data.equipement.bureau?.rh_slug || '',
       zone_nom: this.data.equipement.zone?.nom || 'Non défini',
       zone_slug: this.data.equipement.zone?.slug || '',

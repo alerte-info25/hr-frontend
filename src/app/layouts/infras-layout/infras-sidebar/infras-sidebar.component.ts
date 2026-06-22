@@ -74,12 +74,12 @@ export class InfrasSidebarComponent implements OnInit, OnDestroy {
       route: '/infrastructures/mouvements',
       requireDG: false
     },
-    {
-      name: 'Fournisseurs',
-      icon: 'business',
-      route: '/infrastructures/fournisseurs',
-      requireDG: true
-    }
+    // {
+    //   name: 'Fournisseurs',
+    //   icon: 'business',
+    //   route: '/infrastructures/fournisseurs',
+    //   requireDG: true
+    // }
   ];
 
   constructor(

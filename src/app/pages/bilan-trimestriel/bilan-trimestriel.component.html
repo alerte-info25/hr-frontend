@@ -88,7 +88,7 @@
           <!-- Sections spécifiques par service -->
 
           <!-- JOURNALISTE -->
-          <ng-container *ngIf="isJournaliste()">
+          <!-- <ng-container *ngIf="isJournaliste()">
             <div class="section-header">
               <mat-icon class="section-icon">menu_book</mat-icon>
               <h2>Production journalistique</h2>
@@ -142,10 +142,10 @@
                   styleClass="w-full">
                 </p-inputNumber>
               </div>
-            </div>
+            </div> -->
 
             <!-- Liste des articles/interviews/reportages -->
-            <div class="articles-section">
+            <!-- <div class="articles-section">
               <div class="subsection-header">
                 <h3>Liens des productions</h3>
                 <p-button
@@ -210,7 +210,7 @@
                       type="button"
                       class="delete-btn material-btn"
                       (click)="removeArticle(i)"
-    >
+                   >
                       <ng-template pTemplate="icon">
                         <span id="btn-delete-link" class="material-icons">delete</span>
                       </ng-template>
@@ -223,6 +223,171 @@
                 <div *ngIf="articles.length === 0" class="empty-state">
                   <mat-icon>link</mat-icon>
                   <p>Aucun lien ajouté. Cliquez sur "Ajouter un lien" pour commencer.</p>
+                </div>
+              </div>
+            </div>
+
+            <p-divider></p-divider>
+          </ng-container> -->
+
+          <!-- Journaliste v2 -->
+
+          <ng-container *ngIf="isJournaliste()">
+            <div class="section-header">
+              <mat-icon class="section-icon">menu_book</mat-icon>
+              <h2>Production journalistique</h2>
+            </div>
+
+            <div class="form-grid stats-grid">
+              <div class="form-field stat-card">
+                <label for="nb_articles">Nombre d'articles <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_articles"
+                  formControlName="nombre_articles"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_flashes">Nombre de flashs <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_flashes"
+                  formControlName="nombre_flashes"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_interviews">Nombre d'interviews <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_interviews"
+                  formControlName="nombre_interviews"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_reportages">Nombre de reportages <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_reportages"
+                  formControlName="nombre_reportages"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+
+              <div class="form-field stat-card">
+                <label for="nb_videos">Nombre de vidéos <span class="required">*</span></label>
+                <p-inputNumber
+                  id="nb_videos"
+                  formControlName="nombre_videos"
+                  [showButtons]="true"
+                  [min]="0"
+                  mode="decimal"
+                  styleClass="w-full">
+                </p-inputNumber>
+              </div>
+            </div>
+
+            <!-- BOUTON D'IMPORT DEPUIS ALERTE INFO -->
+            <div class="import-stats-section">
+              <button
+                type="button"
+                class="import-btn"
+                (click)="importFromAlerteInfo()"
+                [disabled]="isImporting()">
+                <span class="material-icons" *ngIf="!isImporting()">cloud_download</span>
+                <mat-spinner diameter="20" *ngIf="isImporting()"></mat-spinner>
+                {{ isImporting() ? 'Import en cours...' : 'Importer mes productions depuis Alerte Info' }}
+              </button>
+              <small class="field-hint">
+                Récupère automatiquement tous vos articles, interviews, reportages, vidéos et flashs publiés sur Alerte Info pendant la période sélectionnée.
+              </small>
+            </div>
+
+            <!-- Liste des articles/interviews/reportages -->
+            <div class="articles-section">
+              <div class="subsection-header">
+                <h3>Liens des productions</h3>
+                <p-button
+                  label="Ajouter un lien"
+                  (onClick)="addArticle()"
+                  [outlined]="true"
+                  size="small"
+                  class="material-icon-btn">
+                  <ng-template pTemplate="icon">
+                    <span class="material-icons">add</span>
+                  </ng-template>
+                </p-button>
+              </div>
+
+              <div class="articles-list" formArrayName="articles">
+                <div
+                  *ngFor="let article of articles.controls; let i = index"
+                  [formGroupName]="i"
+                  class="article-item">
+                  <div class="article-content">
+                    <div class="form-field">
+                      <label>Type</label>
+                      <p-dropdown
+                        formControlName="type"
+                        [options]="[
+                          {label: 'Article', value: 'article'},
+                          {label: 'Interview', value: 'interview'},
+                          {label: 'Reportage', value: 'reportage'},
+                          {label: 'Vidéo', value: 'video'},
+                          {label: 'Flash', value: 'flash'}
+                        ]"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-full">
+                      </p-dropdown>
+                    </div>
+
+                    <div class="form-field flex-grow">
+                      <label>Lien URL</label>
+                      <input
+                        pInputText
+                        formControlName="lien"
+                        placeholder="https://www.alerte-info.net/article/..."
+                        class="w-full" />
+                      <small class="text-danger"
+                        *ngIf="article.get('lien')?.touched && article.get('lien')?.invalid">
+                        <span *ngIf="article.get('lien')?.hasError('required')">
+                          Le lien est obligatoire
+                        </span>
+                        <span *ngIf="article.get('lien')?.hasError('pattern')">
+                          URL invalide
+                        </span>
+                        <span *ngIf="article.get('lien')?.hasError('duplicateLink')">
+                          Lien déjà ajouté
+                        </span>
+                      </small>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="delete-btn material-btn"
+                      (click)="removeArticle(i)">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="articles.length === 0" class="empty-state">
+                  <mat-icon>link</mat-icon>
+                  <p>Aucun lien ajouté. Cliquez sur "Ajouter un lien" ou "Importer mes productions" pour commencer.</p>
                 </div>
               </div>
             </div>
@@ -347,13 +512,6 @@
             <div class="projets-section">
               <div class="subsection-header">
                 <h3>Liste des projets</h3>
-                <!-- <p-button
-                  label="Ajouter un projet"
-                  icon="pi pi-plus"
-                  (onClick)="addProjet()"
-                  [outlined]="true"
-                  size="small">
-                </p-button> -->
                 <p-button
                   label="Ajouter un projet"
                   (onClick)="addProjet()"
@@ -374,24 +532,12 @@
                   class="projet-card">
                   <div class="projet-header">
                     <span class="projet-number">Projet {{ i + 1 }}</span>
-                    <!-- <button
-                      type="button"
-                      (click)="removeProjet(i)"
-                      pButton
-                      icon="pi pi-times"
-                      [rounded]="true"
-                      severity="danger"
-                      [text]="true"
-                      size="small">
-                    </button> -->
                     <button
                       type="button"
                       (click)="removeProjet(i)"
                       class="delete-project-btn material">
                       <span class="material-icons">delete</span>
                     </button>
-
-
                   </div>
 
                   <div class="form-field">
@@ -419,14 +565,6 @@
 
                   <div class="taches-section" formArrayName="taches">
                     <div class="taches-header">
-                      <label>Tâches réalisées <span class="required">*</span></label>
-                      <!-- <p-button
-                        label="Ajouter une tâche"
-                        icon="pi pi-plus-circle"
-                        (onClick)="addTache(i)"
-                        [text]="true"
-                        size="small">
-                      </p-button> -->
                       <p-button
                         label="Ajouter une tâche"
                         (onClick)="addTache(i)"
@@ -571,14 +709,6 @@
 
           <!-- Submit Button -->
           <div class="form-actions">
-            <!-- <p-button
-              label="Enregistrer le bilan"
-              icon="pi pi-check"
-              type="submit"
-              [loading]="isSubmitting()"
-              [disabled]="isSubmitting()"
-              size="large">
-            </p-button> -->
             <p-button
               [label]="isEditMode() ? 'Mettre à jour le bilan' : 'Enregistrer le bilan'"
               type="submit"

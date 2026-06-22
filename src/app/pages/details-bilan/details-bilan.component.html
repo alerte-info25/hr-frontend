@@ -157,12 +157,20 @@
                       <span class="stat-label">Vidéos</span>
                     </div>
                   </div>
+                  <!-- Ajout du compteur de flashs -->
+                  <div class="stat-item" *ngIf="getFlashesCount() > 0">
+                    <mat-icon class="flash-icon">bolt</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-number">{{ getFlashesCount() }}</span>
+                      <span class="stat-label">Flashs</span>
+                    </div>
+                  </div>
                 </div>
               </mat-card-content>
             </mat-card>
 
             <!-- Articles (format JSON moderne) -->
-            <mat-card class="section-card" *ngIf="hasDetail('articles') && isArray(bilanData.details.articles)">
+            <!-- <mat-card class="section-card" *ngIf="hasDetail('articles') && isArray(bilanData.details.articles)">
               <mat-card-header>
                 <mat-icon mat-card-avatar>article</mat-icon>
                 <mat-card-title>Liens des productions ({{ bilanData.details.articles.length }})</mat-card-title>
@@ -177,6 +185,48 @@
                       {{ article.lien }}
                       <mat-icon>open_in_new</mat-icon>
                     </a>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card> -->
+
+            <!-- V2 -->
+            <!-- Articles (format JSON moderne) -->
+            <mat-card class="section-card" *ngIf="hasDetail('articles') && isArray(bilanData.details.articles)">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>article</mat-icon>
+                <mat-card-title>
+                  Liens des productions 
+                  <span class="title-badge">{{ bilanData.details.articles.length }} éléments</span>
+                  <!-- <span class="title-badge flash-badge" *ngIf="getFlashesCount() > 0">
+                    <mat-icon>bolt</mat-icon>
+                    {{ getFlashesCount() }} flashs
+                  </span> -->
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="links-list">
+                  <div 
+                    [class]="getArticleClass(article.type)" 
+                    *ngFor="let article of bilanData.details.articles; let i = index"
+                  >
+                    <mat-chip-option 
+                      [selected]="true" 
+                      [color]="getArticleChipColor(article.type)"
+                      class="article-chip"
+                      disabled
+                    >
+                      <mat-icon>{{ getArticleIcon(article.type) }}</mat-icon>
+                      {{ article.type | titlecase }}
+                    </mat-chip-option>
+                    <a [href]="article.lien" target="_blank" class="link-url">
+                      {{ article.lien }}
+                      <mat-icon class="external-icon">open_in_new</mat-icon>
+                    </a>
+                    <!-- Afficher le titre/description si disponible -->
+                    <span class="link-description" *ngIf="article.titre || article.description">
+                      {{ article.titre || article.description }}
+                    </span>
                   </div>
                 </div>
               </mat-card-content>

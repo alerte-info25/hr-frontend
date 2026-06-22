@@ -341,14 +341,14 @@ export class EquipementsComponent implements OnInit {
             options: this.categories().map((cat: any) => ({ value: cat.slug, label: cat.nom }))
           },
           { name: 'marque', label: 'Marque', type: 'text', validators: ['required'] },
-          { name: 'modele', label: 'Modèle', type: 'text', validators: ['required'] },
-          { name: 'numero_serie', label: 'Numéro de série', type: 'text', validators: ['required'] },
+          { name: 'modele', label: 'Modèle', type: 'text' },
+          { name: 'numero_serie', label: 'Numéro de série', type: 'text' },
           { name: 'configuration', label: 'Configuration', type: 'text' },
           { name: 'etat', label: 'Etat', type: 'select2',
             options: this.etatsDisponibles, validators: ['required']
           },
-          { name: 'prix_achat', label: 'Prix d\'achat', type: 'text', validators: ['required'] },
-          { name: 'date_garantie_fin', label: 'Date de fin de garantie', type: 'date'},
+          { name: 'prix_achat', label: 'Prix d\'achat', type: 'text' },
+          { name: 'date_garantie_fin', label: 'Date de fin de garantie', type: 'datePic'},
           { name: 'bureau_slug', label: 'Bureau', type: 'select2', validators: ['required'],
             options: this.bureaux().map((b: any) => ({ value: b.rh_slug, label: b.acronyme }))
           },
@@ -387,14 +387,14 @@ export class EquipementsComponent implements OnInit {
             options: this.categories().map((cat: any) => ({ value: cat.slug, label: cat.nom }))
           },
           { name: 'marque', label: 'Marque', type: 'text', validators: ['required'] },
-          { name: 'modele', label: 'Modèle', type: 'text', validators: ['required'] },
-          { name: 'numero_serie', label: 'Numéro de série', type: 'text', validators: ['required'] },
+          { name: 'modele', label: 'Modèle', type: 'text' },
+          { name: 'numero_serie', label: 'Numéro de série', type: 'text' },
           { name: 'configuration', label: 'Configuration', type: 'text' },
           { name: 'etat', label: 'Etat', type: 'select2',
             options: this.etatsDisponibles, validators: ['required']
           },
-          { name: 'prix_achat', label: 'Prix d\'achat', type: 'text', validators: ['required'] },
-          { name: 'date_garantie_fin', label: 'Date de fin de garantie', type: 'date'},
+          { name: 'prix_achat', label: 'Prix d\'achat', type: 'text' },
+          { name: 'date_garantie_fin', label: 'Date de fin de garantie', type: 'datePic'},
           // { name: 'bureau_slug', label: 'Bureau', type: 'select2',
           //   options: this.bureaux().map((b: any) => ({ value: b.rh_slug, label: b.acronyme }))
           // },
@@ -480,12 +480,46 @@ export class EquipementsComponent implements OnInit {
   }
 
   openAffectation(equipement: any) {
-    this.dialog.open(AssignEquipementComponent, {
+    const dialogRef = this.dialog.open(AssignEquipementComponent, {
       width: 'auto',
       maxWidth: '90vw',
       data: equipement
     });
+
+    // Écouter le résultat du dialog
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.success) {
+        // Succès - Afficher le toast
+        this.snackBar.open(
+          result.message || 'Affectation réalisée avec succès !', 
+          'Fermer', 
+          { 
+            duration: 5000,
+            panelClass: ['success-snackbar'],
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          }
+        );
+        
+        // Rafraîchir la liste des équipements si nécessaire
+        this.loadEquipements(); // Appelez votre méthode de rechargement
+      } 
+      else if (result && !result.success) {
+        // Erreur - Afficher le toast d'erreur
+        this.snackBar.open(
+          result.message || 'Erreur lors de l\'affectation', 
+          'Fermer', 
+          { 
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          }
+        );
+      }
+    });
   }
+
   openCreateMouvement(equipement: any): void {
     const nonAssignableStates = ['reforme', 'en_panne', 'en_maintenance'];
 
