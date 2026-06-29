@@ -193,7 +193,7 @@ export class BilanTrimestrielComponent {
       nombre_interviews: details.nombre_interviews,
       nombre_reportages: details.nombre_reportages,
       nombre_videos: details.nombre_videos,
-      nombre_flashes: details.nombre_flashes
+      // nombre_flashes: details.nombre_flashes
     });
 
     details.articles?.forEach((a: any) => {
@@ -324,7 +324,7 @@ export class BilanTrimestrielComponent {
             nombre_interviews: stats.nombre_interviews,
             nombre_reportages: stats.nombre_reportages,
             nombre_videos: stats.nombre_videos,
-            nombre_flashes: stats.nombre_flashes
+            // nombre_flashes: stats.nombre_flashes
           });
 
           // Vider la liste actuelle des articles
@@ -349,7 +349,7 @@ export class BilanTrimestrielComponent {
           if (stats.nombre_interviews > 0) message += `, ${stats.nombre_interviews} interviews`;
           if (stats.nombre_reportages > 0) message += `, ${stats.nombre_reportages} reportages`;
           if (stats.nombre_videos > 0) message += `, ${stats.nombre_videos} vidéos`;
-          if (stats.nombre_flashes > 0) message += `, ${stats.nombre_flashes} flashs`;
+          // if (stats.nombre_flashes > 0) message += `, ${stats.nombre_flashes} flashs`;
 
           this.snackBar.open(message, 'Fermer', { duration: 5000, panelClass: 'toast-success' });
         }
@@ -418,7 +418,7 @@ export class BilanTrimestrielComponent {
     this.bilanForm.addControl('nombre_interviews', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('nombre_reportages', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('nombre_videos', this.fb.control(0, [Validators.required, Validators.min(0)]));
-    this.bilanForm.addControl('nombre_flashes', this.fb.control(0, [Validators.required, Validators.min(0)]));
+    // this.bilanForm.addControl('nombre_flashes', this.fb.control(0, [Validators.required, Validators.min(0)]));
     this.bilanForm.addControl('articles', this.fb.array([]));
   }
 
@@ -722,7 +722,7 @@ export class BilanTrimestrielComponent {
       details.nombre_articles = formValue.nombre_articles;
       details.nombre_interviews = formValue.nombre_interviews;
       details.nombre_reportages = formValue.nombre_reportages;
-      details.nombre_flashes = formValue.nombre_flashes;
+      // details.nombre_flashes = formValue.nombre_flashes;
       details.nombre_videos = formValue.nombre_videos;
       details.articles = formValue.articles;
     } else if (serviceCode === 'commercial') {

@@ -158,13 +158,13 @@
                     </div>
                   </div>
                   <!-- Ajout du compteur de flashs -->
-                  <div class="stat-item" *ngIf="getFlashesCount() > 0">
+                  <!-- <div class="stat-item" *ngIf="getFlashesCount() > 0">
                     <mat-icon class="flash-icon">bolt</mat-icon>
                     <div class="stat-info">
                       <span class="stat-number">{{ getFlashesCount() }}</span>
                       <span class="stat-label">Flashs</span>
                     </div>
-                  </div>
+                  </div> -->
                 </div>
               </mat-card-content>
             </mat-card>
@@ -196,7 +196,7 @@
               <mat-card-header>
                 <mat-icon mat-card-avatar>article</mat-icon>
                 <mat-card-title>
-                  Liens des productions 
+                  Liens des productions
                   <span class="title-badge">{{ bilanData.details.articles.length }} éléments</span>
                   <!-- <span class="title-badge flash-badge" *ngIf="getFlashesCount() > 0">
                     <mat-icon>bolt</mat-icon>
@@ -206,12 +206,12 @@
               </mat-card-header>
               <mat-card-content>
                 <div class="links-list">
-                  <div 
-                    [class]="getArticleClass(article.type)" 
+                  <div
+                    [class]="getArticleClass(article.type)"
                     *ngFor="let article of bilanData.details.articles; let i = index"
                   >
-                    <mat-chip-option 
-                      [selected]="true" 
+                    <mat-chip-option
+                      [selected]="true"
                       [color]="getArticleChipColor(article.type)"
                       class="article-chip"
                       disabled

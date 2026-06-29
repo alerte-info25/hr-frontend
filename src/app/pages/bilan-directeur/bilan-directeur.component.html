@@ -255,7 +255,7 @@
             </div>
 
             <div class="indicators-summary">
-              <ng-container *ngFor="let key of ['nombre_articles', 'nombre_flashes', 'nombre_reportages', 'nombre_interviews', 'nombre_videos', 'nombre_clients', 'chiffre_affaire']">
+              <ng-container *ngFor="let key of ['nombre_articles', 'nombre_reportages', 'nombre_interviews', 'nombre_videos', 'nombre_clients', 'chiffre_affaire']">
                 <div
                   class="indicator-mini"
                   *ngIf="bilan?.comparaison?.details?.[key] as detail"
