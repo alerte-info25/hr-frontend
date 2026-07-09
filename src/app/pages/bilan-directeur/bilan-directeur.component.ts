@@ -95,7 +95,7 @@ export class BilanDirecteurComponent implements OnInit {
 
   tableauDeBord: TableauDeBord | null = null;
   selectedYear: number = new Date().getFullYear();
-  selectedTrimestre: number = Math.ceil((new Date().getMonth() + 1) / 3);
+  selectedTrimestre: number = Math.ceil((new Date().getMonth() + 1) / 3) - 1;
   loading = true;
   error: string | null = null;
 
