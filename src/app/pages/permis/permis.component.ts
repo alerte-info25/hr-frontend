@@ -10,48 +10,37 @@ import autoTable from 'jspdf-autotable';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { TypePermissionsService } from '../../services/type-permissions.service';
-// import Swal from 'sweetalert2';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 declare var bootstrap: any;
 
 @Component({
   selector: 'app-permis',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule,MaterialModule,],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './permis.component.html',
   styleUrl: './permis.component.scss',
 })
-export class PermisComponent {
+export class PermisComponent implements OnInit {
   permissionsEnAttente: any[] = [];
+  toutesPermissions1: any[] = [];
   toutesPermissions: any[] = [];
   typesPermission: any[] = [];
-  // Pagination
-  // Pagination permissions en attente
   currentPageAttente = 1;
   perPageAttente = 5;
   totalAttente = 0;
-
-  // Pagination toutes permissions
   currentPageToutes = 1;
   perPageToutes = 10;
   totalToutes = 0;
-
-
-  // Modal de réponse
   showModal: boolean = false;
   permissionSelectionnee: any | null = null;
   commentaireAdmin: string = '';
   actionEnCours: 'accepter' | 'refuser' | null = null;
-
-  // Loading states
   isLoadingEnAttente: boolean = false;
   isLoadingToutes: boolean = false;
+  isLoading: boolean = false;
   isSubmitting: boolean = false;
-
-  // Messages
   messageSucces: string = '';
   messageErreur: string = '';
-
-  // Filtres et recherche
   searchQuery = '';
   selectedStatus: number | null = null;
   selectedType: string | null = null;
@@ -61,13 +50,17 @@ export class PermisComponent {
     private dialog: MatDialog,
     private snackbar: MatSnackBar,
     private router: Router,
-    private typePermissionService: TypePermissionsService
+    private typePermissionService: TypePermissionsService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
     this.chargerToutesPermissions();
     this.loadTypesPermission();
   }
+
+  // ========== STATISTIQUES ==========
+
   get totalDemandes(): number {
     return this.toutesPermissions.length;
   }
@@ -84,14 +77,47 @@ export class PermisComponent {
     return this.toutesPermissions.filter(p => p.statut === 3).length;
   }
 
+  // ========== CHARGEMENT DES DONNÉES ==========
+
+  loadTypesPermission(): void {
+    this.typePermissionService.getList().subscribe({
+      next: (data) => {
+        this.typesPermission = data;
+      },
+      error: (err) => {
+        this.snackbar.open(err.error.message || 'Erreur lors du chargement des types de permission', 'Fermer', { duration: 3000 });
+        console.error(err);
+      }
+    });
+  }
+
+  chargerToutesPermissions(): void {
+    this.isLoadingToutes = true;
+    this.permissionService.getList().subscribe({
+      next: (response) => {
+        this.isLoadingToutes = false;
+        this.toutesPermissions1 = response;
+        this.toutesPermissions = this.toutesPermissions1.filter(p => p.statut !== 1); 
+        this.permissionsEnAttente = this.toutesPermissions1.filter(p => p.statut === 1);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des permissions:', error);
+        this.afficherErreur('Erreur lors du chargement des permissions');
+        this.isLoadingToutes = false;
+      }
+    });
+  }
+
+  // ========== FILTRES ET RECHERCHE ==========
+
   get filteredPermissions(): any[] {
     return this.toutesPermissions.filter(perm => {
       const matchesSearch = !this.searchQuery ||
-        perm.raison.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        perm.type?.nom.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        perm.employe?.nom.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        perm.employe?.prenom.toLowerCase().includes(this.searchQuery.toLowerCase());
-        perm.employe?.fonction?.nom.toLowerCase().includes(this.searchQuery.toLowerCase());
+        perm.raison?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        perm.type?.nom?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        perm.employe?.nom?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        perm.employe?.prenom?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        perm.employe?.fonction?.nom?.toLowerCase().includes(this.searchQuery.toLowerCase());
 
       const matchesStatus = this.selectedStatus === null || perm.statut === this.selectedStatus;
       const matchesType = !this.selectedType || perm.id_type === this.selectedType;
@@ -104,43 +130,50 @@ export class PermisComponent {
     this.searchQuery = '';
     this.selectedStatus = null;
     this.selectedType = null;
-    // this.currentPage = 1;
+    this.currentPageToutes = 1;
   }
 
-  loadTypesPermission(): void {
-    // TODO: Appel au service Angular
-    this.typePermissionService.getList().subscribe({
-      next: (data) => {
-        this.typesPermission = data;
-      },
-      error: (err) => {
-        this.snackbar.open(err.error.message || 'Erreur lors du chargement des types de permission', 'Fermer', { duration: 3000 });
-        console.error(err);
-      }
-    });
+  onFilterChange(): void {
+    this.currentPageToutes = 1;
   }
 
-  // Charger toutes les permissions avec pagination
-  chargerToutesPermissions(): void {
-    this.isLoadingToutes = true;
-    this.permissionService.getList().subscribe({
-      next: (response) => {
-        this.isLoadingToutes = false;
-        this.toutesPermissions = response;
-        this.permissionsEnAttente = this.toutesPermissions.filter(p => p.statut === 1);
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des permissions:', error);
-        this.afficherErreur('Erreur lors du chargement des permissions');
-        this.isLoadingToutes = false;
-      }
-    });
+  // ========== PAGINATION ==========
+
+  get paginatedPermissionsEnAttente() {
+    const start = (this.currentPageAttente - 1) * this.perPageAttente;
+    return this.permissionsEnAttente.slice(start, start + this.perPageAttente);
   }
+
+  get totalPagesAttente(): number {
+    return Math.ceil(this.permissionsEnAttente.length / this.perPageAttente);
+  }
+
+  changerPageAttente(page: number) {
+    if (page >= 1 && page <= this.totalPagesAttente) {
+      this.currentPageAttente = page;
+    }
+  }
+
+  get paginatedToutesPermissions(): any[] {
+    const start = (this.currentPageToutes - 1) * this.perPageToutes;
+    return this.filteredPermissions.slice(start, start + this.perPageToutes);
+  }
+
+  get totalPagesToutes(): number {
+    return Math.ceil(this.filteredPermissions.length / this.perPageToutes);
+  }
+
+  changerPageToutes(page: number): void {
+    if (page >= 1 && page <= this.totalPagesToutes) {
+      this.currentPageToutes = page;
+    }
+  }
+
+  // ========== GESTION DES PERMISSIONS ==========
 
   archiverPermission(permission: any): void {
     if (!permission) return;
     this.isSubmitting = true;
-
     this.permissionService.archivePermission(permission.slug).subscribe({
       next: (res) => {
         this.snackbar.open(res.message || 'Permission archivée avec succès', 'Fermer', { duration: 3000 });
@@ -155,21 +188,12 @@ export class PermisComponent {
     });
   }
 
-  // Ouvrir le modal pour voir et répondre
-  // ouvrirModal(permission: any) {
-  //   this.dialog.open(PermissionDetailDialogComponent, {
-  //     width: '2000px',
-  //     data: permission,
-  //     disableClose: true
-  //   });
-  // }
   ouvrirModal(permission: any) {
     const dialogRef = this.dialog.open(PermissionDetailDialogComponent, {
       width: '900px',
       data: permission,
       disableClose: true
     });
-
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.chargerToutesPermissions();
@@ -177,26 +201,21 @@ export class PermisComponent {
     });
   }
 
-
   voirDetails(permission: any): void {
     this.permissionSelectionnee = permission;
     this.showModal = true;
   }
 
-
-  // Fermer le modal
   fermerModal(): void {
     this.showModal = false;
     this.permissionSelectionnee = null;
     this.commentaireAdmin = '';
-
+    this.actionEnCours = null;
   }
 
-  // Soumettre la réponse (accepter ou refuser)
   soumettreReponse(): void {
     if (!this.permissionSelectionnee || !this.actionEnCours) return;
 
-    // Validation du commentaire pour le refus
     if (this.actionEnCours === 'refuser' && !this.commentaireAdmin.trim()) {
       this.afficherErreur('Un commentaire est obligatoire pour refuser une demande');
       return;
@@ -204,7 +223,6 @@ export class PermisComponent {
 
     this.isSubmitting = true;
     const statut = this.actionEnCours === 'accepter' ? 2 : 3;
-
     const data = {
       statut: statut,
       commentaire_admin: this.commentaireAdmin.trim(),
@@ -227,8 +245,64 @@ export class PermisComponent {
     });
   }
 
+  getDocumentUrl(doc: any): string {
+    if (!doc || !doc.url) {
+      return '#';
+    }
+    // Si l'URL est déjà complète
+    if (doc.url.startsWith('http://') || doc.url.startsWith('https://')) {
+      return doc.url;
+    }
+    // Si l'URL commence par /storage/
+    if (doc.url.startsWith('/storage/')) {
+      return doc.url;
+    }
+    // Si c'est un chemin relatif
+    if (doc.url.startsWith('storage/')) {
+      return '/' + doc.url;
+    }
+    // Si c'est juste un chemin
+    if (!doc.url.startsWith('/') && !doc.url.startsWith('http')) {
+      return '/storage/' + doc.url;
+    }
+    return doc.url;
+  }
 
-  // Helpers pour l'affichage
+  isImageDocument(doc: any): boolean {
+    return doc.type === 'image' ||
+           ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(doc.extension?.toLowerCase());
+  }
+
+  isPdfDocument(doc: any): boolean {
+    return doc.type === 'pdf' || doc.extension?.toLowerCase() === 'pdf';
+  }
+
+  getDocumentIcon(doc: any): string {
+    if (this.isImageDocument(doc)) {
+      return 'fa-file-image';
+    }
+    if (this.isPdfDocument(doc)) {
+      return 'fa-file-pdf';
+    }
+    return 'fa-file';
+  }
+
+  getFileExtensionLabel(doc: any): string {
+    if (this.isImageDocument(doc)) {
+      return 'Image';
+    }
+    if (this.isPdfDocument(doc)) {
+      return 'PDF';
+    }
+    return doc.extension?.toUpperCase() || 'Fichier';
+  }
+
+  getSafeUrl(url: string): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(url);
+  }
+
+  // ========== UTILITAIRES ==========
+
   getStatutLabel(statut: number): string {
     switch (statut) {
       case 1: return 'En attente';
@@ -250,18 +324,13 @@ export class PermisComponent {
   calculerDuree(debut: string, fin: string): string {
     const dateDebut = new Date(debut);
     const dateFin = new Date(fin);
-
     const diffMs = Math.abs(dateFin.getTime() - dateDebut.getTime());
-
     const totalHeures = Math.floor(diffMs / (1000 * 60 * 60));
     const jours = Math.floor(totalHeures / 24);
     const heures = totalHeures % 24;
-
     const heuresFormattees = heures.toString().padStart(2, '0');
-
     return `${jours}j ${heuresFormattees}h`;
   }
-
 
   formatDateSort(date: string): string {
     return new Date(date).toLocaleDateString('fr-FR', {
@@ -281,7 +350,13 @@ export class PermisComponent {
     });
   }
 
-  // Messages
+  formatFileSize(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+  }
+
   afficherSucces(message: string): void {
     this.messageSucces = message;
     setTimeout(() => this.messageSucces = '', 5000);
@@ -292,126 +367,203 @@ export class PermisComponent {
     setTimeout(() => this.messageErreur = '', 5000);
   }
 
-  // Pagination
-  // ===== PAGINATION EN ATTENTE =====
-  get paginatedPermissionsEnAttente() {
-    const start = (this.currentPageAttente - 1) * this.perPageAttente;
-    return this.permissionsEnAttente.slice(start, start + this.perPageAttente);
-  }
-
-  get totalPagesAttente(): number {
-    return Math.ceil(this.permissionsEnAttente.length / this.perPageAttente);
-  }
-
-  changerPageAttente(page: number) {
-    if (page >= 1 && page <= this.totalPagesAttente) {
-      this.currentPageAttente = page;
-    }
-  }
-
-  // ===== PAGINATION TOUTES PERMISSIONS =====
-  get paginatedToutesPermissions(): any[] {
-    const start = (this.currentPageToutes - 1) * this.perPageToutes;
-    return this.filteredPermissions.slice(start, start + this.perPageToutes);
-  }
-
-  get totalPagesToutes(): number {
-    return Math.ceil(this.filteredPermissions.length / this.perPageToutes);
-  }
-
-  changerPageToutes(page: number): void {
-    if (page >= 1 && page <= this.totalPagesToutes) {
-      this.currentPageToutes = page;
-    }
-  }
-  onFilterChange(): void {
-    this.currentPageToutes = 1;
-  }
-
-
-
-  generatePdf(permission: any) {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // === Logo en haut à gauche ===
-    const logo = new Image();
-    logo.src = window.location.origin + '/assets/images/logo/logo-alerteInfo.png';
-    logo.onload = () => {
-      doc.addImage(logo, 'PNG', 14, 10, 40, 20);
-
-      // === Titre centré ===
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(41, 128, 185); // bleu
-      const title = 'Détails de la demande de permission';
-      const textWidth = doc.getTextWidth(title);
-      doc.text(title, (pageWidth - textWidth) / 2, 20);
-
-      // === Bloc infos employé stylé ===
-      let y = 35;
-      const cardHeight = 50;
-      doc.setFillColor(230, 240, 250); // léger bleu
-      doc.roundedRect(10, y, pageWidth - 20, cardHeight, 3, 3, 'F');
-
-      doc.setFontSize(12);
-      doc.setTextColor(0);
-      doc.setFont('helvetica', 'normal');
-
-      doc.text(`Employé: ${permission.employe?.nom} ${permission.employe?.prenom}`, 14, y + 8);
-      doc.text(`Fonction: ${permission.employe?.fonction?.nom}`, 14, y + 16);
-      doc.text(`Type: ${permission.type.nom}`, 14, y + 24);
-      doc.text(`Date demande: ${permission.date_demande}`, 14, y + 32);
-      doc.text(`Début: ${permission.debut}`, 110, y + 8);
-      doc.text(`Fin: ${permission.fin}`, 110, y + 16);
-      doc.text(`Raison: ${permission.raison}`, 110, y + 24);
-
-      if (permission.date_reponse) {
-        doc.text(`Date réponse: ${permission.date_reponse}`, 110, y + 32);
-      }
-      if (permission.commentaire_admin) {
-        doc.setFont('helvetica', 'italic');
-        doc.text(`Commentaire admin: ${permission.commentaire_admin}`, 14, y + 44);
-        doc.setFont('helvetica', 'normal');
-      }
-
-      // === Séparateur ===
-      doc.setDrawColor(200);
-      doc.setLineWidth(0.5);
-      doc.line(10, y + cardHeight + 5, pageWidth - 10, y + cardHeight + 5);
-
-      // === Table AutoTable compacte ===
-      autoTable(doc, {
-        startY: y + cardHeight + 10,
-        head: [['Statut', 'Document']],
-        body: [[
-          this.getStatutLabel(permission.statut),
-          permission.document ? 'Oui' : 'Non'
-        ]],
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-        bodyStyles: { fillColor: [245, 245, 245], textColor: 0 },
-        alternateRowStyles: { fillColor: [230, 230, 230] },
-        margin: { left: 14, right: 14 }
-      });
-
-      // === Footer discret ===
-      const pageHeight = doc.internal.pageSize.height;
-      const today = new Date();
-      const dateStr = today.toLocaleDateString();
-      doc.setFontSize(10);
-      doc.setTextColor(120);
-      doc.text(`Généré le ${dateStr} - © 2025 | ALERTE INFO`, 14, pageHeight - 10);
-
-      // === Téléchargement ===
-      doc.save(`permission_${permission.slug}.pdf`);
-    };
-  }
+  // ========== NAVIGATION ==========
 
   goToArchive() {
     this.router.navigate(['/permissions-archive']);
   }
+
   goToPermissionsUser() {
     this.router.navigate(['/mes-permissions']);
+  }
+
+  // ========== GÉNÉRATION PDF ==========
+
+  // ========== GÉNÉRATION PDF AVEC GESTION D'ERREURS ==========
+
+  async generatePdf(permission: any) {
+    if (!permission) {
+      this.snackbar.open('Permission invalide', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.isLoading = true;
+
+    try {
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Ajouter le logo si disponible
+      try {
+        const logoUrl = window.location.origin + '/assets/images/logo/logo-alerteInfo.png';
+        const logoResponse = await fetch(logoUrl);
+        if (logoResponse.ok) {
+          const logoBlob = await logoResponse.blob();
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              doc.addImage(e.target.result as string, 'PNG', 14, 8, 35, 18);
+            }
+            this.generatePdfContent(doc, permission, pageWidth, pageHeight);
+          };
+          reader.readAsDataURL(logoBlob);
+        } else {
+          this.generatePdfContent(doc, permission, pageWidth, pageHeight);
+        }
+      } catch (e) {
+        this.generatePdfContent(doc, permission, pageWidth, pageHeight);
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      this.snackbar.open('Erreur lors de la génération du PDF ❌', 'Fermer', { duration: 3000 });
+      this.isLoading = false;
+    }
+  }
+
+  private generatePdfContent(doc: jsPDF, permission: any, pageWidth: number, pageHeight: number) {
+    try {
+      // Titre
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('DEMANDE DE PERMISSION', pageWidth / 2, 30, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.setFont('helvetica', 'normal');
+
+      let y = 40;
+      const lineHeight = 7;
+      const leftMargin = 14;
+      const rightColX = 120;
+
+      // Ligne de séparation
+      doc.setDrawColor(200);
+      doc.line(leftMargin, y, pageWidth - leftMargin, y);
+      y += 5;
+
+      // Informations
+      const infoData = [
+        ['Employé', `${permission.employe?.prenom || ''} ${permission.employe?.nom || ''}`],
+        ['Fonction', permission.employe?.fonction?.nom || 'N/A'],
+        ['Type', permission.type?.nom || 'N/A'],
+        ['Date demande', this.formatDateSort(permission.date_demande)],
+        ['Début', this.formatDateSort(permission.debut)],
+        ['Fin', this.formatDateSort(permission.fin)],
+        ['Durée', this.calculerDuree(permission.debut, permission.fin)],
+        ['Statut', this.getStatutLabel(permission.statut)],
+      ];
+
+      infoData.forEach(([label, value], index) => {
+        const x = index < 4 ? leftMargin : rightColX;
+        const row = index < 4 ? index : index - 4;
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${label}:`, x, y + row * lineHeight);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value.toString(), x + 40, y + row * lineHeight);
+      });
+
+      y += 4 * lineHeight + 8;
+
+      // Raison
+      if (permission.raison) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Raison:', leftMargin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        const raisonLines = doc.splitTextToSize(permission.raison, pageWidth - 28);
+        doc.text(raisonLines, leftMargin, y);
+        y += raisonLines.length * 5 + 8;
+      }
+
+      // Commentaire
+      if (permission.commentaire_admin) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('Commentaire de l\'administrateur:', leftMargin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        const commentLines = doc.splitTextToSize(permission.commentaire_admin, pageWidth - 28);
+        doc.text(commentLines, leftMargin, y);
+        y += commentLines.length * 5 + 8;
+      }
+
+      // Documents
+      const documents = permission.documents || [];
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(`Documents joints (${documents.length})`, leftMargin, y);
+      y += 6;
+
+      if (documents.length > 0) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        documents.forEach((docItem: any, index: number) => {
+          const type = this.isImageDocument(docItem) ? 'Image' :
+                      this.isPdfDocument(docItem) ? 'PDF' : 'Fichier';
+          const size = this.formatFileSize(docItem.taille || 0);
+          const text = `${index + 1}. ${docItem.nom_fichier || 'Sans nom'} (${type}) - ${size}`;
+          doc.text(text, leftMargin, y);
+          y += 5;
+        });
+      } else {
+        doc.text('Aucun document joint', leftMargin, y);
+        y += 5;
+      }
+
+      // Pied de page
+      const dateStr = new Date().toLocaleDateString('fr-FR');
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(`Généré le ${dateStr}`, leftMargin, pageHeight - 10);
+      doc.text('ALERTE INFO - Tous droits réservés', pageWidth - leftMargin, pageHeight - 10, { align: 'right' });
+
+      const fileName = this.generateFileName(permission);
+
+      doc.save(fileName);
+      // doc.save(`permission_${permission.slug || 'download'}.pdf`);
+
+      this.snackbar.open('PDF téléchargé avec succès ✅', 'Fermer', { duration: 3000 });
+      this.isLoading = false;
+
+    } catch (error) {
+      console.error('Erreur lors de la génération du contenu PDF:', error);
+      this.snackbar.open('Erreur lors de la génération du PDF ❌', 'Fermer', { duration: 3000 });
+      this.isLoading = false;
+    }
+  }
+
+  private generateFileName(permission: any): string {
+    const prenom = permission.employe?.prenom || 'inconnu';
+    const nom = permission.employe?.nom || 'inconnu';
+
+    // Nettoyer les noms (minuscules, sans accents, remplacement des espaces)
+    const cleanName = (name: string) => {
+      return name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+        .replace(/[^a-z0-9]/g, '_') // Remplace tout caractère spécial par _
+        .replace(/_+/g, '_') // Supprime les _ multiples
+        .replace(/^_|_$/g, ''); // Supprime les _ en début/fin
+    };
+
+    const prenomFormatted = cleanName(prenom);
+    const nomFormatted = cleanName(nom);
+
+    // Formater la date
+    const date = permission.date_demande ? new Date(permission.date_demande) : new Date();
+    const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `permission_${prenomFormatted}_${nomFormatted}_du_${day}_${month}_${year}.pdf`;
   }
 
 }

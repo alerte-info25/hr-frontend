@@ -152,8 +152,8 @@
             <span class="mobile-type-name">{{ permission.type?.nom }}</span>
           </div>
           <span [class]="getStatutBadge(permission.statut)">
-              {{getstatusLabels(permission.statut)}}
-            </span>
+            {{getstatusLabels(permission.statut)}}
+          </span>
         </div>
 
         <div class="mobile-card-body">
@@ -207,10 +207,11 @@
             Supprimer
           </button>
         </div>
-
       </div>
     </div>
   </div>
+
+  <!-- Pagination -->
   <div class="pagination-wrapper" *ngIf="totalPages > 1">
     <button
       class="pagination-btn"
@@ -235,7 +236,6 @@
     </button>
   </div>
 
-
   <!-- État vide -->
   <div class="empty-state" *ngIf="filteredPermissions.length === 0">
     <div class="empty-icon">
@@ -257,6 +257,7 @@
     </button>
   </div>
 </div>
+
 <!-- Modal de détails -->
 <div class="modal-overlay"
      [class.active]="showDetailsModal"
@@ -416,23 +417,38 @@
           </span>
         </div>
 
-        <!-- Documents List -->
+        <!-- Documents List avec aperçu -->
         <div class="documents-list" *ngIf="permissionSelectionnee.documents.length > 0">
           <a *ngFor="let doc of permissionSelectionnee.documents"
              [href]="getSafeUrl(doc.url)"
              target="_blank"
              rel="noopener noreferrer"
-             class="document-card">
-            <div class="document-icon-container">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             class="document-card"
+             [class.image-card]="isImageDocument(doc)"
+             [class.pdf-card]="isPdfDocument(doc)">
+
+            <!-- Aperçu pour les images -->
+            <div *ngIf="isImageDocument(doc)" class="document-thumbnail">
+              <img [src]="getSafeUrl(doc.url)" [alt]="doc.nom_fichier" class="img-thumbnail">
+            </div>
+
+            <!-- Icône pour PDF -->
+            <div *ngIf="isPdfDocument(doc)" class="document-icon-container">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
               </svg>
-              <span class="file-extension" *ngIf="doc.extension">{{ doc.extension }}</span>
+              <span class="file-extension-badge">PDF</span>
             </div>
+
             <div class="document-details">
               <span class="document-name">{{ doc.nom_fichier }}</span>
-              <span class="document-meta" *ngIf="doc.taille">{{ formatFileSize(doc.taille) }}</span>
+              <span class="document-meta" *ngIf="doc.taille">
+                {{ formatFileSize(doc.taille) }}
+                <span class="doc-type-label" [ngClass]="{'image-label': isImageDocument(doc), 'pdf-label': isPdfDocument(doc)}">
+                  {{ isImageDocument(doc) ? '🖼️ Image' : '📄 PDF' }}
+                </span>
+              </span>
             </div>
             <div class="document-action">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -472,7 +488,6 @@
 
   </div>
 </div>
-
 
 <!-- Modal de création/modification -->
 <div class="modal-overlay" [class.active]="showModal" (click)="closeModal()">
@@ -559,17 +574,35 @@
         <!-- Documents existants (en mode édition) -->
         <div class="form-group" *ngIf="isEditMode && currentPermission.documents && currentPermission.documents.length > 0">
           <label class="form-label">Documents joints</label>
-          <div class="documents-list">
+          <div class="documents-list-existing">
             <div
-              class="document-item"
+              class="document-item-existing"
               *ngFor="let doc of currentPermission.documents"
+              [class.image-doc]="isImageDocument(doc)"
+              [class.pdf-doc]="isPdfDocument(doc)"
             >
-              <div class="document-info">
-                <svg class="document-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-                <span class="document-name">{{ doc.nom_fichier }}</span>
+              <div class="document-info-existing">
+                <!-- Aperçu des images -->
+                <div *ngIf="isImageDocument(doc)" class="document-preview-existing">
+                  <img [src]="getSafeUrl(doc.url)" [alt]="doc.nom_fichier" class="img-thumbnail">
+                </div>
+                <!-- Icône pour PDF -->
+                <div *ngIf="isPdfDocument(doc)" class="document-icon-existing">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  <span class="file-badge pdf-badge">PDF</span>
+                </div>
+                <div class="document-details-existing">
+                  <span class="document-name-existing">{{ doc.nom_fichier }}</span>
+                  <span class="document-meta-existing">
+                    {{ formatFileSize(doc.taille) }}
+                    <span class="doc-type-badge" [ngClass]="{'image-badge': isImageDocument(doc), 'pdf-badge': isPdfDocument(doc)}">
+                      {{ isImageDocument(doc) ? 'Image' : 'PDF' }}
+                    </span>
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
@@ -582,17 +615,18 @@
           </div>
         </div>
 
-        <!-- Upload de nouveaux fichiers -->
+        <!-- Zone d'upload modifiée -->
         <div class="form-group">
           <label class="form-label">
-            Ajouter des documents (max 3 fichiers - PDF)
+            Ajouter des documents (max 3 fichiers - PDF ou Images)
+            <span class="file-hint">(JPG, PNG, GIF, WEBP, SVG acceptés)</span>
           </label>
-          <div class="upload-zone">
+          <div class="upload-zone" [class.dragover]="isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
             <input
               type="file"
               #fileInput
               (change)="onFileSelect($event)"
-              accept=".pdf,image/*"
+              accept=".pdf,image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
               multiple
               class="file-input"
               id="fileUpload"
@@ -603,29 +637,39 @@
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <span class="upload-text">Cliquez pour sélectionner des fichiers</span>
-              <span class="upload-hint">PDF uniquement</span>
+              <span class="upload-text">Cliquez ou glissez-déposez vos fichiers</span>
+              <span class="upload-hint">PDF, JPG, PNG, GIF, WEBP, SVG (max 10 Mo)</span>
             </label>
           </div>
 
-          <!-- Liste des fichiers sélectionnés -->
+          <!-- Fichiers sélectionnés avec aperçu -->
           <div class="selected-files" *ngIf="selectedFiles.length > 0">
             <div class="file-item" *ngFor="let file of selectedFiles; let i = index">
               <div class="file-info">
-                <svg class="file-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                  <polyline points="13 2 13 9 20 9"></polyline>
-                </svg>
+                <!-- Aperçu pour les images -->
+                <div *ngIf="file.type.startsWith('image/')" class="file-preview">
+                  <img [src]="getSafeUrl(createObjectURL(file))" [alt]="file.name" class="img-thumbnail">
+                </div>
+                <!-- Icône pour PDF -->
+                <div *ngIf="file.type === 'application/pdf'" class="file-icon-wrapper">
+                  <svg class="file-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  <span class="file-extension-badge">PDF</span>
+                </div>
                 <div class="file-details">
                   <span class="file-name">{{ file.name }}</span>
                   <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                  <span class="file-type-badge" [ngClass]="{'image-badge': file.type.startsWith('image/'), 'pdf-badge': file.type === 'application/pdf'}">
+                    {{ getFileTypeLabel(file) }}
+                  </span>
                 </div>
               </div>
               <button
                 type="button"
                 class="btn-remove-file"
-                (click)="removeSelectedFile(i)"
-              >
+                (click)="removeSelectedFile(i)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -643,7 +687,6 @@
         (click)="closeModal()">
         Annuler
       </button>
-
       <button
         class="btn btn-submit"
         (click)="savePermission()"
@@ -651,7 +694,6 @@
         {{ isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande' }}
       </button>
     </div>
-
   </div>
 </div>
 
