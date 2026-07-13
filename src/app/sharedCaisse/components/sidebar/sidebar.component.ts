@@ -42,12 +42,12 @@ export class SidebarComponent implements OnInit {
       label: '',
     },
     {
-      label: 'Gestion des dépenses',
+      label: 'Gestion des sorties',
       icon: 'fa-solid fa-arrow-trend-down',
       route: '/caisse/depenses',
     },
     {
-      label: 'Gestion des recouvrement',
+      label: 'Gestion des entrées',
       icon: 'fa-solid fa-arrow-trend-up',
       route: '/caisse/recouvrements',
     },

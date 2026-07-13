@@ -28,7 +28,7 @@ export class DetailExerciceComponent implements OnInit {
   private router = inject(Router);
   private exerciceService = inject(ExerciceComptableService);
 
-  //  State
+  // State
   isLoading = signal(true);
   error = signal<string | null>(null);
   stats = signal<ExerciceStats | null>(null);
@@ -36,13 +36,13 @@ export class DetailExerciceComponent implements OnInit {
   // export
   exportLoading = signal(false);
 
-  //  Filtres
+  // Filtres
   filterNature = '';
   filterPeriode = '';
   filterMode = '';
   filterSearch = '';
 
-  //  Opérations fusionnées (dépenses + recouvrements)
+  // Opérations fusionnées (dépenses + recouvrements)
   private allOperations = signal<Operation[]>([]);
 
   operations = computed<Operation[]>(() => {
@@ -91,7 +91,7 @@ export class DetailExerciceComponent implements OnInit {
     return s.solde >= 0;
   });
 
-  //  Lifecycle
+  // Lifecycle
   ngOnInit(): void {
     const rfk = this.route.snapshot.paramMap.get('rfk');
     if (!rfk) {
@@ -157,11 +157,9 @@ export class DetailExerciceComponent implements OnInit {
     this.allOperations.set(merged);
   }
 
-  //  Actions filtres
-  // Méthode déclenchée par (change) et (input) depuis le template
+  // Actions filtres
   applyFilters(): void {
-    // Les computed signals se réévaluent automatiquement
-    // On force la mise à jour en réassignant allOperations
+    // Forcer la mise à jour
     this.allOperations.set([...this.allOperations()]);
   }
 
@@ -170,7 +168,7 @@ export class DetailExerciceComponent implements OnInit {
     this.applyFilters();
   }
 
-  //  Clôture exercice
+  // Clôture exercice
   cloturer(): void {
     const s = this.stats();
     if (!s?.exercice?.rfk) return;

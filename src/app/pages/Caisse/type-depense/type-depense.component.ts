@@ -5,22 +5,25 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule, DecimalPipe } from '@angular/common'; // ← DecimalPipe ajouté
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TypeDepense } from '../../../models/Caisse/type-depense.model';
 import { TypeDepenseService } from '../../../services/Caisse/type-depense.service';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-type-depense',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent], 
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent],
   templateUrl: './type-depense.component.html',
   styleUrl: './type-depense.component.scss',
 })
 export class TypeDepenseComponent implements OnInit {
   private fb = inject(FormBuilder);
   private typeDepenseService = inject(TypeDepenseService);
+  private router = inject(Router);
+  readonly Number = Number;
 
   isLoadingList = signal(false);
   types = signal<TypeDepense[]>([]);
@@ -31,16 +34,31 @@ export class TypeDepenseComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // skeleton loaders
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
   totalCategories = computed(() => this.total());
   totalDepensesCount = computed(() =>
     this.types().reduce((sum, t) => sum + (t.depenses_count ?? 0), 0),
   );
+
   moyenneParCategorie = computed(() => {
     const cats = this.types().length;
-    return cats > 0 ? Math.round(this.totalDepensesCount() / cats) : 0;
+    if (cats === 0) return 0;
+    const totalMontant = this.types().reduce(
+      (sum, t) => sum + Number(t.depenses_sum_montant ?? 0),
+      0,
+    );
+    return totalMontant / cats;
   });
-  totalDepensesMontant = computed(() => // ← ajout
-    this.types().reduce((sum, t) => sum + (t.depenses_sum_montant ?? 0), 0),
+
+  totalDepensesMontant = computed(() =>
+    this.types().reduce(
+      (sum, t) => sum + Number(t.depenses_sum_montant ?? 0),
+      0,
+    ),
   );
 
   editingRfk = signal<string | null>(null);
@@ -50,7 +68,10 @@ export class TypeDepenseComponent implements OnInit {
   formSuccess = signal<string | null>(null);
 
   form: FormGroup = this.fb.group({
-    libelle: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    libelle: [
+      '',
+      [Validators.required, Validators.minLength(2), Validators.maxLength(100)],
+    ],
     description: ['', [Validators.maxLength(500)]],
   });
 
@@ -66,7 +87,11 @@ export class TypeDepenseComponent implements OnInit {
   loadList(): void {
     this.isLoadingList.set(true);
     this.typeDepenseService
-      .getAll({ search: this.searchQuery || undefined, page: this.currentPage(), per_page: this.perPage })
+      .getAll({
+        search: this.searchQuery || undefined,
+        page: this.currentPage(),
+        per_page: this.perPage,
+      })
       .subscribe({
         next: (res) => {
           this.types.set(res.data);
@@ -78,7 +103,10 @@ export class TypeDepenseComponent implements OnInit {
       });
   }
 
-  onSearch(): void { this.currentPage.set(1); this.loadList(); }
+  onSearch(): void {
+    this.currentPage.set(1);
+    this.loadList();
+  }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage()) return;
@@ -101,12 +129,20 @@ export class TypeDepenseComponent implements OnInit {
     this.editingRfk.set(type.rfk);
     this.formError.set(null);
     this.formSuccess.set(null);
-    this.form.patchValue({ libelle: type.libelle, description: type.description });
-    document.getElementById('expenseForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.form.patchValue({
+      libelle: type.libelle,
+      description: type.description,
+    });
+    document
+      .getElementById('expenseForm')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   submit(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.isSaving.set(true);
     this.formError.set(null);
     this.formSuccess.set(null);
@@ -118,7 +154,11 @@ export class TypeDepenseComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.formSuccess.set(this.isEditMode() ? 'Type de dépense mis à jour avec succès.' : 'Type de dépense créé avec succès.');
+        this.formSuccess.set(
+          this.isEditMode()
+            ? 'Type de dépense mis à jour avec succès.'
+            : 'Type de dépense créé avec succès.',
+        );
         this.isSaving.set(false);
         this.resetForm();
         this.loadList();
@@ -131,13 +171,23 @@ export class TypeDepenseComponent implements OnInit {
   }
 
   deleteType(type: TypeDepense): void {
-    if (!confirm(`Supprimer le type « ${type.libelle} » ? Cette action est irréversible.`)) return;
+    if (
+      !confirm(
+        `Supprimer le type « ${type.libelle} » ? Cette action est irréversible.`,
+      )
+    )
+      return;
     this.isDeleting.set(type.rfk);
     this.deleteError.set(null);
     this.typeDepenseService.delete(type.rfk).subscribe({
-      next: () => { this.isDeleting.set(null); this.loadList(); },
+      next: () => {
+        this.isDeleting.set(null);
+        this.loadList();
+      },
       error: (err) => {
-        this.deleteError.set(err?.error?.message ?? 'Impossible de supprimer ce type.');
+        this.deleteError.set(
+          err?.error?.message ?? 'Impossible de supprimer ce type.',
+        );
         this.isDeleting.set(null);
       },
     });
@@ -152,8 +202,14 @@ export class TypeDepenseComponent implements OnInit {
     const ctrl = this.form.get(field);
     if (!ctrl?.errors || !ctrl.touched) return null;
     if (ctrl.errors['required']) return 'Ce champ est obligatoire.';
-    if (ctrl.errors['minlength']) return `Minimum ${ctrl.errors['minlength'].requiredLength} caractères.`;
-    if (ctrl.errors['maxlength']) return `Maximum ${ctrl.errors['maxlength'].requiredLength} caractères.`;
+    if (ctrl.errors['minlength'])
+      return `Minimum ${ctrl.errors['minlength'].requiredLength} caractères.`;
+    if (ctrl.errors['maxlength'])
+      return `Maximum ${ctrl.errors['maxlength'].requiredLength} caractères.`;
     return 'Valeur invalide.';
+  }
+
+  onView(rfk: string): void {
+    this.router.navigate(['/caisse/detail-types-depenses', rfk]);
   }
 }

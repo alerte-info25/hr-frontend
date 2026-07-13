@@ -1,127 +1,185 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { BureauService } from '../../../services/Caisse/bureau.service';
 import { BureauModel, BureauStats } from '../../../models/Caisse/bureau.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 
 @Component({
   selector: 'app-bureau',
-  imports: [RouterLink, FormsModule, LoaderComponent],
+  imports: [RouterLink, FormsModule, CommonModule, LoaderComponent],
   templateUrl: './bureau.component.html',
   styleUrl: './bureau.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BureauComponent implements OnInit {
   private bureauService = inject(BureauService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+
+  readonly Math = Math;
 
   viewMode: 'grid' | 'table' = 'grid';
+
+  // Liste courante (page en cours)
   bureaux = signal<BureauModel[]>([]);
   loader = signal(false);
   errorMessage = signal<string | null>(null);
   deleteRfk = signal<string | null>(null);
-  villes = signal<string[]>([]);
 
-  // ✅ Calculé depuis les données déjà chargées, plus d'appel HTTP
-  stats = computed<BureauStats | null>(() => {
-    const liste = this.bureaux();
-    if (!liste.length) return null;
+  // Pagination
+  currentPage = signal(1);
+  lastPage = signal(1);
+  total = signal(0);
+  perPage = 15;
 
-    const total_depenses = liste.reduce(
-      (sum, b) => sum + (b.depenses_count ?? 0),
-      0,
-    );
-    const total_recouvrements = liste.reduce(
-      (sum, b) => sum + (b.recouvrements_count ?? 0),
-      0,
-    );
+  // skeleton loader
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
 
-    return {
-      bureau: 'global',
-      total_depenses,
-      total_recouvrements,
-      solde: total_recouvrements - total_depenses,
-    };
-  });
+  // Stats globales (tous bureaux, pas juste la page)
+  stats = signal<BureauStats | null>(null);
 
+  // Filtres
   recherche = signal('');
   villeSelectionnee = signal('');
+  villes = signal<string[]>([]);
+
+  hasOperations(bureau: BureauModel): boolean {
+    return (
+      (bureau.depenses_count ?? 0) > 0 || (bureau.recouvrements_count ?? 0) > 0
+    );
+  }
+
   private rechercheSubject = new Subject<string>();
 
-  bureauxFiltres = computed(() => {
-    const terme = this.recherche().toLowerCase();
-    const ville = this.villeSelectionnee();
-
-    return this.bureaux().filter((b) => {
-      const matchRecherche =
-        !terme ||
-        b.nom.toLowerCase().includes(terme) ||
-        b.pays.toLowerCase().includes(terme) ||
-        b.ville?.toLowerCase().includes(terme) ||
-        b.adresse?.toLowerCase().includes(terme);
-
-      const matchVille = !ville || b.ville === ville;
-      return matchRecherche && matchVille;
-    });
-  });
+  pages = computed(() =>
+    Array.from({ length: this.lastPage() }, (_, i) => i + 1),
+  );
 
   ngOnInit(): void {
+    this.loadGlobalStats();
     this.loadBureaux();
-    this.animerStats();
-    // ✅ loadStats() supprimé
 
     this.rechercheSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((terme) => this.recherche.set(terme));
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.currentPage.set(1);
+        this.loadBureaux();
+      });
   }
 
-  onRecherche(terme: string): void {
-    this.rechercheSubject.next(terme);
-  }
-
-  onFiltreVille(ville: string): void {
-    this.villeSelectionnee.set(ville);
+  private loadGlobalStats(): void {
+    this.bureauService
+      .getGlobalStats()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => this.stats.set(data),
+        error: () => {},
+      });
   }
 
   private loadBureaux(): void {
     this.loader.set(true);
 
-    this.bureauService.getAll().subscribe({
-      next: (data) => {
-        this.bureaux.set(data);
-        this.loader.set(false);
+    const filters = {
+      page: this.currentPage(),
+      per_page: this.perPage,
+      search: this.recherche() || undefined,
+      ville: this.villeSelectionnee() || undefined,
+    };
 
-        const villesUniques = [
-          ...new Set(data.map((b) => b.ville).filter((v): v is string => !!v)),
-        ].sort();
-        this.villes.set(villesUniques);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Une erreur est survenue');
-        this.loader.set(false);
-      },
-    });
+    this.bureauService
+      .getAll(filters)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.bureaux.set(res.data);
+          this.total.set(res.total);
+          this.lastPage.set(res.last_page);
+          this.loader.set(false);
+
+          // Villes uniques extraites depuis la page courante (enrichies au fil des pages)
+          const nouvelles = res.data
+            .map((b) => b.ville)
+            .filter((v): v is string => !!v);
+          const merged = [...new Set([...this.villes(), ...nouvelles])].sort();
+          this.villes.set(merged);
+        },
+        error: (err) => {
+          this.errorMessage.set(
+            err.error?.message ?? 'Une erreur est survenue',
+          );
+          this.loader.set(false);
+        },
+      });
+  }
+
+  onRecherche(terme: string): void {
+    this.recherche.set(terme);
+    this.rechercheSubject.next(terme);
+  }
+
+  onFiltreVille(ville: string): void {
+    this.villeSelectionnee.set(ville);
+    this.currentPage.set(1);
+    this.loadBureaux();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.lastPage()) return;
+    this.currentPage.set(page);
+    this.loadBureaux();
   }
 
   onDelete(rfk: string): void {
+    const bureau = this.bureaux().find((b) => b.rfk === rfk);
+
+    if (bureau && this.hasOperations(bureau)) {
+      this.errorMessage.set(
+        'Impossible de supprimer ce bureau : il possède des opérations (entrées ou sorties).',
+      );
+      setTimeout(() => this.errorMessage.set(null), 4000);
+      return;
+    }
+
     if (!confirm('Voulez-vous supprimer ce bureau ?')) return;
 
     this.deleteRfk.set(rfk);
 
-    this.bureauService.delete(rfk).subscribe({
-      next: () => {
-        this.bureaux.update((liste) => liste.filter((b) => b.rfk !== rfk));
-        this.deleteRfk.set(null);
-      },
-      error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? 'Erreur lors de la suppression',
-        );
-        this.deleteRfk.set(null);
-        setTimeout(() => this.errorMessage.set(null), 3000);
-      },
-    });
+    this.bureauService
+      .delete(rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deleteRfk.set(null);
+          this.loadBureaux();
+          this.loadGlobalStats();
+        },
+        error: (err) => {
+          this.errorMessage.set(
+            err.error?.message ?? 'Erreur lors de la suppression',
+          );
+          this.deleteRfk.set(null);
+          setTimeout(() => this.errorMessage.set(null), 3000);
+        },
+      });
   }
 
   onEdit(rfk: string): void {
@@ -131,42 +189,8 @@ export class BureauComponent implements OnInit {
   transformGrid(): void {
     this.viewMode = 'grid';
   }
+
   transformTable(): void {
     this.viewMode = 'table';
-  }
-
-  private animerStats(): void {
-    setTimeout(() => {
-      document.querySelectorAll('.stats-value').forEach((element) => {
-        if (element instanceof HTMLElement) {
-          const num = parseInt(
-            (element.textContent || '').replace(/[^0-9]/g, ''),
-            10,
-          );
-          if (!isNaN(num) && num > 0) {
-            element.textContent = '0';
-            this.animateValue(element, 0, num, 2000);
-          }
-        }
-      });
-    }, 0);
-  }
-
-  private animateValue(
-    element: HTMLElement,
-    start: number,
-    end: number,
-    duration: number,
-  ): void {
-    let startTimestamp: number | null = null;
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      element.innerText = Math.floor(
-        progress * (end - start) + start,
-      ).toString();
-      if (progress < 1) window.requestAnimationFrame(step);
-    };
-    window.requestAnimationFrame(step);
   }
 }

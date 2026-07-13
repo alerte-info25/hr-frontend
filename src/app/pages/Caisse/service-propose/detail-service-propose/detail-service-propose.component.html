@@ -1,0 +1,283 @@
+<app-loader />
+
+<div class="container-fluid px-4">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-3 mb-1">
+          <a routerLink="/caisse/services-propose" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+          </a>
+          <h2 class="page-title mb-0">
+            <i class="fas fa-concierge-bell text-primary me-2"></i>
+            Détail du service proposé
+          </h2>
+        </div>
+        @if (service()) {
+          <p class="text-muted ms-5 mb-0">
+            <strong>{{ service()!.nom }}</strong>
+            @if (service()!.description) {
+              · {{ service()!.description }}
+            }
+          </p>
+        }
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a routerLink="/caisse/services-propose" class="btn btn-outline-primary">
+          <i class="fas fa-arrow-left me-2"></i>
+          Retour à la liste
+        </a>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger mt-4">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ error() }}
+    </div>
+  }
+
+  @if (!isLoading() && service()) {
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon count">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div class="stat-label">Total des entrées</div>
+        <div class="stat-value">{{ nbRecouvrements() }}</div>
+        <div class="stat-trend positive">opérations enregistrées</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon credit">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </div>
+        <div class="stat-label">Montant total</div>
+        <div class="stat-value">{{ totalMontant() | number: "1.0-0" }} F</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon balance">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="stat-label">Moyenne par recouvrement</div>
+        <div class="stat-value">{{ moyenneRecouvrement() | number: "1.0-0" }} F</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-container">
+      <div class="filter-title">
+        <i class="fas fa-filter me-2 text-warning"></i>
+        Filtres des recouvrements
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Réf., description..."
+            [(ngModel)]="filterSearch"
+            (input)="onFilterChange()"
+          />
+        </div>
+        <div class="col-md-4">
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Date début"
+            [(ngModel)]="filterDateDebut"
+            (change)="onFilterChange()"
+          />
+        </div>
+        <div class="col-md-4">
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Date fin"
+            [(ngModel)]="filterDateFin"
+            (change)="onFilterChange()"
+          />
+        </div>
+        <div class="col-md-12">
+          <button
+            class="btn btn-outline-secondary w-100"
+            (click)="resetFilters()"
+          >
+            <i class="fas fa-times me-1"></i>Réinitialiser
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau des recouvrements -->
+    <div class="table-container">
+      <div class="table-header">
+        <h5 class="mb-0">
+          <i class="fas fa-list text-primary me-2"></i>
+          Recouvrements associés
+          <span class="badge bg-primary ms-2">{{ total() }}</span>
+        </h5>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table operations-table">
+          <thead>
+            <tr>
+              <th width="4%">N°</th>
+              <th width="8%">Référence</th>
+              <th width="10%">Date</th>
+              <th width="28%">Description</th>
+              <th width="12%">Client</th>
+              <th width="10%">Période</th>
+              <th width="10%">Mode</th>
+              <th width="12%" class="text-end">Montant (F)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                <tr>
+                  <td colspan="8">
+                    <div class="placeholder-glow">
+                      <span class="placeholder col-12 rounded"></span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+
+            @if (!isLoading() && recouvrements().length === 0) {
+              <tr>
+                <td colspan="8" class="text-center text-muted py-5">
+                  <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                  Aucun recouvrement trouvé pour ce service
+                  @if (
+                    filterSearch ||
+                    filterMode ||
+                    filterDateDebut ||
+                    filterDateFin
+                  ) {
+                    <div class="mt-2">
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="resetFilters()"
+                      >
+                        <i class="fas fa-times me-1"></i>Réinitialiser les
+                        filtres
+                      </button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+
+            @for (r of recouvrements(); track r.rfk; let i = $index) {
+              <tr>
+                <td class="text-muted">
+                  {{ (currentPage() - 1) * perPage + i + 1 }}
+                </td>
+                <td>
+                  <small class="font-monospace text-muted">{{ r.reference_paiement }}</small>
+                </td>
+                <td>{{ r.date_recouvrement | date: "dd/MM/yyyy" }}</td>
+                <td style="max-width: 200px" [title]="r.description || ''">
+                  {{ r.description || "—" }}
+                </td>
+                <td class="text-muted">
+                  <i
+                    class="fas fa-user me-1 opacity-50"
+                    style="font-size: 11px"
+                  ></i>
+                  {{ r.client ? r.client.nom + ' ' + r.client.prenom : "—" }}
+                </td>
+                <td class="text-muted">{{ r.periode?.libelle || "—" }}</td>
+                <td>
+                  @if (r.mode_paiement) {
+                    <span class="badge bg-secondary-subtle text-secondary">
+                      <i
+                        class="fas {{
+                          modePaiementIcons[r.mode_paiement]
+                        }} me-1"
+                      ></i>
+                      {{ modePaiementLabels[r.mode_paiement] }}
+                    </span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td class="text-end fw-semibold text-success">
+                  {{ r.montant | number: "1.0-0" }}
+                </td>
+              </tr>
+            }
+          </tbody>
+          @if (recouvrements().length > 0) {
+            <tfoot>
+              <tr class="table-light fw-semibold">
+                <td colspan="7" class="text-end text-muted">
+                  Total ({{ recouvrements().length }} ligne{{
+                    recouvrements().length > 1 ? "s" : ""
+                  }}) :
+                </td>
+                <td class="text-end text-success">
+                  {{ totalMontant() | number: "1.0-0" }} F
+                </td>
+              </tr>
+            </tfoot>
+          }
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (recouvrements().length > 0) {
+        <div class="pagination-info">
+          <span class="text-muted">
+            Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
+            {{ Math.min(currentPage() * perPage, total()) }} sur
+            {{ total() }} recouvrement{{ total() > 1 ? "s" : "" }}
+          </span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="currentPage() === 1">
+                <a
+                  class="page-link"
+                  style="cursor: pointer"
+                  (click)="goToPage(currentPage() - 1)"
+                >
+                  Précédent
+                </a>
+              </li>
+              @for (page of pages(); track page) {
+                <li class="page-item" [class.active]="page === currentPage()">
+                  <a
+                    class="page-link"
+                    style="cursor: pointer"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page }}
+                  </a>
+                </li>
+              }
+              <li
+                class="page-item"
+                [class.disabled]="currentPage() === lastPage()"
+              >
+                <a
+                  class="page-link"
+                  style="cursor: pointer"
+                  (click)="goToPage(currentPage() + 1)"
+                >
+                  Suivant
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -4,9 +4,7 @@
   <!--  En-tête  -->
   <div class="row my-4">
     <div class="col-md-8">
-      <h2 class="dashboard-title">
-        Gestion des recouvrements
-      </h2>
+      <h2 class="dashboard-title">Gestion des entrées</h2>
       <p class="text-muted">
         Enregistrez et suivez toutes les entrées de la caisse
       </p>
@@ -27,7 +25,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total recouvrements (page)</p>
+              <p class="stats-label">Total des entrées</p>
               <h3 class="stats-value text-success">
                 @if (isLoadingList()) {
                   <span class="placeholder col-6"></span>
@@ -48,7 +46,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Nombre de recouvrements</p>
+              <p class="stats-label">Nombre d'entrées</p>
               <h3 class="stats-value">
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
@@ -108,8 +106,8 @@
             ></i>
             {{
               isEditMode()
-                ? "Modifier le recouvrement"
-                : "Enregistrer un recouvrement"
+                ? "Modifier une entrée"
+                : "Enregistrer une nouvelle entrée"
             }}
           </h5>
           @if (isEditMode()) {
@@ -172,7 +170,7 @@
                       <option [ngValue]="ex.id">
                         {{ ex.annee }}
                         @if (ex.est_actif) {
-                          ★
+                          <i class="fa-solid fa-star"></i>
                         }
                       </option>
                     }
@@ -227,7 +225,7 @@
                     formControlName="bureau_id"
                   >
                     <option [ngValue]="null">— Sélectionner —</option>
-                    @for (b of bureaux(); track b.id) {
+                    @for (b of bureaux(); track b.rfk) {
                       <option [ngValue]="b.id">{{ b.nom }}</option>
                     }
                   </select>
@@ -249,7 +247,7 @@
                     formControlName="service_propose_id"
                   >
                     <option [ngValue]="null">— Sélectionner —</option>
-                    @for (s of services(); track s.id) {
+                    @for (s of services(); track s.rfk) {
                       <option [ngValue]="s.id">{{ s.nom }}</option>
                     }
                   </select>
@@ -274,7 +272,7 @@
                     formControlName="compte_comptable_id"
                   >
                     <option [ngValue]="null">— Sélectionner —</option>
-                    @for (c of comptes(); track c.id) {
+                    @for (c of comptes(); track c.rfk) {
                       <option [ngValue]="c.id">{{ c.libelle }}</option>
                     }
                   </select>
@@ -296,7 +294,7 @@
                     formControlName="client_id"
                   >
                     <option [ngValue]="null">— Sélectionner —</option>
-                    @for (c of clients(); track c.id) {
+                    @for (c of clients(); track c.rfk) {
                       <option [ngValue]="c.id">
                         {{ c.nom }} {{ c.prenom }}
                       </option>
@@ -315,7 +313,7 @@
                 <div class="col-md-6 mb-3">
                   <label class="form-label fw-semibold">
                     <i class="fas fa-calendar-day me-1 text-success"></i>
-                    Date du recouvrement <span class="text-danger">*</span>
+                    Date de l'opération <span class="text-danger">*</span>
                   </label>
                   <input
                     type="date"
@@ -404,7 +402,7 @@
                     [class.is-invalid]="isInvalid('description')"
                     formControlName="description"
                     rows="2"
-                    placeholder="Précisions sur ce recouvrement..."
+                    placeholder="Précisions sur cette opération..."
                   ></textarea>
                   @if (isInvalid("description")) {
                     <div class="invalid-feedback">
@@ -537,7 +535,7 @@
                 placeholder="Réf., desc..."
                 [(ngModel)]="filterSearch"
                 (input)="onFilterChange()"
-                style="height: 43px;"
+                style="height: 43px"
               />
             </div>
 
@@ -553,7 +551,7 @@
                   filterSearch = '';
                   onFilterChange()
                 "
-                style="height: 43px;"
+                style="height: 43px"
               >
                 <i class="fas fa-times"></i>
               </button>
@@ -573,7 +571,7 @@
         >
           <h5 class="mb-0">
             <i class="fas fa-list text-success me-2"></i>
-            Recouvrements enregistrés
+            Entrées enregistrés
           </h5>
           <span class="badge bg-success-subtle text-success px-3 py-2">
             {{ total() }} résultat{{ total() > 1 ? "s" : "" }}
@@ -586,10 +584,10 @@
               <thead>
                 <tr>
                   <th width="4%">N°</th>
-                  <th width="8%">Référence</th>
                   <th width="9%">Date</th>
                   <th width="15%">Client</th>
                   <th width="14%">Service</th>
+                  <th width="8%">Description</th>
                   <th width="12%">Période</th>
                   <th width="10%">Mode</th>
                   <th width="11%" class="text-end">Montant (F)</th>
@@ -597,9 +595,9 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- Skeleton -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- Squelette de chargement -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="9">
                         <div class="placeholder-glow">
@@ -608,10 +606,8 @@
                       </td>
                     </tr>
                   }
-                }
-
-                <!-- Vide -->
-                @if (!isLoadingList() && recouvrements().length === 0) {
+                } @else if (recouvrements().length === 0) {
+                  <!-- Aucun résultat -->
                   <tr>
                     <td colspan="9" class="text-center text-muted py-5">
                       <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
@@ -642,90 +638,101 @@
                       }
                     </td>
                   </tr>
-                }
+                } @else {
+                  <!-- Lignes de données -->
+                  @for (r of recouvrements(); track r.rfk; let i = $index) {
+                    <tr [class.table-warning]="editingRfk() === r.rfk">
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
 
-                <!-- Lignes -->
-                @for (r of recouvrements(); track r.rfk; let i = $index) {
-                  <tr [class.table-warning]="editingRfk() === r.rfk">
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
+                      <td>{{ r.date_recouvrement | date: "dd/MM/yyyy" }}</td>
 
-                    <td>
-                      <small class="text-muted font-monospace">{{
-                        r.rfk
-                      }}</small>
-                    </td>
-
-                    <td>{{ r.date_recouvrement | date: "dd/MM/yyyy" }}</td>
-
-                    <td>
-                      <div class="d-flex align-items-center gap-1">
-                        <div
-                          class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style="
-                            width: 24px;
-                            height: 24px;
-                            font-size: 10px;
-                            font-weight: 600;
-                          "
-                        >
-                          {{ r.client?.nom?.charAt(0)?.toUpperCase() ?? "?" }}
+                      <td>
+                        <div class="d-flex align-items-center gap-1">
+                          <div
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="
+                              width: 24px;
+                              height: 24px;
+                              font-size: 10px;
+                              font-weight: 600;
+                            "
+                          >
+                            {{ r.client?.nom?.charAt(0)?.toUpperCase() ?? "?" }}
+                          </div>
+                          <span>{{ nomClient(r) }}</span>
                         </div>
-                        <span>{{ nomClient(r) }}</span>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      <span class="badge bg-success-subtle text-success">
-                        {{ r.service_propose?.nom ?? "—" }}
-                      </span>
-                    </td>
-
-                    <td class="text-muted">{{ r.periode?.libelle ?? "—" }}</td>
-
-                    <td>
-                      @if (r.mode_paiement) {
-                        <span class="badge bg-secondary-subtle text-secondary">
-                          <i
-                            class="fas {{
-                              modePaiementIcons[r.mode_paiement]
-                            }} me-1"
-                          ></i>
-                          {{ modePaiementLabels[r.mode_paiement] }}
+                      <td>
+                        <span class="badge bg-success-subtle text-success">
+                          {{ r.service_propose?.nom ?? "—" }}
                         </span>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
+                      </td>
 
-                    <td class="text-end fw-semibold text-success">
-                      {{ r.montant | number: "1.0-0" }}
-                    </td>
+                      <td>
+                        <small class="text-muted font-monospace">{{
+                          r.description
+                        }}</small>
+                      </td>
 
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editRecouvrement(r)"
-                        [disabled]="isDeleting() === r.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        title="Supprimer"
-                        (click)="deleteRecouvrement(r)"
-                        [disabled]="isDeleting() === r.rfk"
-                      >
-                        @if (isDeleting() === r.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
+                      <td class="text-muted">
+                        {{ r.periode?.libelle ?? "—" }}
+                      </td>
+
+                      <td>
+                        @if (r.mode_paiement) {
+                          <span
+                            class="badge bg-secondary-subtle text-secondary"
+                          >
+                            <i
+                              class="fas {{
+                                modePaiementIcons[r.mode_paiement]
+                              }} me-1"
+                            ></i>
+                            {{ modePaiementLabels[r.mode_paiement] }}
+                          </span>
+                          @if (r.reference_paiement) {
+                            <small class="text-muted font-monospace">
+                              Référence : {{ r.reference_paiement }}
+                            </small>
+                          }
                         } @else {
-                          <i class="fas fa-trash"></i>
+                          <span class="text-muted">—</span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+
+                      <td class="text-end fw-semibold text-success">
+                        {{ r.montant | number: "1.0-0" }}
+                      </td>
+
+                      <td class="text-center">
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editRecouvrement(r)"
+                          [disabled]="isDeleting() === r.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn-icon delete"
+                          title="Supprimer"
+                          (click)="deleteRecouvrement(r)"
+                          [disabled]="isDeleting() === r.rfk"
+                        >
+                          @if (isDeleting() === r.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            <i class="fas fa-trash"></i>
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
 
@@ -758,7 +765,7 @@
               @if (!isLoadingList() && total() > 0) {
                 Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
                 {{ Math.min(currentPage() * perPage, total()) }} sur
-                {{ total() }} recouvrement{{ total() > 1 ? "s" : "" }}
+                {{ total() }} entrées {{ total() > 1 ? "s" : "" }}
               }
             </span>
             <nav>

@@ -4,9 +4,7 @@
   <!--  En-tête  -->
   <div class="row my-4">
     <div class="col-md-8">
-      <h2 class="dashboard-title">
-        Gestion des dépenses
-      </h2>
+      <h2 class="dashboard-title">Gestion des dépenses</h2>
       <p class="text-muted">
         Enregistrez et suivez toutes les dépenses de la caisse
       </p>
@@ -27,7 +25,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total dépenses (page)</p>
+              <p class="stats-label">Total des sorties (page)</p>
               <h3 class="stats-value text-danger">
                 @if (isLoadingList()) {
                   <span class="placeholder col-6"></span>
@@ -170,7 +168,7 @@
                       <option [ngValue]="ex.id">
                         {{ ex.annee }}
                         @if (ex.est_actif) {
-                          ★
+                          <i class="fa-solid fa-star"></i>
                         }
                       </option>
                     }
@@ -547,10 +545,10 @@
               <thead>
                 <tr>
                   <th width="4%">N°</th>
-                  <th width="8%">Référence</th>
                   <th width="9%">Date</th>
                   <th width="15%">Type</th>
                   <th width="14%">Fournisseur</th>
+                  <th width="8%">Description</th>
                   <th width="13%">Période</th>
                   <th width="10%">Mode</th>
                   <th width="11%" class="text-end">Montant (F)</th>
@@ -558,9 +556,9 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- Skeleton -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- 🟡 Squelette de chargement -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="9">
                         <div class="placeholder-glow">
@@ -569,10 +567,8 @@
                       </td>
                     </tr>
                   }
-                }
-
-                <!-- Vide -->
-                @if (!isLoadingList() && depenses().length === 0) {
+                } @else if (depenses().length === 0) {
+                  <!-- 🔍 Aucun résultat -->
                   <tr>
                     <td colspan="9" class="text-center text-muted py-5">
                       <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
@@ -601,81 +597,86 @@
                       }
                     </td>
                   </tr>
-                }
-
-                <!-- Lignes -->
-                @for (d of depenses(); track d.rfk; let i = $index) {
-                  <tr [class.table-warning]="editingRfk() === d.rfk">
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
-
-                    <td>
-                      <small class="text-muted font-monospace">{{
-                        d.rfk
-                      }}</small>
-                    </td>
-
-                    <td>{{ d.date_depense | date: "dd/MM/yyyy" }}</td>
-
-                    <td>
-                      <span class="badge bg-danger-subtle text-danger">
-                        {{ d.type_depense?.libelle ?? "—" }}
-                      </span>
-                    </td>
-
-                    <td class="text-muted">
-                      <i
-                        class="fas fa-truck me-1 opacity-50"
-                        style="font-size: 11px"
-                      ></i>
-                      {{ d.fournisseur?.nom ?? "—" }}
-                    </td>
-
-                    <td class="text-muted">{{ d.periode?.libelle ?? "—" }}</td>
-
-                    <td>
-                      @if (d.mode_paiement) {
-                        <span class="badge bg-secondary-subtle text-secondary">
-                          <i
-                            class="fas {{
-                              modePaiementIcons[d.mode_paiement]
-                            }} me-1"
-                          ></i>
-                          {{ modePaiementLabels[d.mode_paiement] }}
+                } @else {
+                  <!-- ✅ Lignes de données -->
+                  @for (d of depenses(); track d.rfk; let i = $index) {
+                    <tr [class.table-warning]="editingRfk() === d.rfk">
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
+                      <td>{{ d.date_depense | date: "dd/MM/yyyy" }}</td>
+                      <td>
+                        <span class="badge bg-danger-subtle text-danger">
+                          {{ d.type_depense?.libelle ?? "—" }}
                         </span>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-
-                    <td class="text-end fw-semibold text-danger">
-                      {{ d.montant | number: "1.0-0" }}
-                    </td>
-
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editDepense(d)"
-                        [disabled]="isDeleting() === d.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        title="Supprimer"
-                        (click)="deleteDepense(d)"
-                        [disabled]="isDeleting() === d.rfk"
-                      >
-                        @if (isDeleting() === d.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
+                      </td>
+                      <td class="text-muted">
+                        <i
+                          class="fas fa-truck me-1 opacity-50"
+                          style="font-size: 11px"
+                        ></i>
+                        {{ d.fournisseur?.nom ?? "—" }}
+                      </td>
+                      <td class="text-muted">
+                        <i
+                          class="fas fa-truck me-1 opacity-50"
+                          style="font-size: 11px"
+                        ></i>
+                        {{ d.description ?? "—" }}
+                      </td>
+                      <td class="text-muted">
+                        {{ d.periode?.libelle ?? "—" }}
+                      </td>
+                      <td>
+                        @if (d.mode_paiement) {
+                          <span
+                            class="badge bg-secondary-subtle text-secondary"
+                          >
+                            <i
+                              class="fas {{
+                                modePaiementIcons[d.mode_paiement]
+                              }} me-1"
+                            ></i>
+                            {{ modePaiementLabels[d.mode_paiement] }}
+                          </span>
+                          @if (d.reference_paiement) {
+                            <small class="text-muted font-monospace">
+                              Référence : {{ d.reference_paiement }}
+                            </small>
+                          }
                         } @else {
-                          <i class="fas fa-trash"></i>
+                          <span class="text-muted">—</span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td class="text-end fw-semibold text-danger">
+                        {{ d.montant | number: "1.0-0" }}
+                      </td>
+                      <td class="text-center">
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editDepense(d)"
+                          [disabled]="isDeleting() === d.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn-icon delete"
+                          title="Supprimer"
+                          (click)="deleteDepense(d)"
+                          [disabled]="isDeleting() === d.rfk"
+                        >
+                          @if (isDeleting() === d.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            <i class="fas fa-trash"></i>
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
 

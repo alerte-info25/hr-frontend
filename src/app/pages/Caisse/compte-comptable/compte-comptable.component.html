@@ -1,7 +1,7 @@
 <app-loader />
 
 <div class="container-fluid px-4">
-  <!--  En-tête  -->
+  <!-- En-tête -->
   <div class="row my-4">
     <div class="col-md-8">
       <h2 class="dashboard-title">
@@ -14,14 +14,14 @@
     </div>
   </div>
 
-  <!--  Alerte suppression  -->
+  <!-- Alerte suppression -->
   @if (deleteError()) {
     <div class="alert alert-danger d-flex align-items-center gap-2">
       <i class="fas fa-exclamation-circle"></i><span>{{ deleteError() }}</span>
     </div>
   }
 
-  <!--  Cartes statistiques  -->
+  <!-- Cartes statistiques -->
   <div class="row mb-4">
     <div class="col-xl-4 col-md-6 mb-4">
       <div class="card stats-card border-left-primary">
@@ -85,7 +85,7 @@
     </div>
   </div>
 
-  <!--  Formulaire  -->
+  <!-- Formulaire -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="form-card">
@@ -220,7 +220,7 @@
     </div>
   </div>
 
-  <!--  Liste  -->
+  <!-- Liste -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="table-card">
@@ -237,8 +237,8 @@
               type="text"
               class="form-control form-control-sm"
               placeholder="Libellé, référence..."
-              [(ngModel)]="searchQuery"
-              (input)="onFilterChange()"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event); onSearch()"
               style="width: 220px"
             />
           </div>
@@ -253,15 +253,16 @@
                   <th width="28%">Libellé</th>
                   <th width="30%">Description</th>
                   <th width="9%" class="text-center">Statut</th>
-                  <th width="10%" class="text-center">Dépenses</th>
-                  <th width="10%" class="text-center">Recouvr.</th>
+                  <th width="10%" class="text-center">Sorties</th>
+                  <th width="10%" class="text-center">Entrées</th>
                   <th width="9%" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Skeleton -->
+                <!-- ✅ Structure exclusive : chargement / vide / données -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- 🟡 Squelette de chargement -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="7">
                         <div class="placeholder-glow">
@@ -270,21 +271,19 @@
                       </td>
                     </tr>
                   }
-                }
-
-                <!-- Vide -->
-                @if (!isLoadingList() && comptes().length === 0) {
+                } @else if (comptes().length === 0) {
+                  <!-- 🔍 Aucun résultat -->
                   <tr>
                     <td colspan="7" class="text-center text-muted py-5">
                       <i class="fas fa-book fa-2x mb-2 d-block opacity-50"></i>
                       Aucun compte comptable trouvé
-                      @if (searchQuery || filterActif !== "") {
+                      @if (searchQuery() || filterActif() !== "") {
                         <div class="mt-2">
                           <button
                             class="btn btn-sm btn-outline-secondary"
                             (click)="
-                              searchQuery = '';
-                              filterActif = '';
+                              searchQuery.set('');
+                              filterActif.set('');
                               onFilterChange()
                             "
                           >
@@ -294,115 +293,125 @@
                       }
                     </td>
                   </tr>
-                }
+                } @else {
+                  <!-- ✅ Lignes de données -->
+                  @for (
+                    c of comptes();
+                    track trackByRfk($index, c);
+                    let i = $index
+                  ) {
+                    <tr
+                      [class.table-warning]="editingRfk() === c.rfk"
+                      [class.opacity-75]="!c.est_actif"
+                    >
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
 
-                <!-- Lignes -->
-                @for (c of comptes(); track c.rfk; let i = $index) {
-                  <tr
-                    [class.table-warning]="editingRfk() === c.rfk"
-                    [class.opacity-75]="!c.est_actif"
-                  >
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
-
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div
-                          class="rounded d-flex align-items-center justify-content-center flex-shrink-0"
-                          [class.bg-primary]="c.est_actif"
-                          [class.bg-secondary]="!c.est_actif"
-                          style="width: 32px; height: 32px"
-                        >
-                          <i
-                            class="fas fa-book text-white"
-                            style="font-size: 13px"
-                          ></i>
-                        </div>
-                        <div>
-                          <strong>{{ c.libelle }}</strong>
-                          @if (editingRfk() === c.rfk) {
-                            <span class="badge bg-warning text-dark ms-1">
-                              <i class="fas fa-edit me-1"></i>édition
-                            </span>
-                          }
-                          <div class="text-muted" style="font-size: 11px">
-                            {{ c.rfk }}
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="rounded d-flex align-items-center justify-content-center flex-shrink-0"
+                            [class.bg-primary]="c.est_actif"
+                            [class.bg-secondary]="!c.est_actif"
+                            style="width: 32px; height: 32px"
+                          >
+                            <i
+                              class="fas fa-book text-white"
+                              style="font-size: 13px"
+                            ></i>
+                          </div>
+                          <div>
+                            <strong>{{ c.libelle }}</strong>
+                            @if (editingRfk() === c.rfk) {
+                              <span class="badge bg-warning text-dark ms-1">
+                                <i class="fas fa-edit me-1"></i>édition
+                              </span>
+                            }
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td class="text-muted">
-                      <small>{{ c.description || "—" }}</small>
-                    </td>
+                      <td class="text-muted">
+                        <small>{{ c.description || "—" }}</small>
+                      </td>
 
-                    <td class="text-center">
-                      @if (c.est_actif) {
-                        <span class="badge-status actif">
-                          <i class="fas fa-circle me-1"></i>Actif
-                        </span>
-                      } @else {
-                        <span class="badge-status inactif">
-                          <i class="fas fa-circle me-1"></i>Inactif
-                        </span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      @if ((c.depenses_count ?? 0) > 0) {
-                        <span class="badge bg-danger-subtle text-danger">{{
-                          c.depenses_count
-                        }}</span>
-                      } @else {
-                        <span class="text-muted">0</span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      @if ((c.recouvrements_count ?? 0) > 0) {
-                        <span class="badge bg-success-subtle text-success">{{
-                          c.recouvrements_count
-                        }}</span>
-                      } @else {
-                        <span class="text-muted">0</span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editCompte(c)"
-                        [disabled]="isDeleting() === c.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        (click)="deleteCompte(c)"
-                        [disabled]="
-                          isDeleting() === c.rfk ||
-                          (c.depenses_count ?? 0) +
-                            (c.recouvrements_count ?? 0) >
-                            0
-                        "
-                        [title]="
-                          (c.depenses_count ?? 0) +
-                            (c.recouvrements_count ?? 0) >
-                          0
-                            ? 'Impossible : opérations liées à ce compte'
-                            : 'Supprimer'
-                        "
-                      >
-                        @if (isDeleting() === c.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
+                      <td class="text-center">
+                        @if (c.est_actif) {
+                          <span class="badge-status actif">
+                            <i class="fas fa-circle me-1"></i>Actif
+                          </span>
                         } @else {
-                          <i class="fas fa-trash"></i>
+                          <span class="badge-status inactif">
+                            <i class="fas fa-circle me-1"></i>Inactif
+                          </span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+
+                      <td class="text-center">
+                        @if ((c.depenses_count ?? 0) > 0) {
+                          <span class="badge bg-danger-subtle text-danger">{{
+                            c.depenses_count
+                          }}</span>
+                        } @else {
+                          <span class="text-muted">0</span>
+                        }
+                      </td>
+
+                      <td class="text-center">
+                        @if ((c.recouvrements_count ?? 0) > 0) {
+                          <span class="badge bg-success-subtle text-success">{{
+                            c.recouvrements_count
+                          }}</span>
+                        } @else {
+                          <span class="text-muted">0</span>
+                        }
+                      </td>
+
+                      <td class="text-center">
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editCompte(c)"
+                          [disabled]="isDeleting() === c.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn-icon delete"
+                          (click)="deleteCompte(c)"
+                          [disabled]="
+                            isDeleting() === c.rfk ||
+                            (c.depenses_count ?? 0) +
+                              (c.recouvrements_count ?? 0) >
+                              0
+                          "
+                          [title]="
+                            (c.depenses_count ?? 0) +
+                              (c.recouvrements_count ?? 0) >
+                            0
+                              ? 'Impossible : opérations liées à ce compte'
+                              : 'Supprimer'
+                          "
+                        >
+                          @if (isDeleting() === c.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            <i class="fas fa-trash"></i>
+                          }
+                        </button>
+
+                        <a
+                          [routerLink]="['/caisse/detail-compte', c.rfk]"
+                          class="btn-action"
+                        >
+                          <i class="fa-solid fa-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>

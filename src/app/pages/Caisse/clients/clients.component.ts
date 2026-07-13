@@ -1,11 +1,20 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule, DecimalPipe } from '@angular/common'; 
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Client } from '../../../models/Caisse/client.model';
 import { ClientService } from '../../../services/Caisse/clients.service';
@@ -14,39 +23,44 @@ import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.
 @Component({
   selector: 'app-client',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    LoaderComponent,
-  ], 
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClientsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
+  private destroyRef = inject(DestroyRef);
 
   isLoadingList = signal(false);
   clients = signal<Client[]>([]);
-  searchQuery = '';
+  searchQuery = signal('');
 
   currentPage = signal(1);
-  perPage = 10;
+  perPage = 15;
   total = signal(0);
   lastPage = signal(1);
 
+  // skeletton loading
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
+  // Computed signals
   totalClients = computed(() => this.total());
+
   totalRecouvrements = computed(() =>
     this.clients().reduce((sum, c) => sum + (c.recouvrements_count ?? 0), 0),
   );
+
   clientsActifs = computed(
     () => this.clients().filter((c) => (c.recouvrements_count ?? 0) > 0).length,
   );
+
   totalRecouvrementsMontant = computed(() =>
-    // ← ajout
     this.clients().reduce(
-      (sum, c) => sum + (c.recouvrements_sum_montant ?? 0),
+      (sum, c) => sum + Number(c.recouvrements_sum_montant ?? 0),
       0,
     ),
   );
@@ -73,6 +87,10 @@ export class ClientsComponent implements OnInit {
 
   readonly Math = Math;
 
+  trackByRfk(index: number, item: Client): string {
+    return item.rfk;
+  }
+
   ngOnInit(): void {
     this.loadList();
   }
@@ -81,10 +99,11 @@ export class ClientsComponent implements OnInit {
     this.isLoadingList.set(true);
     this.clientService
       .getAll({
-        search: this.searchQuery || undefined,
+        search: this.searchQuery() || undefined,
         page: this.currentPage(),
         per_page: this.perPage,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.clients.set(res.data);
@@ -154,7 +173,7 @@ export class ClientsComponent implements OnInit {
       ? this.clientService.update(this.editingRfk()!, payload)
       : this.clientService.create(payload);
 
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.formSuccess.set(
           this.isEditMode()
@@ -182,18 +201,21 @@ export class ClientsComponent implements OnInit {
       return;
     this.isDeleting.set(client.rfk);
     this.deleteError.set(null);
-    this.clientService.delete(client.rfk).subscribe({
-      next: () => {
-        this.isDeleting.set(null);
-        this.loadList();
-      },
-      error: (err) => {
-        this.deleteError.set(
-          err?.error?.message ?? 'Impossible de supprimer ce client.',
-        );
-        this.isDeleting.set(null);
-      },
-    });
+    this.clientService
+      .delete(client.rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isDeleting.set(null);
+          this.loadList();
+        },
+        error: (err) => {
+          this.deleteError.set(
+            err?.error?.message ?? 'Impossible de supprimer ce client.',
+          );
+          this.isDeleting.set(null);
+        },
+      });
   }
 
   isInvalid(field: string): boolean {

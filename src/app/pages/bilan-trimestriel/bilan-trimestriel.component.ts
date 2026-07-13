@@ -629,7 +629,7 @@ export class BilanTrimestrielComponent {
         { duration: 5000, panelClass: 'toast-error' }
       );
 
-      console.log('FORM ERRORS:', errors);
+      // console.log('FORM ERRORS:', errors);
 
       return;
     }

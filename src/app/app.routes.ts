@@ -394,6 +394,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'detail-bureau/:rfk',      // <-- Route avec paramètre rfk
+        title: 'Détails du bureau',
+        loadComponent: () =>
+          import('./pages/Caisse/bureau/detail-bureau/detail-bureau.component').then(
+            (c) => c.DetailBureauComponent
+          ),
+      },
+      {
         path: 'exercices',
         title: 'Liste des exercices comptables',
         loadComponent: () =>
@@ -418,11 +426,27 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'detail-types-depenses/:rfk',
+        title: 'Détail',
+        loadComponent: () =>
+          import('./pages/Caisse/detail-type-depense/detail-type-depense.component').then(
+            (c) => c.DetailTypeDepenseComponent,
+          ),
+      },
+      {
         path: 'services-propose',
         title: 'gestion des services proposés',
         loadComponent: () =>
           import('./pages/Caisse/service-propose/service-propose.component').then(
             (c) => c.ServiceProposeComponent,
+          ),
+      },
+      {
+        path: 'detail-services-propose/:rfk',
+        title: 'Détail des services proposés',
+        loadComponent: () =>
+          import('./pages/Caisse/service-propose/detail-service-propose/detail-service-propose.component').then(
+            (c) => c.DetailServiceProposeComponent,
           ),
       },
       {
@@ -451,7 +475,7 @@ export const routes: Routes = [
       },
       {
         path: 'recouvrements',
-        title: 'Nouvelle récouvrement',
+        title: 'Nouvelle entrée',
         loadComponent: () =>
           import('./pages/Caisse/recouvrement/recouvrement.component').then(
             (c) => c.RecouvrementComponent,
@@ -471,6 +495,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/Caisse/compte-comptable/compte-comptable.component').then(
             (c) => c.CompteComptableComponent,
+          ),
+      },
+      {
+        path: 'detail-compte/:rfk',
+        title: 'Détail du compte',
+        loadComponent: () =>
+          import('./pages/Caisse/compte-comptable/detail-compte/detail-compte.component').then(
+            (c) => c.DetailCompteComponent,
           ),
       },
     ],

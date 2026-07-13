@@ -21,12 +21,15 @@ export class CaisseGuard implements CanActivate {
   canActivate(): boolean {
     const userData = JSON.parse(localStorage.getItem('user_token') || '{}');
     const userSlug = userData?.employe?.fonction?.slug;
+    const hasCaissePermission = !!userData?.employe?.caisse_permission;
 
     const isAuthorized =
-      this.authSvr.isDG() || this.CAISSE_FONCTIONS.includes(userSlug);
+      this.authSvr.isDG() ||
+      this.CAISSE_FONCTIONS.includes(userSlug) ||
+      hasCaissePermission;
 
     if (!isAuthorized) {
-      this.router.navigate(['/applications']); 
+      this.router.navigate(['/applications']);
       return false;
     }
 

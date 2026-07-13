@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
-  BureauStat,
   DashboardData,
   EvolutionUnifiee,
   MODE_PAIEMENT_ICONS,
@@ -9,24 +9,28 @@ import {
   ModePaiement,
 } from '../../../models/Caisse/dashboard.model';
 import { DashboardCaisseService } from '../../../services/Caisse/dashboard-caisse.service';
+import { ExerciceComptableService } from '../../../services/Caisse/exercice-comptable.service';
+import { ExerciceModel } from '../../../models/Caisse/exercice-comptable.model';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 
 @Component({
   selector: 'app-dashboard-caisse',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, LoaderComponent],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, LoaderComponent],
   templateUrl: './dashboard-caisse.component.html',
   styleUrl: './dashboard-caisse.component.scss',
 })
 export class DashboardCaisseComponent implements OnInit {
   private dashboardService = inject(DashboardCaisseService);
+  private exerciceService = inject(ExerciceComptableService);
 
-  //  État 
   isLoading = signal(true);
+  isLoadingExercices = signal(true);
   data = signal<DashboardData | null>(null);
   error = signal<string | null>(null);
+  exercices = signal<ExerciceModel[]>([]);
+  selectedExerciceRfk = signal<string | null>(null);
 
-  //  Computed 
   soldePositif = computed(() => (this.data()?.kpis.solde ?? 0) >= 0);
 
   evolutionUnifiee = computed((): EvolutionUnifiee[] => {
@@ -54,21 +58,42 @@ export class DashboardCaisseComponent implements OnInit {
       }));
   });
 
-  //  Labels 
   readonly modePaiementLabels = MODE_PAIEMENT_LABELS;
   readonly modePaiementIcons = MODE_PAIEMENT_ICONS;
   readonly Math = Math;
 
-  //  Lifecycle 
   ngOnInit(): void {
-    this.load();
+    this.loadExercices();
+  }
+
+  loadExercices(): void {
+    this.isLoadingExercices.set(true);
+    this.exerciceService.getAll({ per_page: 100 }).subscribe({
+      next: (paginated) => {
+        const list = paginated.data || [];
+        this.exercices.set(list);
+        const actif = list.find((ex) => ex.est_actif);
+        if (actif) {
+          this.selectedExerciceRfk.set(actif.rfk);
+        } else if (list.length) {
+          this.selectedExerciceRfk.set(list[0].rfk);
+        }
+        this.isLoadingExercices.set(false);
+        this.load();
+      },
+      error: () => {
+        this.error.set('Impossible de charger la liste des exercices.');
+        this.isLoadingExercices.set(false);
+        this.load();
+      },
+    });
   }
 
   load(): void {
     this.isLoading.set(true);
     this.error.set(null);
-
-    this.dashboardService.getOverview().subscribe({
+    const rfk = this.selectedExerciceRfk();
+    this.dashboardService.getOverview(rfk || undefined).subscribe({
       next: (d) => {
         this.data.set(d);
         this.isLoading.set(false);
@@ -82,7 +107,11 @@ export class DashboardCaisseComponent implements OnInit {
     });
   }
 
-  //  Helpers 
+  onExerciceChange(rfk: string): void {
+    this.selectedExerciceRfk.set(rfk);
+    this.load();
+  }
+
   formatMois(mois: string): string {
     const moisFr = [
       '',
@@ -130,7 +159,6 @@ export class DashboardCaisseComponent implements OnInit {
     return solde >= 0 ? '+' : '';
   }
 
-  // Retourne le nombre d'opérations pour un mois donné dans l'évolution
   nbMois(evolution: { mois: string; nombre: number }[], mois: string): number {
     return evolution.find((e) => e.mois === mois)?.nombre ?? 0;
   }

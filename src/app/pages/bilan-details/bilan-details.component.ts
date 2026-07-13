@@ -98,9 +98,9 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
   }
 
   loadBilanDetails(slug: string): void {
-    console.log('🔵 Début chargement');
+    // console.log('🔵 Début chargement');
     this.loading = true;
-    console.log('Bilan load begin')
+    // console.log('Bilan load begin')
     this.bilanSvr.getBilanBySlug(slug)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -137,8 +137,8 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
           });
 
           this.loading = false;
-          console.log('📊 Détails transformés:', this.bilan.details);
-          console.log('📊 DetailClean:', this.detailClean);
+          // console.log('📊 Détails transformés:', this.bilan.details);
+          // console.log('📊 DetailClean:', this.detailClean);
         },
         error: (err) => {
           console.error('❌ Error:', err);

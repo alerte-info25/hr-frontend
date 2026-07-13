@@ -20,6 +20,7 @@
     </div>
   }
 
+  <!-- Stats Cards -->
   <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card stats-card border-left-primary">
@@ -69,7 +70,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total recouvrements liés</p>
+              <p class="stats-label">Total des entrées liés</p>
               <h3 class="stats-value">
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
@@ -87,7 +88,6 @@
       </div>
     </div>
 
-    <!-- ← nouvelle stat card -->
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card stats-card border-left-success">
         <div class="card-body">
@@ -110,7 +110,7 @@
     </div>
   </div>
 
-  <!-- Formulaire (inchangé) -->
+  <!-- Formulaire -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="form-card">
@@ -139,16 +139,16 @@
             <div
               class="alert alert-danger d-flex align-items-center gap-2 mb-3"
             >
-              <i class="fas fa-exclamation-circle"></i
-              ><span>{{ formError() }}</span>
+              <i class="fas fa-exclamation-circle"></i>
+              <span>{{ formError() }}</span>
             </div>
           }
           @if (formSuccess()) {
             <div
               class="alert alert-success d-flex align-items-center gap-2 mb-3"
             >
-              <i class="fas fa-check-circle"></i
-              ><span>{{ formSuccess() }}</span>
+              <i class="fas fa-check-circle"></i>
+              <span>{{ formSuccess() }}</span>
             </div>
           }
           <form
@@ -262,11 +262,11 @@
                     <span
                       class="spinner-border spinner-border-sm me-2"
                       role="status"
-                    ></span
-                    >Enregistrement...
+                    ></span>
+                    Enregistrement...
                   } @else {
-                    <i class="fas fa-save me-2"></i
-                    >{{ isEditMode() ? "Mettre à jour" : "Enregistrer" }}
+                    <i class="fas fa-save me-2"></i>
+                    {{ isEditMode() ? "Mettre à jour" : "Enregistrer" }}
                   }
                 </button>
                 <button
@@ -299,8 +299,8 @@
               type="text"
               class="form-control form-control-sm"
               placeholder="Nom, prénom, email, tél..."
-              [(ngModel)]="searchQuery"
-              (input)="onSearch()"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event); onSearch()"
               style="width: 240px"
             />
           </div>
@@ -317,35 +317,33 @@
                   <th width="17%">Adresse</th>
                   <th width="8%" class="text-center">Recouvr.</th>
                   <th width="13%" class="text-center">Montant total</th>
-                  <!-- ← -->
                   <th width="10%" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
+                <!-- ✅ Structure exclusive -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- 🟡 Squelette -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="8">
-                        <!-- ← 7 → 8 -->
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
                       </td>
                     </tr>
                   }
-                }
-
-                @if (!isLoadingList() && clients().length === 0) {
+                } @else if (clients().length === 0) {
+                  <!-- 🔍 Vide -->
                   <tr>
                     <td colspan="8" class="text-center text-muted py-5">
-                      <!-- ← 7 → 8 -->
                       <i class="fas fa-users fa-2x mb-2 d-block opacity-50"></i>
                       Aucun client enregistré
-                      @if (searchQuery) {
+                      @if (searchQuery()) {
                         <div class="mt-2">
                           <button
                             class="btn btn-sm btn-outline-secondary"
-                            (click)="searchQuery = ''; onSearch()"
+                            (click)="searchQuery.set(''); onSearch()"
                           >
                             <i class="fas fa-times me-1"></i>Réinitialiser la
                             recherche
@@ -354,119 +352,123 @@
                       }
                     </td>
                   </tr>
-                }
-
-                @for (client of clients(); track client.rfk; let i = $index) {
-                  <tr [class.table-warning]="editingRfk() === client.rfk">
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div
-                          class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style="
-                            width: 32px;
-                            height: 32px;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                        >
-                          {{ client.nom.charAt(0).toUpperCase()
-                          }}{{ client.prenom?.charAt(0)?.toUpperCase() ?? "" }}
+                } @else {
+                  <!-- ✅ Données -->
+                  @for (
+                    client of clients();
+                    track trackByRfk($index, client);
+                    let i = $index
+                  ) {
+                    <tr [class.table-warning]="editingRfk() === client.rfk">
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="
+                              width: 32px;
+                              height: 32px;
+                              font-size: 12px;
+                              font-weight: 600;
+                            "
+                          >
+                            {{ client.nom.charAt(0).toUpperCase() }}
+                            {{ client.prenom?.charAt(0)?.toUpperCase() ?? "" }}
+                          </div>
+                          <div>
+                            <strong>{{ nomComplet(client) }}</strong>
+                            @if (editingRfk() === client.rfk) {
+                              <span class="badge bg-warning text-dark ms-1">
+                                <i class="fas fa-edit me-1"></i>édition
+                              </span>
+                            }
+                          </div>
                         </div>
-                        <div>
-                          <strong>{{ nomComplet(client) }}</strong>
-                          @if (editingRfk() === client.rfk) {
-                            <span class="badge bg-warning text-dark ms-1">
-                              <i class="fas fa-edit me-1"></i>édition
-                            </span>
-                          }
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      @if (client.email) {
-                        <a
-                          [href]="'mailto:' + client.email"
-                          class="text-decoration-none text-primary"
-                        >
-                          <i
-                            class="fas fa-envelope me-1 text-muted"
-                            style="font-size: 11px"
-                          ></i
-                          >{{ client.email }}
-                        </a>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-                    <td>
-                      @if (client.telephone) {
-                        <a
-                          [href]="'tel:' + client.telephone"
-                          class="text-decoration-none"
-                        >
-                          <i
-                            class="fas fa-phone me-1 text-muted"
-                            style="font-size: 11px"
-                          ></i
-                          >{{ client.telephone }}
-                        </a>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-                    <td class="text-muted">
-                      <small>{{ client.adresse || "—" }}</small>
-                    </td>
-                    <td class="text-center">
-                      @if ((client.recouvrements_count ?? 0) > 0) {
-                        <span class="badge bg-success-subtle text-success">{{
-                          client.recouvrements_count
-                        }}</span>
-                      } @else {
-                        <span class="text-muted">0</span>
-                      }
-                    </td>
-
-                    <!-- ← nouvelle cellule montant total -->
-                    <td class="text-center">
-                      @if ((client.recouvrements_sum_montant ?? 0) > 0) {
-                        <span class="badge bg-success-subtle text-success">
-                          {{
-                            client.recouvrements_sum_montant | number: "1.0-0"
-                          }}
-                          F
-                        </span>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editClient(client)"
-                        [disabled]="isDeleting() === client.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        title="Supprimer"
-                        (click)="deleteClient(client)"
-                        [disabled]="isDeleting() === client.rfk"
-                      >
-                        @if (isDeleting() === client.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
+                      </td>
+                      <td>
+                        @if (client.email) {
+                          <a
+                            [href]="'mailto:' + client.email"
+                            class="text-decoration-none text-primary"
+                          >
+                            <i
+                              class="fas fa-envelope me-1 text-muted"
+                              style="font-size: 11px"
+                            ></i>
+                            {{ client.email }}
+                          </a>
                         } @else {
-                          <i class="fas fa-trash"></i>
+                          <span class="text-muted">—</span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td>
+                        @if (client.telephone) {
+                          <a
+                            [href]="'tel:' + client.telephone"
+                            class="text-decoration-none"
+                          >
+                            <i
+                              class="fas fa-phone me-1 text-muted"
+                              style="font-size: 11px"
+                            ></i>
+                            {{ client.telephone }}
+                          </a>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                      <td class="text-muted">
+                        <small>{{ client.adresse || "—" }}</small>
+                      </td>
+                      <td class="text-center">
+                        @if ((client.recouvrements_count ?? 0) > 0) {
+                          <span class="badge bg-success-subtle text-success">{{
+                            client.recouvrements_count
+                          }}</span>
+                        } @else {
+                          <span class="text-muted">0</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        @if ((client.recouvrements_sum_montant ?? 0) > 0) {
+                          <span class="badge bg-success-subtle text-success">
+                            {{
+                              client.recouvrements_sum_montant | number: "1.0-0"
+                            }}
+                            F
+                          </span>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editClient(client)"
+                          [disabled]="isDeleting() === client.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn-icon delete"
+                          title="Supprimer"
+                          (click)="deleteClient(client)"
+                          [disabled]="isDeleting() === client.rfk"
+                        >
+                          @if (isDeleting() === client.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            <i class="fas fa-trash"></i>
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>
@@ -490,8 +492,9 @@
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() - 1)"
-                    >Précédent</a
                   >
+                    Précédent
+                  </a>
                 </li>
                 @for (page of pages(); track page) {
                   <li class="page-item" [class.active]="page === currentPage()">
@@ -499,8 +502,9 @@
                       class="page-link"
                       style="cursor: pointer"
                       (click)="goToPage(page)"
-                      >{{ page }}</a
                     >
+                      {{ page }}
+                    </a>
                   </li>
                 }
                 <li
@@ -511,8 +515,9 @@
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() + 1)"
-                    >Suivant</a
                   >
+                    Suivant
+                  </a>
                 </li>
               </ul>
             </nav>

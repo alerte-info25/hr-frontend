@@ -44,7 +44,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total dépenses liées</p>
+              <p class="stats-label">Total des sorties liées</p>
               <h3 class="stats-value">
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
@@ -62,13 +62,12 @@
       </div>
     </div>
 
-    <!-- ← nouvelle stat card -->
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card stats-card border-left-success">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Montant total dépenses</p>
+              <p class="stats-label">Montant Total des sorties</p>
               <h3 class="stats-value">
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
@@ -94,8 +93,8 @@
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
                 } @else {
-                  {{ moyenneParCategorie() }}
-                  <small class="text-muted fs-6 fw-normal ms-1">opér.</small>
+                  {{ moyenneParCategorie() | number: "1.0-0" }}
+                  <small class="text-muted fs-6 fw-normal ms-1">F</small>
                 }
               </h3>
             </div>
@@ -106,7 +105,7 @@
     </div>
   </div>
 
-  <!-- formulaire inchangé -->
+  <!-- Formulaire -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="form-card">
@@ -264,32 +263,30 @@
               <thead>
                 <tr>
                   <th width="5%">N°</th>
-                  <th width="22%">Libellé</th>
-                  <th width="33%">Description</th>
+                  <th width="20%">Libellé</th>
+                  <th width="30%">Description</th>
                   <th width="10%" class="text-center">Nb dépenses</th>
-                  <th width="15%" class="text-center">Montant total</th>
-                  <!-- ← -->
-                  <th width="15%" class="text-center">Actions</th>
+                  <th width="13%" class="text-center">Montant total</th>
+                  <th width="22%" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
+                <!-- ✅ Structure exclusive -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- 🟡 Squelette -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="6">
-                        <!-- ← 5 → 6 -->
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
                       </td>
                     </tr>
                   }
-                }
-
-                @if (!isLoadingList() && types().length === 0) {
+                } @else if (types().length === 0) {
+                  <!-- 🔍 Vide -->
                   <tr>
                     <td colspan="6" class="text-center text-muted py-5">
-                      <!-- ← 5 → 6 -->
                       <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
                       Aucun type de dépense enregistré
                       @if (searchQuery) {
@@ -305,73 +302,93 @@
                       }
                     </td>
                   </tr>
-                }
-
-                @for (type of types(); track type.rfk; let i = $index) {
-                  <tr [class.table-warning]="editingRfk() === type.rfk">
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
-                    <td>
-                      <strong>{{ type.libelle }}</strong>
-                      @if (editingRfk() === type.rfk) {
-                        <span class="badge bg-warning text-dark ms-2 fs-xs">
-                          <i class="fas fa-edit me-1"></i>en édition
-                        </span>
-                      }
-                    </td>
-                    <td class="text-muted">{{ type.description || "—" }}</td>
-                    <td class="text-center">
-                      @if ((type.depenses_count ?? 0) > 0) {
-                        <span class="badge bg-danger-subtle text-danger">{{
-                          type.depenses_count
-                        }}</span>
-                      } @else {
-                        <span class="text-muted">0</span>
-                      }
-                    </td>
-
-                    <!-- ← nouvelle cellule montant total -->
-                    <td class="text-center">
-                      @if ((type.depenses_sum_montant ?? 0) > 0) {
-                        <span class="badge bg-success-subtle text-success">
-                          {{ type.depenses_sum_montant | number: "1.0-0" }} F
-                        </span>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editType(type)"
-                        [disabled]="isDeleting() === type.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        (click)="deleteType(type)"
-                        [disabled]="
-                          isDeleting() === type.rfk ||
-                          (type.depenses_count ?? 0) > 0
-                        "
-                        [title]="
-                          (type.depenses_count ?? 0) > 0
-                            ? 'Impossible : des dépenses sont liées à ce type'
-                            : 'Supprimer'
-                        "
-                      >
-                        @if (isDeleting() === type.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
-                        } @else {
-                          <i class="fas fa-trash"></i>
+                } @else {
+                  <!-- ✅ Données -->
+                  @for (type of types(); track type.rfk; let i = $index) {
+                    <tr [class.table-warning]="editingRfk() === type.rfk">
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
+                      <td>
+                        <strong>{{ type.libelle }}</strong>
+                        @if (editingRfk() === type.rfk) {
+                          <span class="badge bg-warning text-dark ms-2 fs-xs">
+                            <i class="fas fa-edit me-1"></i>en édition
+                          </span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td class="text-muted">{{ type.description || "—" }}</td>
+                      <td class="text-center">
+                        @if ((type.depenses_count ?? 0) > 0) {
+                          <span class="badge bg-danger-subtle text-danger">{{
+                            type.depenses_count
+                          }}</span>
+                        } @else {
+                          <span class="text-muted">0</span>
+                        }
+                      </td>
+
+                      <td class="text-center">
+                        @if (Number(type.depenses_sum_montant ?? 0) > 0) {
+                          <span class="badge bg-success-subtle text-success">
+                            {{
+                              Number(type.depenses_sum_montant ?? 0)
+                                | number: "1.0-0"
+                            }}
+                            F
+                          </span>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+
+                      <td class="text-center">
+                        <!-- BOUTON VOIR -->
+                        <button
+                          class="btn-icon view"
+                          title="Voir les détails"
+                          (click)="onView(type.rfk)"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
+
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editType(type)"
+                          [disabled]="isDeleting() === type.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+
+                        <button
+                          class="btn-icon delete"
+                          (click)="deleteType(type)"
+                          [disabled]="
+                            isDeleting() === type.rfk ||
+                            (type.depenses_count ?? 0) > 0
+                          "
+                          [title]="
+                            (type.depenses_count ?? 0) > 0
+                              ? 'Impossible : des dépenses sont liées à ce type'
+                              : 'Supprimer'
+                          "
+                        >
+                          @if (isDeleting() === type.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            @if ((type.depenses_count ?? 0) > 0) {
+                              <i class="fa-solid fa-lock"></i>
+                            } @else {
+                              <i class="fas fa-trash"></i>
+                            }
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>

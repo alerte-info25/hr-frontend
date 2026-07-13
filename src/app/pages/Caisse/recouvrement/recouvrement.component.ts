@@ -48,7 +48,7 @@ export class RecouvrementComponent implements OnInit {
   private clientService = inject(ClientService);
   private bureauService = inject(BureauService);
 
-  //  Référentiels
+  // Référentiels
   exercices = signal<ExerciceModel[]>([]);
   periodes = signal<Periode[]>([]);
   services = signal<any[]>([]);
@@ -57,7 +57,7 @@ export class RecouvrementComponent implements OnInit {
   bureaux = signal<any[]>([]);
   isLoadingRefs = signal(true);
 
-  //  Liste
+  // Liste
   isLoadingList = signal(false);
   recouvrements = signal<Recouvrement[]>([]);
   currentPage = signal(1);
@@ -65,20 +65,25 @@ export class RecouvrementComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // Skeleton pour le chargement
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
   // Filtres liste
   filterExerciceId = '';
   filterServiceId = '';
   filterClientId = '';
   filterMode = '';
   filterSearch = '';
-  filterActif = ''; 
+  filterActif = '';
 
-  //  Stats dérivées
+  // Stats dérivées
   totalMontant = computed(() =>
     this.recouvrements().reduce((sum, r) => sum + Number(r.montant), 0),
   );
 
-  //  Formulaire
+  // Formulaire
   editingRfk = signal<string | null>(null);
   isEditMode = computed(() => this.editingRfk() !== null);
   isSaving = signal(false);
@@ -99,11 +104,11 @@ export class RecouvrementComponent implements OnInit {
     description: ['', [Validators.maxLength(500)]],
   });
 
-  //  Suppression
+  // Suppression
   isDeleting = signal<string | null>(null);
   deleteError = signal<string | null>(null);
 
-  //  Labels
+  // Labels
   readonly modePaiementLabels = MODE_PAIEMENT_LABELS;
   readonly modePaiementIcons = MODE_PAIEMENT_ICONS;
   readonly modesOptions = Object.entries(MODE_PAIEMENT_LABELS) as [
@@ -112,20 +117,19 @@ export class RecouvrementComponent implements OnInit {
   ][];
   readonly Math = Math;
 
-  //  Lifecycle
+  // Lifecycle
   ngOnInit(): void {
     this.loadReferentiels();
   }
 
-  //  Chargement référentiels
+  // Chargement SÉQUENTIEL des référentiels
   private loadReferentiels(): void {
     this.isLoadingRefs.set(true);
-    let done = 0;
-    const check = () => {
-      if (++done === 5) this.isLoadingRefs.set(false);
-    };
+    this.loadExercices();
+  }
 
-    this.exerciceService.getAll({ per_page: 100 }).subscribe({
+  private loadExercices(): void {
+    this.exerciceService.getAll({ per_page: 30 }).subscribe({
       next: (r) => {
         this.exercices.set(r.data.filter((e) => !e.est_cloture));
         const actif = r.data.find((e) => e.est_actif && !e.est_cloture);
@@ -133,55 +137,62 @@ export class RecouvrementComponent implements OnInit {
           this.form.patchValue({ exercice_id: actif.id });
           this.onExerciceChange(actif.id);
         }
-        check();
+        this.loadServices();
       },
-      error: check,
+      error: () => this.isLoadingRefs.set(false),
     });
+  }
 
-    this.serviceProposeService.getAll({ per_page: 100 }).subscribe({
+  private loadServices(): void {
+    this.serviceProposeService.getAll({ per_page: 30 }).subscribe({
       next: (r) => {
         this.services.set(r.data);
-        check();
+        this.loadComptes();
       },
-      error: check,
+      error: () => this.isLoadingRefs.set(false),
     });
+  }
 
-    
-
+  private loadComptes(): void {
     this.compteService
       .getAll({
-        per_page: 100,
+        per_page: 30,
         est_actif:
           this.filterActif !== '' ? this.filterActif === 'true' : undefined,
       })
       .subscribe({
         next: (comptes) => {
           this.comptes.set(comptes.data);
-          check();
+          this.loadClients();
         },
-        error: check,
+        error: () => this.isLoadingRefs.set(false),
       });
-
-    this.clientService.getAll({ per_page: 100 }).subscribe({
-      next: (r) => {
-        this.clients.set(r.data);
-        check();
-      },
-      error: check,
-    });
-
-    this.bureauService.getAll({ per_page: 100 }).subscribe({
-      next: (bureaux) => {
-        this.bureaux.set(bureaux);
-        check();
-      },
-      error: check,
-    });
-
-    this.loadList();
   }
 
-  //  Changement d'exercice → recharge périodes
+  private loadClients(): void {
+    this.clientService.getAll({ per_page: 30 }).subscribe({
+      next: (r) => {
+        this.clients.set(r.data);
+        this.loadBureaux();
+      },
+      error: () => this.isLoadingRefs.set(false),
+    });
+  }
+
+  private loadBureaux(): void {
+    this.bureauService.getAll({ per_page: 30 }).subscribe({
+      next: (res) => {
+        this.bureaux.set(res.data); // .data extrait le tableau depuis PaginatedResponse
+        this.isLoadingRefs.set(false);
+        this.loadList();
+      },
+      error: () => {
+        this.isLoadingRefs.set(false);
+      },
+    });
+  }
+
+  // Changement d'exercice → recharge périodes
   onExerciceChange(exerciceId: number | string): void {
     this.form.patchValue({ periode_id: null });
     this.periodes.set([]);
@@ -191,13 +202,13 @@ export class RecouvrementComponent implements OnInit {
     if (!ex) return;
 
     this.periodeService
-      .getAll({ exercice_rfk: ex.rfk, per_page: 100 })
+      .getAll({ exercice_rfk: ex.rfk, per_page: 30 })
       .subscribe({
         next: (r) => this.periodes.set(r.data.filter((p) => !p.est_cloturee)),
       });
   }
 
-  //  Chargement liste
+  // Chargement liste
   loadList(): void {
     this.isLoadingList.set(true);
     this.recouvrementService
@@ -242,7 +253,7 @@ export class RecouvrementComponent implements OnInit {
     return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
   }
 
-  //  Formulaire
+  // Formulaire
   resetForm(): void {
     this.editingRfk.set(null);
     this.formError.set(null);
@@ -326,7 +337,7 @@ export class RecouvrementComponent implements OnInit {
     });
   }
 
-  //  Suppression
+  // Suppression
   deleteRecouvrement(r: Recouvrement): void {
     const client = r.client
       ? `${r.client.nom} ${r.client.prenom ?? ''}`.trim()
@@ -355,7 +366,7 @@ export class RecouvrementComponent implements OnInit {
     });
   }
 
-  //  Helpers formulaire
+  // Helpers formulaire
   isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
@@ -371,7 +382,7 @@ export class RecouvrementComponent implements OnInit {
     return 'Valeur invalide.';
   }
 
-  //  Utilitaire affichage
+  // Utilitaire affichage
   nomClient(r: Recouvrement): string {
     if (!r.client) return '—';
     return `${r.client.nom} ${r.client.prenom ?? ''}`.trim();

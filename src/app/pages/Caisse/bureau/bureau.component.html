@@ -36,34 +36,74 @@
 
   <!-- Stats Cards -->
   <div class="row mb-4">
-    <div class="col-xl-4 col-md-4 mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="stats-card">
         <div class="stats-icon blue">
-          <i class="fas fa-arrow-down"></i>
+          <i class="fas fa-building"></i>
         </div>
-        <div class="stats-label">Total dépenses</div>
-        <div class="stats-value">{{ stats()?.total_depenses ?? "—" }}</div>
+        <div class="stats-label">Total bureaux</div>
+        <div class="stats-value">
+          @if (loader()) {
+            <span class="placeholder col-4"></span>
+          } @else {
+            {{ total() }}
+          }
+        </div>
       </div>
     </div>
-    <div class="col-xl-4 col-md-4 mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon red">
+          <i class="fas fa-arrow-down"></i>
+        </div>
+        <div class="stats-label">Total des sorties</div>
+        <div class="stats-value">
+          @if (!stats()) {
+            <span class="placeholder col-4"></span>
+          } @else {
+            {{ stats()!.total_depenses | number: "1.0-0" }} F
+          }
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="stats-card">
         <div class="stats-icon green">
           <i class="fas fa-arrow-up"></i>
         </div>
-        <div class="stats-label">Total recouvrements</div>
-        <div class="stats-value">{{ stats()?.total_recouvrements ?? "—" }}</div>
+        <div class="stats-label">Total des entrées</div>
+        <div class="stats-value">
+          @if (!stats()) {
+            <span class="placeholder col-4"></span>
+          } @else {
+            {{ stats()!.total_recouvrements | number: "1.0-0" }} F
+          }
+        </div>
       </div>
     </div>
-    <div class="col-xl-4 col-md-4 mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="stats-card">
         <div class="stats-icon purple">
           <i class="fas fa-balance-scale"></i>
         </div>
         <div class="stats-label">Solde</div>
-        <div class="stats-value">{{ stats()?.solde ?? "—" }}</div>
+        <div class="stats-value">
+          @if (!stats()) {
+            <span class="placeholder col-4"></span>
+          } @else {
+            {{ stats()!.solde | number: "1.0-0" }} F
+          }
+        </div>
       </div>
     </div>
   </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
 
   <!-- Toolbar -->
   <div class="offices-toolbar">
@@ -102,73 +142,99 @@
   <!-- Grid View -->
   @if (viewMode === "grid") {
     <div class="offices-grid">
-      @for (bureau of bureauxFiltres(); track bureau.rfk) {
-        <div class="office-card active">
-          <div class="office-header">
-            <div class="office-icon">
-              <i class="fas fa-building"></i>
-            </div>
-            <div class="office-status">
-              <span class="status-badge active">Actif</span>
-            </div>
+      @if (loader()) {
+        <!-- 🟡 Squelette grille (6 cartes) -->
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <div class="office-card placeholder-glow">
+            <span
+              class="placeholder col-12 rounded"
+              style="height: 160px"
+            ></span>
           </div>
-
-          <div class="office-info">
-            <div class="office-name">{{ bureau.nom }}</div>
-
-            <div class="office-address">
-              <i class="fas fa-map-marker-alt"></i>
-              {{ bureau.adresse || "" }}
-              {{ bureau.codepostal ? bureau.codepostal + " " : "" }}
-              {{ bureau.ville }}
-              {{ bureau.pays ? ", " + bureau.pays : "" }}
-            </div>
-
-            @if (bureau.complement) {
-              <div class="office-contact">
-                <i class="fas fa-map-pin"></i>
-                {{ bureau.complement }}
-              </div>
-            }
-
-            <div class="office-address">
-              <i class="fa-solid fa-arrow-down"></i>
-              {{ bureau.depenses_count ?? 0 }} Dépense(s)
-            </div>
-            <div class="office-address">
-              <i class="fa-solid fa-arrow-up"></i>
-              {{ bureau.recouvrements_count ?? 0 }} Recouvrement(s)
-            </div>
-          </div>
-
-          <div class="office-footer">
-            <div class="office-actions">
-              <button
-                type="button"
-                class="btn-action"
-                (click)="onEdit(bureau.rfk)"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
-              <button
-                type="button"
-                class="btn-action delete"
-                (click)="onDelete(bureau.rfk)"
-                [disabled]="deleteRfk() === bureau.rfk"
-              >
-                @if (deleteRfk() === bureau.rfk) {
-                  <i class="fas fa-spinner fa-spin"></i>
-                } @else {
-                  <i class="fas fa-trash"></i>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      @if (bureaux().length === 0 && !loader()) {
+        }
+      } @else if (bureaux().length === 0) {
+        <!-- 🔍 Aucun bureau -->
         <div class="text-muted p-4">Aucun bureau enregistré.</div>
+      } @else {
+        <!-- ✅ Cartes réelles -->
+        @for (bureau of bureaux(); track bureau.rfk) {
+          <div class="office-card active">
+            <div class="office-header">
+              <div class="office-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="office-status">
+                <span class="status-badge active">Actif</span>
+              </div>
+            </div>
+
+            <div class="office-info">
+              <div class="office-name">{{ bureau.nom }}</div>
+
+              <div class="office-address">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ bureau.adresse || "" }}
+                {{ bureau.codepostal ? bureau.codepostal + " " : "" }}
+                {{ bureau.ville }}
+                {{ bureau.pays ? ", " + bureau.pays : "" }}
+              </div>
+
+              @if (bureau.complement) {
+                <div class="office-contact">
+                  <i class="fas fa-map-pin"></i>
+                  {{ bureau.complement }}
+                </div>
+              }
+
+              <div class="office-address">
+                <i class="fa-solid fa-arrow-down"></i>
+                {{ bureau.depenses_count ?? 0 }} sortie(s)
+              </div>
+              <div class="office-address">
+                <i class="fa-solid fa-arrow-up"></i>
+                {{ bureau.recouvrements_count ?? 0 }} entrée(s)
+              </div>
+            </div>
+
+            <div class="office-footer">
+              <div class="office-actions">
+                <button
+                  type="button"
+                  class="btn-action"
+                  (click)="onEdit(bureau.rfk)"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+
+                @if (
+                  (bureau.depenses_count ?? 0) === 0 &&
+                  (bureau.recouvrements_count ?? 0) === 0
+                ) {
+                  <button
+                    type="button"
+                    class="btn-action delete"
+                    (click)="onDelete(bureau.rfk)"
+                    [disabled]="deleteRfk() === bureau.rfk"
+                    title="Supprimer"
+                  >
+                    @if (deleteRfk() === bureau.rfk) {
+                      <i class="fas fa-spinner fa-spin"></i>
+                    } @else {
+                      <i class="fas fa-trash"></i>
+                    }
+                  </button>
+                }
+
+                <a
+                  [routerLink]="['/caisse/detail-bureau', bureau.rfk]"
+                  class="btn-action"
+                >
+                  <i class="fa-regular fa-eye"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
   }
@@ -184,66 +250,130 @@
               <th>Adresse</th>
               <th>Ville</th>
               <th>Pays</th>
-              <th>Dépenses</th>
-              <th>Recouvrements</th>
+              <th>Sorties</th>
+              <th>Entrées</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (bureau of bureauxFiltres(); track bureau.rfk) {
-              <tr>
-                <td>
-                  <strong>{{ bureau.nom }}</strong>
-                  @if (bureau.complement) {
-                    <br /><small class="text-muted">{{
-                      bureau.complement
-                    }}</small>
-                  }
-                </td>
-                <td>
-                  {{ bureau.adresse || "—" }}
-                  {{ bureau.codepostal ? ", " + bureau.codepostal : "" }}
-                </td>
-                <td>{{ bureau.ville }}</td>
-                <td>{{ bureau.pays }}</td>
-                <td>{{ bureau.depenses_count ?? 0 }}</td>
-                <td>{{ bureau.recouvrements_count ?? 0 }}</td>
-                <td>
-                  <div class="office-actions">
-                    <button
-                      type="button"
-                      class="btn-action"
-                      (click)="onEdit(bureau.rfk)"
-                    >
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-action delete"
-                      (click)="onDelete(bureau.rfk)"
-                      [disabled]="deleteRfk() === bureau.rfk"
-                    >
-                      @if (deleteRfk() === bureau.rfk) {
-                        <i class="fas fa-spinner fa-spin"></i>
-                      } @else {
-                        <i class="fas fa-trash"></i>
-                      }
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-
-            @if (bureaux().length === 0 && !loader()) {
+            @if (loader()) {
+              <!-- 🟡 Squelette tableau -->
+              @for (_ of skeletonArray; track $index) {
+                <tr>
+                  <td colspan="7">
+                    <div class="placeholder-glow">
+                      <span class="placeholder col-12 rounded"></span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @else if (bureaux().length === 0) {
+              <!-- 🔍 Aucun résultat -->
               <tr>
                 <td colspan="7" class="text-center text-muted py-4">
                   Aucun bureau enregistré.
                 </td>
               </tr>
+            } @else {
+              <!-- ✅ Lignes de données -->
+              @for (bureau of bureaux(); track bureau.rfk) {
+                <tr>
+                  <td>
+                    <strong>{{ bureau.nom }}</strong>
+                    @if (bureau.complement) {
+                      <br /><small class="text-muted">{{
+                        bureau.complement
+                      }}</small>
+                    }
+                  </td>
+                  <td>
+                    {{ bureau.adresse || "—" }}
+                    {{ bureau.codepostal ? ", " + bureau.codepostal : "" }}
+                  </td>
+                  <td>{{ bureau.ville }}</td>
+                  <td>{{ bureau.pays }}</td>
+                  <td>{{ bureau.depenses_count ?? 0 }}</td>
+                  <td>{{ bureau.recouvrements_count ?? 0 }}</td>
+                  <td>
+                    <div class="office-actions">
+                      <button
+                        type="button"
+                        class="btn-action"
+                        (click)="onEdit(bureau.rfk)"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      &nbsp;
+                      <button
+                        type="button"
+                        class="btn-action delete"
+                        (click)="onDelete(bureau.rfk)"
+                        [disabled]="deleteRfk() === bureau.rfk"
+                      >
+                        @if (deleteRfk() === bureau.rfk) {
+                          <i class="fas fa-spinner fa-spin"></i>
+                        } @else {
+                          <i class="fas fa-trash"></i>
+                        }
+                      </button>
+                      &nbsp;
+                      <a
+                        [routerLink]="['/caisse/detail-bureau', bureau.rfk]"
+                        class="btn-action"
+                      >
+                        <i class="fa-regular fa-eye"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
       </div>
+    </div>
+  }
+
+  <!-- Pagination -->
+  @if (lastPage() > 1) {
+    <div
+      class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2"
+    >
+      <span class="text-muted">
+        Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
+        {{ Math.min(currentPage() * perPage, total()) }} sur
+        {{ total() }} bureau{{ total() > 1 ? "x" : "" }}
+      </span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <a
+              class="page-link"
+              style="cursor: pointer"
+              (click)="goToPage(currentPage() - 1)"
+              >Précédent</a
+            >
+          </li>
+          @for (page of pages(); track page) {
+            <li class="page-item" [class.active]="page === currentPage()">
+              <a
+                class="page-link"
+                style="cursor: pointer"
+                (click)="goToPage(page)"
+                >{{ page }}</a
+              >
+            </li>
+          }
+          <li class="page-item" [class.disabled]="currentPage() === lastPage()">
+            <a
+              class="page-link"
+              style="cursor: pointer"
+              (click)="goToPage(currentPage() + 1)"
+              >Suivant</a
+            >
+          </li>
+        </ul>
+      </nav>
     </div>
   }
 </div>

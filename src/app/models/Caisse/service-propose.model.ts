@@ -3,6 +3,7 @@ import { ApiResponse, PaginatedResponse } from './bureau.model';
 export type { ApiResponse, PaginatedResponse };
 
 export interface ServicePropose {
+  id: number; 
   rfk: string;
   nom: string;
   description: string;

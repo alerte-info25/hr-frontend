@@ -7,6 +7,8 @@ import {
   CompteComptable,
   CompteComptableFilters,
   CompteComptablePayload,
+  CompteOperationsData,
+  CompteStats,
   PaginatedResponse,
 } from '../../models/Caisse/compte-comptable.model';
 
@@ -29,7 +31,9 @@ export class CompteComptableService {
     return params;
   }
 
-  getAll(filters?: CompteComptableFilters): Observable<PaginatedResponse<CompteComptable>> {
+  getAll(
+    filters?: CompteComptableFilters,
+  ): Observable<PaginatedResponse<CompteComptable>> {
     return this.http
       .get<ApiResponse<PaginatedResponse<CompteComptable>>>(this.url, {
         params: this.buildParams(filters),
@@ -38,7 +42,10 @@ export class CompteComptableService {
         map((res) => {
           const paginated = res.data;
           if (!paginated || !Array.isArray(paginated.data)) {
-            return { ...paginated, data: [] } as PaginatedResponse<CompteComptable>;
+            return {
+              ...paginated,
+              data: [],
+            } as PaginatedResponse<CompteComptable>;
           }
           return paginated;
         }),
@@ -57,7 +64,10 @@ export class CompteComptableService {
       .pipe(map((res) => res.data!));
   }
 
-  update(rfk: string, payload: Partial<CompteComptablePayload>): Observable<CompteComptable> {
+  update(
+    rfk: string,
+    payload: Partial<CompteComptablePayload>,
+  ): Observable<CompteComptable> {
     return this.http
       .put<ApiResponse<CompteComptable>>(`${this.url}/${rfk}`, payload)
       .pipe(map((res) => res.data!));
@@ -67,5 +77,44 @@ export class CompteComptableService {
     return this.http
       .delete<ApiResponse<null>>(`${this.url}/${rfk}`)
       .pipe(map((res) => res.message!));
+  }
+
+  getStats(
+    rfk: string,
+    filters?: { exercice_id?: number },
+  ): Observable<CompteStats> {
+    let params = new HttpParams();
+    if (filters?.exercice_id) {
+      params = params.set('exercice_id', String(filters.exercice_id));
+    }
+    return this.http
+      .get<ApiResponse<CompteStats>>(`${this.url}/${rfk}/stats`, { params })
+      .pipe(map((res) => res.data!));
+  }
+
+  getOperations(
+    rfk: string,
+    filters?: {
+      exercice_id?: number;
+      periode_id?: number;
+      type?: 'entree' | 'sortie';
+      search?: string;
+      per_page?: number;
+      page?: number;
+    },
+  ): Observable<CompteOperationsData> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, String(value));
+        }
+      });
+    }
+    return this.http
+      .get<
+        ApiResponse<CompteOperationsData>
+      >(`${this.url}/${rfk}/operations`, { params })
+      .pipe(map((res) => res.data!));
   }
 }

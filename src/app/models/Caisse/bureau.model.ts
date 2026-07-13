@@ -1,3 +1,5 @@
+import { ModePaiement } from "./depense.model";
+
 export interface PaginatedResponse<T> {
   current_page: number;
   data: T[];
@@ -56,6 +58,52 @@ export interface BureauFilters {
   search?: string;
   pays?: string;
   ville?: string;
+  per_page?: number;
+  page?: number;
+}
+
+// Opération unifiée
+export interface BureauOperation {
+  rfk: string;
+  date: string;
+  libelle: string | null;
+  reference: string | null;
+  type: 'entree' | 'sortie';
+  montant: number;
+  mode_paiement: ModePaiement | null;
+  // Spécifiques selon le type
+  type_depense?: string | null;   // pour sortie
+  service?: string | null;        // pour entrée
+  periode?: string | null;
+  exercice?: string | null;
+  compte?: string | null;
+  tiers?: string | null;          // fournisseur ou client
+}
+
+export interface BureauDetailData {
+  bureau: {
+    rfk: string;
+    nom: string;
+    adresse?: string | null;
+    ville: string;
+    pays: string;
+    codepostal?: string | null;
+    complement?: string | null;
+  };
+  totaux: {
+    total_entrees: number;
+    total_sorties: number;
+    solde: number;
+    nb_operations: number;
+  };
+  operations: PaginatedResponse<BureauOperation>;
+}
+
+export interface BureauOperationsFilters {
+  exercice_id?: number;
+  periode_id?: number;
+  type?: 'entree' | 'sortie';
+  search?: string;
   per_page?: number;
   page?: number;
 }

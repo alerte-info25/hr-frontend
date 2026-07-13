@@ -1,0 +1,246 @@
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  DestroyRef,
+  computed,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { BureauService } from '../../../../services/Caisse/bureau.service';
+import { ExerciceComptableService } from '../../../../services/Caisse/exercice-comptable.service';
+import { PeriodeService } from '../../../../services/Caisse/periode.service';
+import {
+  BureauDetailData,
+  BureauOperation,
+  BureauOperationsFilters,
+} from '../../../../models/Caisse/bureau.model';
+import { ExerciceModel } from '../../../../models/Caisse/exercice-comptable.model';
+import { Periode } from '../../../../models/Caisse/periode.model';
+import { LoaderComponent } from '../../../../sharedCaisse/components/loader/loader.component';
+
+@Component({
+  selector: 'app-detail-bureau',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, LoaderComponent],
+  templateUrl: './detail-bureau.component.html',
+  styleUrls: ['./detail-bureau.component.scss'],
+})
+export class DetailBureauComponent implements OnInit {
+  private bureauService = inject(BureauService);
+  private exerciceService = inject(ExerciceComptableService);
+  private periodeService = inject(PeriodeService);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+
+  // Identifiant du bureau
+  bureauRfk = signal<string>('');
+
+  // États
+  loading = signal(false);
+  error = signal<string | null>(null);
+
+  // Données principales
+  bureauData = signal<BureauDetailData | null>(null);
+
+  // Liste des exercices
+  exercices = signal<ExerciceModel[]>([]);
+  // Liste des périodes (dépend de l'exercice sélectionné)
+  periodes = signal<Periode[]>([]);
+
+  // Filtres sélectionnés
+  selectedExerciceId = signal<number | null>(null);
+  selectedPeriodeId = signal<number | null>(null);
+  selectedType = signal<'entree' | 'sortie' | null>(null);
+  searchTerm = signal<string>('');
+
+  // Pagination
+  currentPage = signal(1);
+  perPage = 15;
+
+  // Computed pour les opérations paginées (extraites de bureauData)
+  operations = computed(() => {
+    const data = this.bureauData();
+    return data?.operations.data ?? [];
+  });
+
+  totalOperations = computed(() => {
+    const data = this.bureauData();
+    return data?.totaux.nb_operations ?? 0;
+  });
+
+  totalPages = computed(() => {
+    const data = this.bureauData();
+    return data?.operations.last_page ?? 1;
+  });
+
+  // Affichage des pages
+  pages = computed(() => {
+    const total = this.totalPages();
+    return Array.from({ length: total }, (_, i) => i + 1);
+  });
+
+  ngOnInit(): void {
+    // Récupérer le rfk depuis l'URL
+    const rfk = this.route.snapshot.paramMap.get('rfk');
+    if (rfk) {
+      this.bureauRfk.set(rfk);
+      // On ne charge les opérations qu'une fois le filtre d'exercice
+      // déterminé (voir loadExercices), pour éviter toute divergence
+      // entre le total affiché en page 1 et celui utilisé par les
+      // requêtes de pagination suivantes.
+      this.loadExercices();
+    } else {
+      this.error.set('Aucun bureau spécifié.');
+    }
+  }
+
+  // Charger la liste des exercices
+  private loadExercices(): void {
+    this.exerciceService
+      .getAll({ per_page: 100 }) // on récupère tous (ou un grand nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const exercices = res.data;
+          this.exercices.set(exercices);
+          // Sélectionner l'exercice actif par défaut
+          const actif = exercices.find((e) => e.est_actif && !e.est_cloture);
+          if (actif) {
+            this.selectedExerciceId.set(actif.id);
+            this.loadPeriodes(actif.id);
+          } else if (exercices.length > 0) {
+            this.selectedExerciceId.set(exercices[0].id);
+            this.loadPeriodes(exercices[0].id);
+          }
+          // Chargement initial des opérations, une fois le filtre
+          // d'exercice connu (avec ou sans exercice trouvé).
+          this.loadData();
+        },
+        error: () => {
+          this.error.set('Impossible de charger les exercices.');
+          // On tente quand même de charger les opérations sans filtre
+          this.loadData();
+        },
+      });
+  }
+
+  // Charger les périodes d'un exercice
+  private loadPeriodes(exerciceId: number): void {
+    this.periodeService
+      .getAll({ exercice_rfk: this.getExerciceRfk(exerciceId), per_page: 100 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.periodes.set(res.data);
+        },
+        error: () => {
+          this.periodes.set([]);
+        },
+      });
+  }
+
+  // Helper pour obtenir le rfk d'un exercice à partir de son id
+  private getExerciceRfk(exerciceId: number): string {
+    const ex = this.exercices().find((e) => e.id === exerciceId);
+    return ex?.rfk ?? '';
+  }
+
+  // Chargement des données du bureau avec filtres
+  private loadData(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    const filters: BureauOperationsFilters = {
+      exercice_id: this.selectedExerciceId() ?? undefined,
+      periode_id: this.selectedPeriodeId() ?? undefined,
+      type: this.selectedType() ?? undefined,
+      search: this.searchTerm() || undefined,
+      per_page: this.perPage,
+      page: this.currentPage(),
+    };
+
+    this.bureauService
+      .getOperations(this.bureauRfk(), filters)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.bureauData.set(data);
+          this.loading.set(false);
+
+          // Filet de sécurité : si la page courante dépasse le nombre
+          // réel de pages (ex. changement de filtre réduisant le total),
+          // on se replie sur la dernière page valide et on recharge.
+          const lastPage = data.operations.last_page ?? 1;
+          if (this.currentPage() > lastPage) {
+            this.currentPage.set(lastPage);
+            this.loadData();
+          }
+        },
+        error: (err) => {
+          this.error.set(
+            err.message || 'Erreur lors du chargement des données.',
+          );
+          this.loading.set(false);
+        },
+      });
+  }
+
+  // Changement d'exercice
+  onExerciceChange(exerciceId: number | null): void {
+    this.selectedExerciceId.set(exerciceId);
+    this.selectedPeriodeId.set(null); // réinitialiser la période
+    this.currentPage.set(1);
+    if (exerciceId) {
+      this.loadPeriodes(exerciceId);
+    } else {
+      this.periodes.set([]);
+    }
+    this.loadData();
+  }
+
+  // Changement de période
+  onPeriodeChange(periodeId: number | null): void {
+    this.selectedPeriodeId.set(periodeId);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Changement de type
+  onTypeChange(type: string): void {
+    this.selectedType.set(
+      type === 'all' ? null : (type as 'entree' | 'sortie'),
+    );
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Recherche
+  onSearch(): void {
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Pagination
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadData();
+  }
+
+  // Rafraîchir
+  refresh(): void {
+    this.loadData();
+  }
+
+  // Formatage des montants (pour l'affichage)
+  formatMontant(montant: number): string {
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(montant);
+  }
+}

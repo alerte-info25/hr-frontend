@@ -41,7 +41,7 @@ export class DepenseComponent implements OnInit {
   private fournisseurService = inject(FournisseurService);
   private bureauService = inject(BureauService);
 
-  //  Référentiels pour les selects
+  // Référentiels pour les selects
   exercices = signal<ExerciceModel[]>([]);
   periodes = signal<Periode[]>([]);
   typesDepense = signal<any[]>([]);
@@ -50,7 +50,7 @@ export class DepenseComponent implements OnInit {
   bureaux = signal<any[]>([]);
   isLoadingRefs = signal(true);
 
-  //  Liste
+  // Liste
   isLoadingList = signal(false);
   depenses = signal<Depense[]>([]);
   currentPage = signal(1);
@@ -58,18 +58,23 @@ export class DepenseComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // skeleton loading
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
   // Filtres liste
   filterExerciceId = '';
   filterTypeId = '';
   filterMode = '';
   filterSearch = '';
 
-  //  Stats dérivées
+  // Stats dérivées
   totalMontant = computed(() =>
     this.depenses().reduce((sum, d) => sum + Number(d.montant), 0),
   );
 
-  //  Formulaire
+  // Formulaire
   editingRfk = signal<string | null>(null);
   isEditMode = computed(() => this.editingRfk() !== null);
   isSaving = signal(false);
@@ -90,11 +95,11 @@ export class DepenseComponent implements OnInit {
     description: ['', [Validators.required, Validators.maxLength(500)]],
   });
 
-  //  Suppression
+  // Suppression
   isDeleting = signal<string | null>(null);
   deleteError = signal<string | null>(null);
 
-  //  Labels
+  // Labels
   readonly modePaiementLabels = MODE_PAIEMENT_LABELS;
   readonly modePaiementIcons = MODE_PAIEMENT_ICONS;
   readonly modesOptions = Object.entries(MODE_PAIEMENT_LABELS) as [
@@ -103,69 +108,84 @@ export class DepenseComponent implements OnInit {
   ][];
   readonly Math = Math;
 
-  //  Lifecycle
+  // Lifecycle
   ngOnInit(): void {
     this.loadReferentiels();
   }
 
-  //  Chargement de tous les référentiels
+  // Chargement SÉQUENTIEL des référentiels (1 connexion à la fois)
   private loadReferentiels(): void {
     this.isLoadingRefs.set(true);
-    let done = 0;
-    const check = () => {
-      if (++done === 5) this.isLoadingRefs.set(false);
-    };
+    this.loadExercices();
+  }
 
-    this.exerciceService.getAll({ per_page: 100 }).subscribe({
+  private loadExercices(): void {
+    this.exerciceService.getAll({ per_page: 30 }).subscribe({
       next: (r) => {
         this.exercices.set(r.data.filter((e) => !e.est_cloture));
-        // Pré-sélectionner l'exercice actif
         const actif = r.data.find((e) => e.est_actif && !e.est_cloture);
         if (actif) {
           this.form.patchValue({ exercice_id: actif.id });
           this.onExerciceChange(actif.id);
         }
-        check();
+        this.loadTypesDepense();
       },
-      error: check,
-    });
-
-    this.typeDepenseService.getAll({ per_page: 100 }).subscribe({
-      next: (r) => {
-        this.typesDepense.set(r.data);
-        check();
+      error: () => {
+        this.isLoadingRefs.set(false);
       },
-      error: check,
     });
-
-    this.compteService.getAll({ per_page: 100 }).subscribe({
-      next: (r) => {
-        this.comptes.set(r.data);
-        check();
-      },
-      error: check,
-    });
-
-    this.fournisseurService.getAll({ per_page: 100 }).subscribe({
-      next: (r) => {
-        this.fournisseurs.set(r.data);
-        check();
-      },
-      error: check,
-    });
-
-    this.bureauService.getAll({ per_page: 100 }).subscribe({
-      next: (bureaux) => {
-        this.bureaux.set(bureaux);
-        check();
-      },
-      error: check,
-    });
-
-    this.loadList();
   }
 
-  //  Changement d'exercice → recharge les périodes
+  private loadTypesDepense(): void {
+    this.typeDepenseService.getAll({ per_page: 30 }).subscribe({
+      next: (r) => {
+        this.typesDepense.set(r.data);
+        this.loadComptes();
+      },
+      error: () => {
+        this.isLoadingRefs.set(false);
+      },
+    });
+  }
+
+  private loadComptes(): void {
+    this.compteService.getAll({ per_page: 30 }).subscribe({
+      next: (r) => {
+        this.comptes.set(r.data);
+        this.loadFournisseurs();
+      },
+      error: () => {
+        this.isLoadingRefs.set(false);
+      },
+    });
+  }
+
+  private loadFournisseurs(): void {
+    this.fournisseurService.getAll({ per_page: 30 }).subscribe({
+      next: (r) => {
+        this.fournisseurs.set(r.data);
+        this.loadBureaux();
+      },
+      error: () => {
+        this.isLoadingRefs.set(false);
+      },
+    });
+  }
+
+  private loadBureaux(): void {
+    this.bureauService.getAll({ per_page: 30 }).subscribe({
+      next: (res) => {
+        this.bureaux.set(res.data); // .data extrait le tableau depuis PaginatedResponse
+        this.isLoadingRefs.set(false);
+        this.loadList();
+      },
+      error: () => {
+        this.isLoadingRefs.set(false);
+      },
+    });
+  }
+
+  // Changement d'exercice → recharge les périodes
   onExerciceChange(exerciceId: number | string): void {
     this.form.patchValue({ periode_id: null });
     this.periodes.set([]);
@@ -177,16 +197,16 @@ export class DepenseComponent implements OnInit {
     if (!ex) return;
 
     this.periodeService
-      .getAll({ exercice_rfk: ex.rfk, per_page: 100 })
+      .getAll({ exercice_rfk: ex.rfk, per_page: 30 })
       .subscribe({
         next: (r) => {
           this.periodes.set(r.data.filter((p) => !p.est_cloturee));
-          this.form.get('periode_id')?.enable(); // ← réactive après chargement
+          this.form.get('periode_id')?.enable();
         },
       });
   }
 
-  //  Chargement liste
+  // Chargement liste
   loadList(): void {
     this.isLoadingList.set(true);
     this.depenseService
@@ -228,7 +248,7 @@ export class DepenseComponent implements OnInit {
     return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
   }
 
-  //  Formulaire
+  // Formulaire
   resetForm(): void {
     this.editingRfk.set(null);
     this.formError.set(null);
@@ -246,7 +266,6 @@ export class DepenseComponent implements OnInit {
       reference_paiement: '',
       description: '',
     });
-    // Repré-sélectionner l'exercice actif
     const actif = this.exercices().find((e) => e.est_actif);
     if (actif) {
       this.form.patchValue({ exercice_id: actif.id });
@@ -264,7 +283,6 @@ export class DepenseComponent implements OnInit {
     this.formError.set(null);
     this.formSuccess.set(null);
 
-    // Charger d'abord les périodes de l'exercice
     this.onExerciceChange(d.exercice_id);
 
     this.form.patchValue({
@@ -297,7 +315,7 @@ export class DepenseComponent implements OnInit {
     this.formSuccess.set(null);
 
     const payload = this.form.value;
-    
+
     const request$ = this.isEditMode()
       ? this.depenseService.update(this.editingRfk()!, payload)
       : this.depenseService.create(payload);
@@ -320,7 +338,7 @@ export class DepenseComponent implements OnInit {
     });
   }
 
-  //  Suppression
+  // Suppression
   deleteDepense(d: Depense): void {
     if (
       !confirm(
@@ -345,7 +363,7 @@ export class DepenseComponent implements OnInit {
     });
   }
 
-  //  Helpers formulaire
+  // Helpers formulaire
   isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);

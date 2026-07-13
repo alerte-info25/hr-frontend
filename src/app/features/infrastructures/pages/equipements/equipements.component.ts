@@ -88,7 +88,7 @@ export class EquipementsComponent implements OnInit {
 
     // Filtre bureau
     if (this.selectedBureau()) {
-      console.log(this.selectedBureau());
+      // console.log(this.selectedBureau());
       result = result.filter(e => e.bureau_slug === this.selectedBureau());
     }
 

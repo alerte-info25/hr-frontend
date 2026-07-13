@@ -3,8 +3,10 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment.developpement';
 import {
   ApiResponse,
+  BureauDetailData,
   BureauFilters,
   BureauModel,
+  BureauOperationsFilters,
   BureauPayload,
   BureauStats,
   PaginatedResponse,
@@ -18,7 +20,8 @@ export class BureauService {
   private http = inject(HttpClient);
   private url = `${environment.apiUrl}caisse/bureaux`;
 
-  getAll(filters?: BureauFilters): Observable<BureauModel[]> {
+  // Retourne la réponse paginée complète (current_page, last_page, total, data...)
+  getAll(filters?: BureauFilters): Observable<PaginatedResponse<BureauModel>> {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -34,7 +37,7 @@ export class BureauService {
           if (!res.success || !res.data) {
             throw new Error(res.message || 'Erreur API');
           }
-          return res.data.data; // extraire le tableau
+          return res.data; // PaginatedResponse complet
         }),
       );
   }
@@ -48,6 +51,59 @@ export class BureauService {
         return res.data;
       }),
     );
+  }
+
+  // Stats globales tous bureaux confondus
+  getGlobalStats(): Observable<BureauStats> {
+    return this.http
+      .get<ApiResponse<BureauStats>>(`${this.url}/global-stats`)
+      .pipe(
+        map((res) => {
+          if (!res.success || !res.data) {
+            throw new Error(res.message || 'Erreur API');
+          }
+          return res.data;
+        }),
+      );
+  }
+
+  getStats(rfk: string): Observable<BureauStats> {
+    return this.http
+      .get<ApiResponse<BureauStats>>(`${this.url}/${rfk}/stats`)
+      .pipe(
+        map((res) => {
+          if (!res.success || !res.data) {
+            throw new Error(res.message || 'Erreur API');
+          }
+          return res.data;
+        }),
+      );
+  }
+
+  getOperations(
+    rfk: string,
+    filters?: BureauOperationsFilters,
+  ): Observable<BureauDetailData> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, String(value));
+        }
+      });
+    }
+    return this.http
+      .get<
+        ApiResponse<BureauDetailData>
+      >(`${this.url}/${rfk}/operations`, { params })
+      .pipe(
+        map((res) => {
+          if (!res.success || !res.data) {
+            throw new Error(res.message || 'Erreur API');
+          }
+          return res.data;
+        }),
+      );
   }
 
   create(payload: BureauPayload): Observable<BureauModel> {
@@ -83,9 +139,7 @@ export class BureauService {
         if (!res.success) {
           throw new Error(res.message || 'Erreur suppression');
         }
-        // ne rien retourner, data est null
       }),
     );
   }
-
 }

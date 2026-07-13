@@ -1,23 +1,24 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
-import { environment } from '../../../environments/environment.developpement';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { DashboardData } from '../../models/Caisse/dashboard.model';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-}
+import { environment } from '../../../environments/environment.developpement';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardCaisseService {
   private http = inject(HttpClient);
-  private url = `${environment.apiUrl}caisse/dashboard`;
+  private apiUrl = environment.apiUrl;
 
-  getOverview(): Observable<DashboardData> {
+  getOverview(exerciceRfk?: string): Observable<DashboardData> {
+    let params = new HttpParams();
+    if (exerciceRfk) {
+      params = params.set('exercice_rfk', exerciceRfk);
+    }
     return this.http
-      .get<ApiResponse<DashboardData>>(this.url)
-      .pipe(map((res) => res.data!));
+      .get<{
+        success: boolean;
+        data: DashboardData;
+      }>(`${this.apiUrl}caisse/dashboard`, { params })
+      .pipe(map((res) => res.data));
   }
 }

@@ -1,4 +1,13 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 import { CommonModule } from '@angular/common';
@@ -14,11 +23,13 @@ import {
   imports: [ReactiveFormsModule, LoaderComponent, CommonModule],
   templateUrl: './exercice.component.html',
   styleUrl: './exercice.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush, // 
 })
 export class ExerciceComponent implements OnInit {
   private fb = inject(FormBuilder);
   private exerciceService = inject(ExerciceComptableService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef); // 
 
   loader = signal(false);
   success = signal(false);
@@ -27,11 +38,10 @@ export class ExerciceComponent implements OnInit {
 
   exercices = signal<ExerciceModel[]>([]);
 
-  // Pagination
   currentPage = signal(1);
   lastPage = signal(1);
   total = signal(0);
-  perPage = signal(15);
+  perPage = signal(15); //  RÉDUIT
 
   pageRange = computed(() => {
     const current = this.currentPage();
@@ -58,6 +68,11 @@ export class ExerciceComponent implements OnInit {
     est_actif: [true],
   });
 
+  //  TrackBy
+  trackByRfk(index: number, item: ExerciceModel): string {
+    return item.rfk;
+  }
+
   ngOnInit(): void {
     this.loadData();
   }
@@ -66,6 +81,7 @@ export class ExerciceComponent implements OnInit {
     this.loader.set(true);
     this.exerciceService
       .getAll({ page: this.currentPage(), per_page: this.perPage() })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (paginated) => {
           const liste = Array.isArray(paginated?.data) ? paginated.data : [];
@@ -90,19 +106,10 @@ export class ExerciceComponent implements OnInit {
     this.loadData();
   }
 
-  // true = exercice en cours (actif et non clôturé)
   isActif(exercice: ExerciceModel): boolean {
     return exercice.est_actif && !exercice.est_cloture;
   }
 
-  // Libellé du badge statut
-  getStatutLabel(exercice: ExerciceModel): string {
-    if (exercice.est_cloture) return 'Clôturé';
-    if (exercice.est_actif) return 'Actif';
-    return 'Inactif';
-  }
-
-  // Classe CSS du badge statut
   getStatutClass(exercice: ExerciceModel): string {
     if (exercice.est_cloture) return 'closed';
     if (exercice.est_actif) return 'active';
@@ -119,31 +126,34 @@ export class ExerciceComponent implements OnInit {
 
     this.cloturerRfk.set(rfk);
 
-    this.exerciceService.cloturer(rfk).subscribe({
-      next: (updated) => {
-        this.exercices.update((liste) =>
-          liste.map((e) =>
-            e.rfk === rfk
-              ? {
-                  ...e,
-                  est_cloture: updated.est_cloture,
-                  est_actif: updated.est_actif,
-                }
-              : e,
-          ),
-        );
-        this.cloturerRfk.set(null);
-        this.success.set(true);
-        setTimeout(() => this.success.set(false), 3000);
-      },
-      error: (err) => {
-        this.errorMessage.set(
-          err.error?.message ?? 'Erreur lors de la clôture',
-        );
-        this.cloturerRfk.set(null);
-        setTimeout(() => this.errorMessage.set(null), 3000);
-      },
-    });
+    this.exerciceService
+      .cloturer(rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.exercices.update((liste) =>
+            liste.map((e) =>
+              e.rfk === rfk
+                ? {
+                    ...e,
+                    est_cloture: updated.est_cloture,
+                    est_actif: updated.est_actif,
+                  }
+                : e,
+            ),
+          );
+          this.cloturerRfk.set(null);
+          this.success.set(true);
+          setTimeout(() => this.success.set(false), 3000);
+        },
+        error: (err) => {
+          this.errorMessage.set(
+            err.error?.message ?? 'Erreur lors de la clôture',
+          );
+          this.cloturerRfk.set(null);
+          setTimeout(() => this.errorMessage.set(null), 3000);
+        },
+      });
   }
 
   onSubmit(): void {
@@ -160,26 +170,30 @@ export class ExerciceComponent implements OnInit {
       libelle: `Exercice ${raw.annee}`,
     };
 
-    this.exerciceService.create(payload).subscribe({
-      next: (created) => {
-        this.loadData();
-
-        this.success.set(true);
-        this.loader.set(false);
-        this.exerciceForm.reset({
-          annee: '',
-          date_debut: '',
-          date_fin: '',
-          libelle: '',
-        });
-        setTimeout(() => this.success.set(false), 3000);
-      },
-      error: (err) => {
-        this.errorMessage.set(err.error?.message ?? 'Une erreur est survenue');
-        this.loader.set(false);
-        setTimeout(() => this.errorMessage.set(null), 3000);
-      },
-    });
+    this.exerciceService
+      .create(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadData();
+          this.success.set(true);
+          this.loader.set(false);
+          this.exerciceForm.reset({
+            annee: '',
+            date_debut: '',
+            date_fin: '',
+            libelle: '',
+          });
+          setTimeout(() => this.success.set(false), 3000);
+        },
+        error: (err) => {
+          this.errorMessage.set(
+            err.error?.message ?? 'Une erreur est survenue',
+          );
+          this.loader.set(false);
+          setTimeout(() => this.errorMessage.set(null), 3000);
+        },
+      });
   }
 
   onConsultation(rfk: string): void {

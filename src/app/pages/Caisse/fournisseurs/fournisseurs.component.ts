@@ -1,11 +1,20 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule, DecimalPipe } from '@angular/common'; 
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Fournisseur } from '../../../models/Caisse/fournisseur.model';
 import { FournisseurService } from '../../../services/Caisse/fournisseurs.service';
@@ -14,42 +23,46 @@ import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.
 @Component({
   selector: 'app-fournisseur',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    LoaderComponent,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent],
   templateUrl: './fournisseurs.component.html',
   styleUrl: './fournisseurs.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush, //
 })
 export class FournisseursComponent implements OnInit {
   private fb = inject(FormBuilder);
   private fournisseurService = inject(FournisseurService);
+  private destroyRef = inject(DestroyRef); //
 
   isLoadingList = signal(false);
   fournisseurs = signal<Fournisseur[]>([]);
-  searchQuery = '';
+  searchQuery = signal(''); //
 
   currentPage = signal(1);
-  perPage = 10;
+  perPage = 15; //  RÉDUIT
   total = signal(0);
   lastPage = signal(1);
 
+  // skeletton loading
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
   totalFournisseurs = computed(() => this.total());
+
   totalDepenses = computed(() =>
     this.fournisseurs().reduce((sum, f) => sum + (f.depenses_count ?? 0), 0),
   );
+
   fournisseursActifs = computed(
     () => this.fournisseurs().filter((f) => (f.depenses_count ?? 0) > 0).length,
   );
+
   totalDepensesMontant = computed(() =>
-    // ← ajout
-    this.fournisseurs().reduce(
-      (sum, f) => sum + (f.depenses_sum_montant ?? 0),
-      0,
-    ),
-  );
+  this.fournisseurs().reduce(
+    (sum, f) => sum + Number(f.depenses_sum_montant ?? 0),
+    0,
+  ),
+);
 
   editingRfk = signal<string | null>(null);
   isEditMode = computed(() => this.editingRfk() !== null);
@@ -73,6 +86,10 @@ export class FournisseursComponent implements OnInit {
 
   readonly Math = Math;
 
+  trackByRfk(index: number, item: Fournisseur): string {
+    return item.rfk;
+  }
+
   ngOnInit(): void {
     this.loadList();
   }
@@ -81,10 +98,11 @@ export class FournisseursComponent implements OnInit {
     this.isLoadingList.set(true);
     this.fournisseurService
       .getAll({
-        search: this.searchQuery || undefined,
+        search: this.searchQuery() || undefined,
         page: this.currentPage(),
         per_page: this.perPage,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.fournisseurs.set(res.data);
@@ -154,7 +172,7 @@ export class FournisseursComponent implements OnInit {
       ? this.fournisseurService.update(this.editingRfk()!, payload)
       : this.fournisseurService.create(payload);
 
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.formSuccess.set(
           this.isEditMode()
@@ -181,18 +199,21 @@ export class FournisseursComponent implements OnInit {
       return;
     this.isDeleting.set(f.rfk);
     this.deleteError.set(null);
-    this.fournisseurService.delete(f.rfk).subscribe({
-      next: () => {
-        this.isDeleting.set(null);
-        this.loadList();
-      },
-      error: (err) => {
-        this.deleteError.set(
-          err?.error?.message ?? 'Impossible de supprimer ce fournisseur.',
-        );
-        this.isDeleting.set(null);
-      },
-    });
+    this.fournisseurService
+      .delete(f.rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isDeleting.set(null);
+          this.loadList();
+        },
+        error: (err) => {
+          this.deleteError.set(
+            err?.error?.message ?? 'Impossible de supprimer ce fournisseur.',
+          );
+          this.isDeleting.set(null);
+        },
+      });
   }
 
   isInvalid(field: string): boolean {

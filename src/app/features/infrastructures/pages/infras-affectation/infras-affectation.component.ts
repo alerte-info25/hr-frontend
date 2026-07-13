@@ -435,7 +435,7 @@ export class InfrasAffectationComponent implements OnInit, OnDestroy {
       'Motif': a.motif || ''
     }));
 
-    console.log('Export des données:', dataToExport);
+    // console.log('Export des données:', dataToExport);
     this.snackBar.open('Export démarré', 'Fermer', { duration: 2000 });
   }
 }

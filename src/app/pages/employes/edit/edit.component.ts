@@ -1,5 +1,11 @@
 import { Component, Input } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MaterialModule } from '../../../../../material.module';
 import { CommonModule } from '@angular/common';
@@ -23,52 +29,43 @@ export interface Employee {
   nationalite: string;
   paysResidence: string;
   adresse: string;
-  numeroSocial:string;
-  emailProfessionnel:string;
+  numeroSocial: string;
+  emailProfessionnel: string;
   typePiece: string;
   service: string;
   fonction: string;
   bureau: string;
   estResponsable: number;
+  caissePermission: number;
   numeroPiece: string;
   photo?: File | null;
 }
 @Component({
   selector: 'app-edit',
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MaterialModule,
-  ],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './edit.component.html',
-  styleUrl: './edit.component.scss'
+  styleUrl: './edit.component.scss',
 })
 export class EditComponent {
-@Input() employeeData?: Employee;
+  @Input() employeeData?: Employee;
   selectedFile: File | null = null;
   currentStep = 1;
   totalSteps = 2;
   isLoading = false;
-  theEmploye:any;
+  theEmploye: any;
   personalInfoForm!: FormGroup;
   professionalInfoForm!: FormGroup;
-  fonctions:any[]=[];
-  services:any[]=[];
-  bureau:any[]=[];
+  fonctions: any[] = [];
+  services: any[] = [];
+  bureau: any[] = [];
   selectedPhoto: File | null = null;
   photoPreview: string | null = null;
   currentPhotoUrl: string | null = null;
   photoChanged = false;
   isAdmin: boolean = false;
-  nationalites = NATIONALITES
-  pays = PAYS
-  typesPiece = [
-    'Carte d\'identité',
-    'Passeport',
-    'Permis de conduire'
-  ];
-
+  nationalites = NATIONALITES;
+  pays = PAYS;
+  typesPiece = ["Carte d'identité", 'Passeport', 'Permis de conduire'];
 
   constructor(
     private fb: FormBuilder,
@@ -79,12 +76,12 @@ export class EditComponent {
     private fonctionSvr: FonctionsService,
     private bureauSvr: BureauService,
     private snackBar: MatSnackBar,
-    private authSvr: AuthService
+    private authSvr: AuthService,
   ) {}
 
   ngOnInit() {
     const ad = this.authSvr.isDG();
-    if(ad){
+    if (ad) {
       this.isAdmin = true;
     }
     this.initializeForms();
@@ -97,7 +94,6 @@ export class EditComponent {
     window.history.back();
   }
 
-
   initializeForms() {
     this.personalInfoForm = this.fb.group({
       nom: ['', [Validators.required, Validators.minLength(2)]],
@@ -106,10 +102,13 @@ export class EditComponent {
       dateNaissance: ['', Validators.required],
       lieuNaissance: ['', Validators.required],
       emailPersonnel: ['', [Validators.required, Validators.email]],
-      telephone: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]{8,15}$/)]],
+      telephone: [
+        '',
+        [Validators.required, Validators.pattern(/^\+?[0-9\s\-\(\)]{8,15}$/)],
+      ],
       nationalite: ['', Validators.required],
       paysResidence: ['', Validators.required],
-      adresse: ['', Validators.required]
+      adresse: ['', Validators.required],
     });
 
     this.professionalInfoForm = this.fb.group({
@@ -121,44 +120,45 @@ export class EditComponent {
       id_bureau: [''],
       emailProfessionnel: [''],
       estResponsable: [0],
-      photo: [null]
+      caissePermission: [0],
+      photo: [null],
     });
   }
-  getFonctionListe(){
+  getFonctionListe() {
     this.fonctionSvr.getList().subscribe({
       next: (data) => {
-        this.fonctions = data
-        this.isLoading = false
+        this.fonctions = data;
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Erreur de chargement des fonction', err);
         this.isLoading = false;
-      }
-    })
+      },
+    });
   }
-  getBureauListe(){
+  getBureauListe() {
     this.bureauSvr.getList().subscribe({
       next: (data) => {
-        this.bureau = data
-        this.isLoading = false
+        this.bureau = data;
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Erreur de chargement des bureau', err);
         this.isLoading = false;
-      }
-    })
+      },
+    });
   }
-  getServiceListe(){
+  getServiceListe() {
     this.svrService.getList().subscribe({
       next: (data) => {
-        this.services = data
-        this.isLoading = false
+        this.services = data;
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Erreur de chargement des services', err);
         this.isLoading = false;
-      }
-    })
+      },
+    });
   }
   loadEmployeeData() {
     const slug = this.route.snapshot.paramMap.get('id');
@@ -181,7 +181,7 @@ export class EditComponent {
           telephone: employee.telephone,
           nationalite: employee.nationnalite,
           paysResidence: employee.paysResidence,
-          adresse: employee.adresse
+          adresse: employee.adresse,
         });
 
         // Formulaire pro
@@ -194,7 +194,8 @@ export class EditComponent {
           id_fonction: employee.id_fonction,
           id_bureau: employee.id_bureau,
           estResponsable: employee.responsable_equipement,
-          photo: null
+          caissePermission: employee.caisse_permission ? 1 : 0,
+          photo: null,
         });
 
         // Photo
@@ -210,12 +211,11 @@ export class EditComponent {
         this.snackBar.open(
           "Erreur lors de la récupération de l'employé",
           'Fermer',
-          { duration: 3000, panelClass: ['toast-warning'] }
+          { duration: 3000, panelClass: ['toast-warning'] },
         );
-      }
+      },
     });
   }
-
 
   nextStep() {
     if (this.currentStep === 1 && this.personalInfoForm.valid) {
@@ -238,16 +238,14 @@ export class EditComponent {
 
       // Écouter l'événement de lecture
       reader.onload = (event: any) => {
-        this.selectedFile  = event.target.result;
-
+        this.selectedFile = event.target.result;
       };
 
       // Lancer la lecture du fichier
       reader.readAsDataURL(file);
-    }else{
-      this.selectedFile = null
+    } else {
+      this.selectedFile = null;
     }
-
   }
 
   removePhoto() {
@@ -276,7 +274,14 @@ export class EditComponent {
   onResponsableChange(event: any) {
     const value = event.target.checked ? 1 : 0;
     this.professionalInfoForm.patchValue({
-      estResponsable: value
+      estResponsable: value,
+    });
+  }
+
+  onCaissePermissionChange(event: any) {
+    const value = event.target.checked ? 1 : 0;
+    this.professionalInfoForm.patchValue({
+      caissePermission: value,
     });
   }
 
@@ -288,43 +293,54 @@ export class EditComponent {
         id: this.employeeData?.id || this.theEmploye.id,
         ...this.personalInfoForm.value,
         ...this.professionalInfoForm.value,
-        estResponsable: this.professionalInfoForm.get('estResponsable')?.value || 0
+        estResponsable:
+          this.professionalInfoForm.get('estResponsable')?.value || 0,
       };
       if (this.selectedFile) {
-      updatedEmployee.photo = this.selectedFile;
-    }
+        updatedEmployee.photo = this.selectedFile;
+      }
 
       // Simulation d'une mise à jour
-      this.employeSvr.updateEmployes(this.theEmploye.slug,updatedEmployee).subscribe({
-        next: () => {
-          this.isLoading = false;
-          this.snackBar.open('Employé modifié avec succès ✅', 'Fermer', {
-            duration: 4000,
-            panelClass: ['toast-success']
-          });
-          this.router.navigate(['/']);
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.snackBar.open('Échec de la modification de l’employé ❌', 'Fermer', {
-            duration: 4000,
-            panelClass: ['toast-error']
-          });
-        }
-      });
+      this.employeSvr
+        .updateEmployes(this.theEmploye.slug, updatedEmployee)
+        .subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.snackBar.open('Employé modifié avec succès ✅', 'Fermer', {
+              duration: 4000,
+              panelClass: ['toast-success'],
+            });
+            this.router.navigate(['/']);
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.snackBar.open(
+              'Échec de la modification de l’employé ❌',
+              'Fermer',
+              {
+                duration: 4000,
+                panelClass: ['toast-error'],
+              },
+            );
+          },
+        });
     } else {
       this.markFormGroupTouched(this.professionalInfoForm);
       this.markFormGroupTouched(this.personalInfoForm);
-       this.snackBar.open('Échec de la modification de l’employé ❌', 'Fermer', {
-          duration: 4000,
-          panelClass: ['toast-error']
-        });
+      this.snackBar.open('Échec de la modification de l’employé ❌', 'Fermer', {
+        duration: 4000,
+        panelClass: ['toast-error'],
+      });
     }
   }
 
   onCancel() {
     if (this.hasChanges()) {
-      if (confirm('Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir annuler ?')) {
+      if (
+        confirm(
+          'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir annuler ?',
+        )
+      ) {
         // this.router.navigate(['/employees']);
         this.resetToOriginal();
       }
@@ -345,20 +361,24 @@ export class EditComponent {
     const originalEmployee = this.employeeData || this.theEmploye;
 
     // Vérifier les changements dans les informations personnelles
-    const personalChanged = Object.keys(currentPersonalData).some(key =>
-      currentPersonalData[key] !== originalEmployee[key as keyof Employee]
+    const personalChanged = Object.keys(currentPersonalData).some(
+      (key) =>
+        currentPersonalData[key] !== originalEmployee[key as keyof Employee],
     );
 
     // Vérifier les changements dans les informations professionnelles
-    const professionalChanged = Object.keys(currentProfessionalData).some(key =>
-      key !== 'photo' && currentProfessionalData[key] !== originalEmployee[key as keyof Employee]
+    const professionalChanged = Object.keys(currentProfessionalData).some(
+      (key) =>
+        key !== 'photo' &&
+        currentProfessionalData[key] !==
+          originalEmployee[key as keyof Employee],
     );
 
     return personalChanged || professionalChanged || this.photoChanged;
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
     });
@@ -374,7 +394,8 @@ export class EditComponent {
     if (field && field.errors && field.touched) {
       if (field.errors['required']) return 'Ce champ est requis';
       if (field.errors['email']) return 'Email invalide';
-      if (field.errors['minlength']) return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
+      if (field.errors['minlength'])
+        return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
       if (field.errors['pattern']) return 'Format invalide';
     }
     return '';

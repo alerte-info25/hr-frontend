@@ -41,6 +41,11 @@ export class PeriodeComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // skeleton pour le chargement de la liste
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
   //  Stats dérivées
   totalPeriodes = computed(() => this.total());
   periodesOuvertes = computed(

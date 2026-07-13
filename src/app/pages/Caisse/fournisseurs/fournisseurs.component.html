@@ -20,6 +20,7 @@
     </div>
   }
 
+  <!-- Stats Cards -->
   <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card stats-card border-left-primary">
@@ -53,7 +54,7 @@
                 } @else {
                   {{ fournisseursActifs() }}
                   <small class="text-muted fs-6 fw-normal ms-1"
-                    >avec dépenses</small
+                    >avec sorties (dépenses)</small
                   >
                 }
               </h3>
@@ -69,7 +70,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total dépenses liées</p>
+              <p class="stats-label">Total des sorties liées</p>
               <h3 class="stats-value">
                 @if (isLoadingList()) {
                   <span class="placeholder col-4"></span>
@@ -87,7 +88,6 @@
       </div>
     </div>
 
-    <!-- ← nouvelle stat card -->
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card stats-card border-left-danger">
         <div class="card-body">
@@ -110,7 +110,7 @@
     </div>
   </div>
 
-  <!-- Formulaire (inchangé) -->
+  <!-- Formulaire -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="form-card">
@@ -305,8 +305,8 @@
               type="text"
               class="form-control form-control-sm"
               placeholder="Nom, contact, email, tél..."
-              [(ngModel)]="searchQuery"
-              (input)="onSearch()"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event); onSearch()"
               style="width: 240px"
             />
           </div>
@@ -324,35 +324,33 @@
                   <th width="13%">Adresse</th>
                   <th width="7%" class="text-center">Dépenses</th>
                   <th width="12%" class="text-center">Montant total</th>
-                  <!-- ← -->
                   <th width="6%" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
+                <!-- ✅ Structure exclusive -->
                 @if (isLoadingList()) {
-                  @for (_ of [1, 2, 3, 4, 5]; track $index) {
+                  <!-- 🟡 Squelette -->
+                  @for (_ of skeletonArray; track $index) {
                     <tr>
                       <td colspan="9">
-                        <!-- ← 8 → 9 -->
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
                       </td>
                     </tr>
                   }
-                }
-
-                @if (!isLoadingList() && fournisseurs().length === 0) {
+                } @else if (fournisseurs().length === 0) {
+                  <!-- 🔍 Vide -->
                   <tr>
                     <td colspan="9" class="text-center text-muted py-5">
-                      <!-- ← 8 → 9 -->
                       <i class="fas fa-truck fa-2x mb-2 d-block opacity-50"></i>
                       Aucun fournisseur enregistré
-                      @if (searchQuery) {
+                      @if (searchQuery()) {
                         <div class="mt-2">
                           <button
                             class="btn btn-sm btn-outline-secondary"
-                            (click)="searchQuery = ''; onSearch()"
+                            (click)="searchQuery.set(''); onSearch()"
                           >
                             <i class="fas fa-times me-1"></i>Réinitialiser la
                             recherche
@@ -361,119 +359,123 @@
                       }
                     </td>
                   </tr>
-                }
-
-                @for (f of fournisseurs(); track f.rfk; let i = $index) {
-                  <tr [class.table-warning]="editingRfk() === f.rfk">
-                    <td class="text-muted">
-                      {{ (currentPage() - 1) * perPage + i + 1 }}
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div
-                          class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style="
-                            width: 32px;
-                            height: 32px;
-                            font-size: 13px;
-                            font-weight: 600;
-                          "
-                        >
-                          {{ f.nom.charAt(0).toUpperCase() }}
-                        </div>
-                        <div>
-                          <strong>{{ f.nom }}</strong>
-                          @if (editingRfk() === f.rfk) {
-                            <span class="badge bg-warning text-dark ms-1">
-                              <i class="fas fa-edit me-1"></i>édition
-                            </span>
-                          }
-                          <div class="text-muted" style="font-size: 11px">
-                            {{ f.rfk }}
+                } @else {
+                  <!-- ✅ Données -->
+                  @for (
+                    f of fournisseurs();
+                    track trackByRfk($index, f);
+                    let i = $index
+                  ) {
+                    <tr [class.table-warning]="editingRfk() === f.rfk">
+                      <td class="text-muted">
+                        {{ (currentPage() - 1) * perPage + i + 1 }}
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="
+                              width: 32px;
+                              height: 32px;
+                              font-size: 13px;
+                              font-weight: 600;
+                            "
+                          >
+                            {{ f.nom.charAt(0).toUpperCase() }}
+                          </div>
+                          <div>
+                            <strong>{{ f.nom }}</strong>
+                            @if (editingRfk() === f.rfk) {
+                              <span class="badge bg-warning text-dark ms-1">
+                                <i class="fas fa-edit me-1"></i>édition
+                              </span>
+                            }
+                            <div class="text-muted" style="font-size: 11px">
+                              {{ f.rfk }}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td class="text-muted">{{ f.contact || "—" }}</td>
-                    <td>
-                      @if (f.email) {
-                        <a
-                          [href]="'mailto:' + f.email"
-                          class="text-decoration-none text-primary"
-                        >
-                          <i
-                            class="fas fa-envelope me-1 text-muted"
-                            style="font-size: 11px"
-                          ></i
-                          >{{ f.email }}
-                        </a>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-                    <td>
-                      @if (f.telephone) {
-                        <a
-                          [href]="'tel:' + f.telephone"
-                          class="text-decoration-none"
-                        >
-                          <i
-                            class="fas fa-phone me-1 text-muted"
-                            style="font-size: 11px"
-                          ></i
-                          >{{ f.telephone }}
-                        </a>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-                    <td class="text-muted">
-                      <small>{{ f.adresse || "—" }}</small>
-                    </td>
-                    <td class="text-center">
-                      @if ((f.depenses_count ?? 0) > 0) {
-                        <span class="badge bg-danger-subtle text-danger">{{
-                          f.depenses_count
-                        }}</span>
-                      } @else {
-                        <span class="text-muted">0</span>
-                      }
-                    </td>
-
-                    <!-- ← nouvelle cellule montant total -->
-                    <td class="text-center">
-                      @if ((f.depenses_sum_montant ?? 0) > 0) {
-                        <span class="badge bg-danger-subtle text-danger">
-                          {{ f.depenses_sum_montant | number: "1.0-0" }} F
-                        </span>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-
-                    <td class="text-center">
-                      <button
-                        class="btn-icon edit"
-                        title="Modifier"
-                        (click)="editFournisseur(f)"
-                        [disabled]="isDeleting() === f.rfk"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button
-                        class="btn-icon delete"
-                        title="Supprimer"
-                        (click)="deleteFournisseur(f)"
-                        [disabled]="isDeleting() === f.rfk"
-                      >
-                        @if (isDeleting() === f.rfk) {
-                          <span class="spinner-border spinner-border-sm"></span>
+                      </td>
+                      <td class="text-muted">{{ f.contact || "—" }}</td>
+                      <td>
+                        @if (f.email) {
+                          <a
+                            [href]="'mailto:' + f.email"
+                            class="text-decoration-none text-primary"
+                          >
+                            <i
+                              class="fas fa-envelope me-1 text-muted"
+                              style="font-size: 11px"
+                            ></i
+                            >{{ f.email }}
+                          </a>
                         } @else {
-                          <i class="fas fa-trash"></i>
+                          <span class="text-muted">—</span>
                         }
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td>
+                        @if (f.telephone) {
+                          <a
+                            [href]="'tel:' + f.telephone"
+                            class="text-decoration-none"
+                          >
+                            <i
+                              class="fas fa-phone me-1 text-muted"
+                              style="font-size: 11px"
+                            ></i
+                            >{{ f.telephone }}
+                          </a>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                      <td class="text-muted">
+                        <small>{{ f.adresse || "—" }}</small>
+                      </td>
+                      <td class="text-center">
+                        @if ((f.depenses_count ?? 0) > 0) {
+                          <span class="badge bg-danger-subtle text-danger">{{
+                            f.depenses_count
+                          }}</span>
+                        } @else {
+                          <span class="text-muted">0</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        @if ((f.depenses_sum_montant ?? 0) > 0) {
+                          <span class="badge bg-danger-subtle text-danger">
+                            {{ f.depenses_sum_montant | number: "1.0-0" }} F
+                          </span>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        <button
+                          class="btn-icon edit"
+                          title="Modifier"
+                          (click)="editFournisseur(f)"
+                          [disabled]="isDeleting() === f.rfk"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn-icon delete"
+                          title="Supprimer"
+                          (click)="deleteFournisseur(f)"
+                          [disabled]="isDeleting() === f.rfk"
+                        >
+                          @if (isDeleting() === f.rfk) {
+                            <span
+                              class="spinner-border spinner-border-sm"
+                            ></span>
+                          } @else {
+                            <i class="fas fa-trash"></i>
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>

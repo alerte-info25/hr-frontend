@@ -1,0 +1,356 @@
+<!-- Loader global uniquement pendant le tout premier chargement du compte -->
+<app-loader *ngIf="isLoadingCompte && !compte" />
+
+<!-- Erreur de chargement du compte : on ne bloque plus l'utilisateur sans rien lui dire -->
+<div class="container-fluid px-4" *ngIf="errorCompte && !compte">
+  <div
+    class="alert alert-danger d-flex justify-content-between align-items-center"
+  >
+    <span>{{ errorCompte }}</span>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-danger"
+      (click)="retryLoadCompte()"
+    >
+      Réessayer
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid px-4" *ngIf="compte">
+  <!-- Account Header avec navigation -->
+  <div class="account-header">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-3">
+          <a
+            routerLink="/caisse/comptes"
+            class="btn btn-sm btn-outline-secondary me-3"
+          >
+            <i class="fas fa-arrow-left"></i>
+          </a>
+          <span class="account-badge actif" [class.inactif]="!compte.est_actif">
+            {{ compte.est_actif ? "Actif" : "Inactif" }}
+          </span>
+        </div>
+
+        <div class="account-name-large">{{ compte.libelle }}</div>
+        <div class="account-desc">{{ compte.description }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4" *ngIf="stats; else statsLoading">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="stat-card">
+        <div class="stat-icon debit">
+          <i class="fas fa-arrow-down"></i>
+        </div>
+        <div class="stat-label">Total entrées</div>
+        <div class="stat-value">
+          {{ stats.total_recouvrements | number: "1.2-2" }} Fcfa
+        </div>
+        <div class="stat-trend">
+          <span class="trend-up"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="stat-card">
+        <div class="stat-icon credit">
+          <i class="fas fa-arrow-up"></i>
+        </div>
+        <div class="stat-label">Total sorties</div>
+        <div class="stat-value">
+          {{ stats.total_depenses | number: "1.2-2" }} Fcfa
+        </div>
+        <div class="stat-trend">
+          <span class="trend-down"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="stat-card">
+        <div class="stat-icon solde">
+          <i class="fas fa-balance-scale"></i>
+        </div>
+        <div class="stat-label">Solde actuel</div>
+        <div class="stat-value">{{ stats.solde | number: "1.2-2" }} Fcfa</div>
+        <div class="stat-trend">
+          Solde {{ stats.solde >= 0 ? "débiteur" : "créditeur" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="stat-card">
+        <div
+          class="stat-icon"
+          style="
+            background: rgba(244, 180, 0, 0.1);
+            color: var(--primary-yellow);
+          "
+        >
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-label">Nombre d'opérations</div>
+        <div class="stat-value">
+          {{ operationsData?.totaux?.nb_operations || 0 }}
+        </div>
+        <div class="stat-trend"></div>
+      </div>
+    </div>
+  </div>
+  <ng-template #statsLoading>
+    <div class="row mb-4" *ngIf="isLoadingStats">
+      <div class="col-xl-3 col-md-6 mb-4" *ngFor="let i of [1, 2, 3, 4]">
+        <div class="stat-card skeleton-card"></div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Toolbar pour les opérations -->
+  <div class="operations-toolbar">
+    <!-- Filtre de recherche -->
+    <div class="search-box position-relative">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Rechercher..."
+        [(ngModel)]="filterSearch"
+        (input)="onSearchInput()"
+        [disabled]="isLoadingOperations"
+      />
+      <span class="search-spinner" *ngIf="isLoadingOperations">
+        <i class="fas fa-spinner fa-spin"></i>
+      </span>
+    </div>
+
+    <div class="quick-filters" [class.disabled]="isLoadingOperations">
+      <span
+        class="filter-pill"
+        [class.active]="filterType === ''"
+        [class.disabled]="isLoadingOperations"
+        (click)="!isLoadingOperations && (filterType = ''); onFilterChange()"
+        >Toutes</span
+      >
+      <span
+        class="filter-pill"
+        [class.active]="filterType === 'entree'"
+        [class.disabled]="isLoadingOperations"
+        (click)="
+          !isLoadingOperations && (filterType = 'entree'); onFilterChange()
+        "
+        >Entrées</span
+      >
+      <span
+        class="filter-pill"
+        [class.active]="filterType === 'sortie'"
+        [class.disabled]="isLoadingOperations"
+        (click)="
+          !isLoadingOperations && (filterType = 'sortie'); onFilterChange()
+        "
+        >Sorties</span
+      >
+    </div>
+  </div>
+
+  <!-- Tableau des opérations -->
+  <div class="operations-table-container position-relative">
+    <!-- Overlay de chargement : visible pendant pagination/filtre/recherche,
+         le tableau précédent reste affiché en dessous (pas de flash de contenu vide) -->
+    <div class="table-loading-overlay" *ngIf="isLoadingOperations">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Chargement…</span>
+    </div>
+
+    <div
+      class="alert alert-danger d-flex justify-content-between align-items-center m-3"
+      *ngIf="errorOperations"
+    >
+      <span>{{ errorOperations }}</span>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        (click)="retryLoadOperations()"
+      >
+        Réessayer
+      </button>
+    </div>
+
+    <div class="table-responsive" [class.is-loading]="isLoadingOperations">
+      <table class="operations-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Libellé</th>
+            <th>Mode de règlement</th>
+            <th>Fournisseur / Client</th>
+            <th>Entrées (Fcfa)</th>
+            <th>Sorties (Fcfa)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let op of operations; let i = index">
+            <td>{{ op.date | date: "dd/MM/yyyy" }}</td>
+            <td>
+              <span class="journal-badge" [ngClass]="getBadgeClass(op.type)">
+                {{ op.type }}
+              </span>
+            </td>
+            <td>{{ op.libelle || "-" }}</td>
+            <td>{{ op.mode_paiement || "-" }}</td>
+            <td>{{ op.tiers || "-" }}</td>
+            <td
+              [ngClass]="getAmountClass('entree')"
+              *ngIf="op.type === 'entree'"
+            >
+              {{ op.montant | number: "1.2-2" }}
+            </td>
+            <td
+              [ngClass]="getAmountClass('entree')"
+              *ngIf="op.type !== 'entree'"
+            >
+              -
+            </td>
+            <td
+              [ngClass]="getAmountClass('sortie')"
+              *ngIf="op.type === 'sortie'"
+            >
+              {{ op.montant | number: "1.2-2" }}
+            </td>
+            <td
+              [ngClass]="getAmountClass('sortie')"
+              *ngIf="op.type !== 'sortie'"
+            >
+              -
+            </td>
+          </tr>
+          <tr *ngIf="operations.length === 0 && !isLoadingOperations">
+            <td colspan="8" class="text-center">Aucune opération trouvée</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totaux -->
+    <div class="totals-row" *ngIf="operationsData">
+      <div class="total-item">
+        <span class="total-label">Total Entrées:</span>
+        <span class="total-value" style="color: var(--success)"
+          >{{
+            operationsData.totaux.total_entrees | number: "1.2-2"
+          }}
+          Fcfa</span
+        >
+      </div>
+      <div class="total-item">
+        <span class="total-label">Total Sorties:</span>
+        <span class="total-value" style="color: var(--danger)"
+          >{{
+            operationsData.totaux.total_sorties | number: "1.2-2"
+          }}
+          Fcfa</span
+        >
+      </div>
+      <div class="total-item">
+        <span class="total-label">Solde période:</span>
+        <span
+          class="total-value"
+          [style.color]="
+            operationsData.totaux.solde >= 0
+              ? 'var(--success)'
+              : 'var(--danger)'
+          "
+        >
+          {{ operationsData.totaux.solde | number: "1.2-2" }} Fcfa
+        </span>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav *ngIf="totalPages > 1">
+      <ul class="pagination">
+        <li
+          class="page-item"
+          [class.disabled]="currentPage === 1 || isLoadingOperations"
+        >
+          <button
+            type="button"
+            class="page-link"
+            (click)="goToPage(currentPage - 1)"
+          >
+            Précédent
+          </button>
+        </li>
+        <li
+          class="page-item"
+          *ngFor="let p of pagesArray"
+          [class.active]="currentPage === p"
+          [class.disabled]="isLoadingOperations"
+        >
+          <button type="button" class="page-link" (click)="goToPage(p)">
+            {{ p }}
+          </button>
+        </li>
+        <li
+          class="page-item"
+          [class.disabled]="currentPage === totalPages || isLoadingOperations"
+        >
+          <button
+            type="button"
+            class="page-link"
+            (click)="goToPage(currentPage + 1)"
+          >
+            Suivant
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Informations complémentaires -->
+  <div class="row mt-4">
+    <div class="col-md-12 mb-4">
+      <div class="chart-card">
+        <h5 class="mb-3">
+          <i class="fas fa-info-circle me-2"></i> Détails du compte
+        </h5>
+        <table class="table table-sm">
+          <tr>
+            <td style="width: 150px">Date création</td>
+            <td>
+              <strong>{{ compte.created_at | date: "dd/MM/yyyy" }}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td>Dernière opération</td>
+            <td>
+              <strong>{{
+                operations.length
+                  ? (operations[0].date | date: "dd/MM/yyyy")
+                  : "Aucune"
+              }}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td>Mouvements cumulés</td>
+            <td>
+              <strong
+                >{{
+                  operationsData?.totaux?.nb_operations || 0
+                }}
+                opérations</strong
+              >
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

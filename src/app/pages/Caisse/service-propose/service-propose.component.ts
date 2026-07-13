@@ -1,15 +1,25 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule, DecimalPipe } from '@angular/common'; // ← DecimalPipe ajouté
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ServicePropose } from '../../../models/Caisse/service-propose.model';
 import { ServiceProposeService } from '../../../services/Caisse/service-propose.service';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-service-propose',
@@ -19,35 +29,45 @@ import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.
     ReactiveFormsModule,
     FormsModule,
     LoaderComponent,
-  ], 
+    RouterLink,
+  ],
   templateUrl: './service-propose.component.html',
   styleUrl: './service-propose.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush, //
 })
 export class ServiceProposeComponent implements OnInit {
   private fb = inject(FormBuilder);
   private serviceProposeService = inject(ServiceProposeService);
+  private destroyRef = inject(DestroyRef); //
 
   isLoadingList = signal(false);
   services = signal<ServicePropose[]>([]);
-  searchQuery = '';
+  searchQuery = signal(''); //
 
   currentPage = signal(1);
-  perPage = 10;
+  perPage = 15; //  RÉDUIT
   total = signal(0);
   lastPage = signal(1);
+
+  // skeletal loading state
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
 
   totalServices = computed(() => this.total());
   totalRecouvrements = computed(() =>
     this.services().reduce((sum, s) => sum + (s.recouvrements_count ?? 0), 0),
   );
+
   moyenneParService = computed(() => {
     const count = this.services().length;
-    return count > 0 ? Math.round(this.totalRecouvrements() / count) : 0;
+    if (count === 0) return 0;
+    return this.totalRecouvrementsMontant() / count;
   });
+
   totalRecouvrementsMontant = computed(() =>
-    // ← ajout
     this.services().reduce(
-      (sum, s) => sum + (s.recouvrements_sum_montant ?? 0),
+      (sum, s) => sum + Number(s.recouvrements_sum_montant ?? 0),
       0,
     ),
   );
@@ -71,6 +91,10 @@ export class ServiceProposeComponent implements OnInit {
 
   readonly Math = Math;
 
+  trackByRfk(index: number, item: ServicePropose): string {
+    return item.rfk;
+  }
+
   ngOnInit(): void {
     this.loadList();
   }
@@ -79,10 +103,11 @@ export class ServiceProposeComponent implements OnInit {
     this.isLoadingList.set(true);
     this.serviceProposeService
       .getAll({
-        search: this.searchQuery || undefined,
+        search: this.searchQuery() || undefined,
         page: this.currentPage(),
         per_page: this.perPage,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.services.set(res.data);
@@ -143,7 +168,7 @@ export class ServiceProposeComponent implements OnInit {
       ? this.serviceProposeService.update(this.editingRfk()!, payload)
       : this.serviceProposeService.create(payload);
 
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.formSuccess.set(
           this.isEditMode()
@@ -170,18 +195,21 @@ export class ServiceProposeComponent implements OnInit {
       return;
     this.isDeleting.set(service.rfk);
     this.deleteError.set(null);
-    this.serviceProposeService.delete(service.rfk).subscribe({
-      next: () => {
-        this.isDeleting.set(null);
-        this.loadList();
-      },
-      error: (err) => {
-        this.deleteError.set(
-          err?.error?.message ?? 'Impossible de supprimer ce service.',
-        );
-        this.isDeleting.set(null);
-      },
-    });
+    this.serviceProposeService
+      .delete(service.rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isDeleting.set(null);
+          this.loadList();
+        },
+        error: (err) => {
+          this.deleteError.set(
+            err?.error?.message ?? 'Impossible de supprimer ce service.',
+          );
+          this.isDeleting.set(null);
+        },
+      });
   }
 
   isInvalid(field: string): boolean {

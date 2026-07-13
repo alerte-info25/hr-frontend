@@ -1,4 +1,13 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -10,30 +19,44 @@ import { FormsModule } from '@angular/forms';
 import { CompteComptable } from '../../../models/Caisse/compte-comptable.model';
 import { CompteComptableService } from '../../../services/Caisse/compte-comptable.service';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-compte-comptable',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    LoaderComponent,
+    RouterLink,
+  ],
   templateUrl: './compte-comptable.component.html',
   styleUrl: './compte-comptable.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompteComptableComponent implements OnInit {
   private fb = inject(FormBuilder);
   private compteService = inject(CompteComptableService);
+  private destroyRef = inject(DestroyRef);
 
-  //  Liste
+  // Liste
   isLoadingList = signal(false);
   comptes = signal<CompteComptable[]>([]);
-  searchQuery = '';
-  filterActif = ''; // '' | 'true' | 'false'
+  searchQuery = signal(''); // ← SIGNAL
+  filterActif = signal(''); // ← SIGNAL
 
   currentPage = signal(1);
-  perPage = 10;
+  perPage = 15;
   total = signal(0);
   lastPage = signal(1);
 
-  //  Stats dérivées
+  // skeleton loader
+  get skeletonArray(): number[] {
+    return Array(this.perPage).fill(0);
+  }
+
+  // Stats dérivées
   totalComptes = computed(() => this.total());
   comptesActifs = computed(
     () => this.comptes().filter((c) => c.est_actif).length,
@@ -45,7 +68,7 @@ export class CompteComptableComponent implements OnInit {
     ),
   );
 
-  //  Formulaire
+  // Formulaire
   editingRfk = signal<string | null>(null);
   isEditMode = computed(() => this.editingRfk() !== null);
   isSaving = signal(false);
@@ -61,28 +84,33 @@ export class CompteComptableComponent implements OnInit {
     est_actif: [true],
   });
 
-  //  Suppression
+  // Suppression
   isDeleting = signal<string | null>(null);
   deleteError = signal<string | null>(null);
 
   readonly Math = Math;
 
-  //  Lifecycle
+  // TrackBy
+  trackByRfk(index: number, item: CompteComptable): string {
+    return item.rfk;
+  }
+
   ngOnInit(): void {
     this.loadList();
   }
 
-  //  Chargement liste
+  // Chargement liste
   loadList(): void {
     this.isLoadingList.set(true);
     this.compteService
       .getAll({
-        search: this.searchQuery || undefined,
+        search: this.searchQuery() || undefined,
         est_actif:
-          this.filterActif !== '' ? this.filterActif === 'true' : undefined,
+          this.filterActif() !== '' ? this.filterActif() === 'true' : undefined,
         page: this.currentPage(),
         per_page: this.perPage,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.comptes.set(res.data);
@@ -94,7 +122,14 @@ export class CompteComptableComponent implements OnInit {
       });
   }
 
+  // ✅ Méthode unifiée pour les filtres
   onFilterChange(): void {
+    this.currentPage.set(1);
+    this.loadList();
+  }
+
+  // ✅ Méthode pour la recherche (appelée depuis le template)
+  onSearch(): void {
     this.currentPage.set(1);
     this.loadList();
   }
@@ -109,7 +144,7 @@ export class CompteComptableComponent implements OnInit {
     return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
   }
 
-  //  Formulaire
+  // Formulaire
   resetForm(): void {
     this.editingRfk.set(null);
     this.formError.set(null);
@@ -146,7 +181,7 @@ export class CompteComptableComponent implements OnInit {
       ? this.compteService.update(this.editingRfk()!, payload)
       : this.compteService.create(payload);
 
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.formSuccess.set(
           this.isEditMode()
@@ -164,7 +199,7 @@ export class CompteComptableComponent implements OnInit {
     });
   }
 
-  //  Suppression
+  // Suppression
   deleteCompte(c: CompteComptable): void {
     if (
       !confirm(
@@ -175,21 +210,24 @@ export class CompteComptableComponent implements OnInit {
     this.isDeleting.set(c.rfk);
     this.deleteError.set(null);
 
-    this.compteService.delete(c.rfk).subscribe({
-      next: () => {
-        this.isDeleting.set(null);
-        this.loadList();
-      },
-      error: (err) => {
-        this.deleteError.set(
-          err?.error?.message ?? 'Impossible de supprimer ce compte.',
-        );
-        this.isDeleting.set(null);
-      },
-    });
+    this.compteService
+      .delete(c.rfk)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isDeleting.set(null);
+          this.loadList();
+        },
+        error: (err) => {
+          this.deleteError.set(
+            err?.error?.message ?? 'Impossible de supprimer ce compte.',
+          );
+          this.isDeleting.set(null);
+        },
+      });
   }
 
-  //  Helpers formulaire
+  // Helpers formulaire
   isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);

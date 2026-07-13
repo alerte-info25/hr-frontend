@@ -113,7 +113,7 @@
         <div class="stat-icon debit">
           <i class="fa-solid fa-arrow-trend-down"></i>
         </div>
-        <div class="stat-label">Total dépenses</div>
+        <div class="stat-label">Total des sorties</div>
         <div class="stat-value">{{ s.total_depenses | number: "1.0-0" }} F</div>
       </div>
 
@@ -121,7 +121,7 @@
         <div class="stat-icon credit">
           <i class="fa-solid fa-arrow-trend-up"></i>
         </div>
-        <div class="stat-label">Total recouvrements</div>
+        <div class="stat-label">Total des entrées</div>
         <div class="stat-value">
           {{ s.total_recouvrements | number: "1.0-0" }} F
         </div>
@@ -266,12 +266,11 @@
             <th width="4%">N°</th>
             <th width="9%">Date</th>
             <th width="7%">Nature</th>
-            <th width="13%">Référence</th>
-            <th width="22%">Description</th>
+            <th width="45%">Description</th>
             <th width="13%">Catégorie</th>
             <th width="10%">Mode</th>
             <th width="12%">Montant (F)</th>
-            <th width="10%">Actions</th>
+            <th width="12%">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -320,13 +319,7 @@
                 }
               </td>
 
-              <td>
-                <span class="piece-ref">{{ op.rfk }}</span>
-              </td>
-
               <td
-                class="text-truncate"
-                style="max-width: 200px"
                 [title]="op.description"
               >
                 {{ op.description || "—" }}
@@ -368,9 +361,6 @@
               </td>
 
               <td>
-                <button class="btn-icon view" title="Voir les détails">
-                  <i class="fas fa-eye"></i>
-                </button>
                 @if (!s.exercice.est_cloture) {
                   <button class="btn-icon edit" title="Modifier">
                     <i class="fas fa-edit"></i>

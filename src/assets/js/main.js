@@ -489,19 +489,19 @@
 		dictDefaultMessage: "Upload your file here",
 		init: function () {
 			this.on("sending", function (file, xhr, formData) {
-				console.log("Sending file");
+				// console.log("Sending file");
 			});
 
 			this.on("success", function (file, responseText) {
-				console.log('Great success');
+				// console.log('Great success');
 			});
 
 			this.on("addedfile", function (file) {
-				console.log('File added');
+				// console.log('File added');
 			});
 
 			this.on("complete", function (file) {
-				console.log('Upload complete for: ' + file.name);
+				// console.log('Upload complete for: ' + file.name);
 			});
 		}
 	};
@@ -528,19 +528,19 @@
 				init: function () {
 					/* Event handlers */
 					this.on("sending", function (file, xhr, formData) {
-						console.log("Sending file");
+						// console.log("Sending file");
 					});
 
 					this.on("success", function (file, responseText) {
-						console.log('Great success');
+						// console.log('Great success');
 					});
 
 					this.on("addedfile", function (file) {
-						console.log('File added');
+						// console.log('File added');
 					});
 
 					this.on("complete", function (file) {
-						console.log('Upload complete for: ' + file.name);
+						// console.log('Upload complete for: ' + file.name);
 					});
 				}
 			};
@@ -1852,13 +1852,13 @@
 		dictDefaultMessage: "Upload your file here",
 		init: function () {
 			this.on("sending", function (file, xhr, formData) {
-				console.log("sending file");
+				// console.log("sending file");
 			});
 			this.on("success", function (file, responseText) {
-				console.log('great success');
+				// console.log('great success');
 			});
 			this.on("addedfile", function (file) {
-				console.log('file added');
+				// console.log('file added');
 			});
 		}
 	};
@@ -1875,13 +1875,13 @@
 		dictDefaultMessage: "Upload your file here",
 		init: function () {
 			this.on("sending", function (file, xhr, formData) {
-				console.log("sending file");
+				// console.log("sending file");
 			});
 			this.on("success", function (file, responseText) {
-				console.log('great success');
+				// console.log('great success');
 			});
 			this.on("addedfile", function (file) {
-				console.log('file added');
+				// console.log('file added');
 
 				// Remove any existing files before adding the new one
 				if (this.files.length > 1) {
