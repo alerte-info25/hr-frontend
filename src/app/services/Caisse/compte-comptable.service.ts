@@ -52,6 +52,12 @@ export class CompteComptableService {
       );
   }
 
+  getListe(): Observable<CompteComptable[]> {
+  return this.http
+    .get<ApiResponse<CompteComptable[]>>(`${this.url}/liste`)
+    .pipe(map((res) => res.data ?? []));
+}
+
   getOne(rfk: string): Observable<CompteComptable> {
     return this.http
       .get<ApiResponse<CompteComptable>>(`${this.url}/${rfk}`)

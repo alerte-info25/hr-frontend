@@ -47,6 +47,12 @@ export class TypeDepenseService {
       );
   }
 
+  getListe(): Observable<TypeDepense[]> {
+  return this.http
+    .get<ApiResponse<TypeDepense[]>>(`${this.url}/liste`)
+    .pipe(map((res) => res.data ?? []));
+}
+
   getOne(rfk: string): Observable<TypeDepense> {
     return this.http
       .get<ApiResponse<TypeDepense>>(`${this.url}/${rfk}`)

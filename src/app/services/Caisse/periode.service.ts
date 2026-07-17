@@ -45,6 +45,13 @@ export class PeriodeService {
       );
   }
 
+  getListe(exerciceRfk: string): Observable<Periode[]> {
+  const params = new HttpParams().set('exercice_rfk', exerciceRfk);
+  return this.http
+    .get<ApiResponse<Periode[]>>(`${this.url}/liste`, { params })
+    .pipe(map((res) => res.data ?? []));
+}
+
   getOne(rfk: string): Observable<Periode> {
     return this.http
       .get<ApiResponse<Periode>>(`${this.url}/${rfk}`)

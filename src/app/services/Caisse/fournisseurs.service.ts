@@ -41,6 +41,12 @@ export class FournisseurService {
       );
   }
 
+  getListe(): Observable<Fournisseur[]> {
+  return this.http
+    .get<ApiResponse<Fournisseur[]>>(`${this.url}/liste`)
+    .pipe(map((res) => res.data ?? []));
+}
+
   getOne(rfk: string): Observable<Fournisseur> {
     return this.http
       .get<ApiResponse<Fournisseur>>(`${this.url}/${rfk}`)

@@ -120,72 +120,61 @@ export class DepenseComponent implements OnInit {
   }
 
   private loadExercices(): void {
-    this.exerciceService.getAll({ per_page: 30 }).subscribe({
-      next: (r) => {
-        this.exercices.set(r.data.filter((e) => !e.est_cloture));
-        const actif = r.data.find((e) => e.est_actif && !e.est_cloture);
+    this.exerciceService.getListe().subscribe({
+      next: (data) => {
+        this.exercices.set(data.filter((e) => !e.est_cloture));
+        const actif = data.find((e) => e.est_actif && !e.est_cloture);
         if (actif) {
           this.form.patchValue({ exercice_id: actif.id });
           this.onExerciceChange(actif.id);
         }
         this.loadTypesDepense();
       },
-      error: () => {
-        this.isLoadingRefs.set(false);
-      },
+      error: () => this.isLoadingRefs.set(false),
     });
   }
 
   private loadTypesDepense(): void {
-    this.typeDepenseService.getAll({ per_page: 30 }).subscribe({
-      next: (r) => {
-        this.typesDepense.set(r.data);
+    this.typeDepenseService.getListe().subscribe({
+      next: (data) => {
+        this.typesDepense.set(data);
         this.loadComptes();
       },
-      error: () => {
-        this.isLoadingRefs.set(false);
-      },
+      error: () => this.isLoadingRefs.set(false),
     });
   }
 
   private loadComptes(): void {
-    this.compteService.getAll({ per_page: 30 }).subscribe({
-      next: (r) => {
-        this.comptes.set(r.data);
+    this.compteService.getListe().subscribe({
+      next: (data) => {
+        this.comptes.set(data);
         this.loadFournisseurs();
       },
-      error: () => {
-        this.isLoadingRefs.set(false);
-      },
+      error: () => this.isLoadingRefs.set(false),
     });
   }
 
   private loadFournisseurs(): void {
-    this.fournisseurService.getAll({ per_page: 30 }).subscribe({
-      next: (r) => {
-        this.fournisseurs.set(r.data);
+    this.fournisseurService.getListe().subscribe({
+      next: (data) => {
+        this.fournisseurs.set(data);
         this.loadBureaux();
       },
-      error: () => {
-        this.isLoadingRefs.set(false);
-      },
+      error: () => this.isLoadingRefs.set(false),
     });
   }
 
   private loadBureaux(): void {
-    this.bureauService.getAll({ per_page: 30 }).subscribe({
-      next: (res) => {
-        this.bureaux.set(res.data); // .data extrait le tableau depuis PaginatedResponse
+    this.bureauService.getListe().subscribe({
+      next: (data) => {
+        this.bureaux.set(data);
         this.isLoadingRefs.set(false);
         this.loadList();
       },
-      error: () => {
-        this.isLoadingRefs.set(false);
-      },
+      error: () => this.isLoadingRefs.set(false),
     });
   }
 
-  // Changement d'exercice → recharge les périodes
   onExerciceChange(exerciceId: number | string): void {
     this.form.patchValue({ periode_id: null });
     this.periodes.set([]);
@@ -196,14 +185,12 @@ export class DepenseComponent implements OnInit {
     const ex = this.exercices().find((e) => e.id === Number(exerciceId));
     if (!ex) return;
 
-    this.periodeService
-      .getAll({ exercice_rfk: ex.rfk, per_page: 30 })
-      .subscribe({
-        next: (r) => {
-          this.periodes.set(r.data.filter((p) => !p.est_cloturee));
-          this.form.get('periode_id')?.enable();
-        },
-      });
+    this.periodeService.getListe(ex.rfk).subscribe({
+      next: (data) => {
+        this.periodes.set(data.filter((p) => !p.est_cloturee));
+        this.form.get('periode_id')?.enable();
+      },
+    });
   }
 
   // Chargement liste

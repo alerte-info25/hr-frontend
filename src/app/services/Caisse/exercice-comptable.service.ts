@@ -52,6 +52,12 @@ export class ExerciceComptableService {
       );
   }
 
+  getListe(): Observable<ExerciceModel[]> {
+  return this.http
+    .get<ApiResponse<ExerciceModel[]>>(`${this.url}/liste`)
+    .pipe(map((res) => res.data ?? []));
+}
+
   getTotalToNumberFormat(rfk: string): Observable<{
     total: {
       stats: number;

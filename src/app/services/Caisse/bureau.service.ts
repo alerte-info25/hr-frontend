@@ -42,6 +42,19 @@ export class BureauService {
       );
   }
 
+  getListe(): Observable<BureauModel[]> {
+  return this.http
+    .get<ApiResponse<BureauModel[]>>(`${this.url}/liste`)
+    .pipe(
+      map((res) => {
+        if (!res.success || !res.data) {
+          throw new Error(res.message || 'Erreur API');
+        }
+        return res.data;
+      }),
+    );
+}
+
   getOne(rfk: string): Observable<BureauModel> {
     return this.http.get<ApiResponse<BureauModel>>(`${this.url}/${rfk}`).pipe(
       map((res) => {
