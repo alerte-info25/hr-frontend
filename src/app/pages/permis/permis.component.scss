@@ -1039,3 +1039,78 @@ h2 {
   padding: 0.5rem 0.75rem;
   font-weight: 500;
 }
+
+// Styles pour l'affichage des durées
+.duration-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  .duration-main {
+    font-weight: 600;
+    font-size: 1em;
+  }
+
+  .duration-detail {
+    font-size: 0.75em;
+    color: #6c757d;
+  }
+
+  .duration-info {
+    font-size: 0.7em;
+    color: #0d6efd;
+    cursor: help;
+    margin-top: 2px;
+  }
+}
+
+// Styles pour le détail des durées dans le modal
+.duration-detail-list {
+  .day-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    .day-label {
+      font-weight: 500;
+    }
+
+    .day-duration {
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    .day-hours {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+  }
+
+  .total-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 2px solid #dee2e6;
+    margin-top: 4px;
+
+    .total-duration {
+      color: #198754;
+      font-size: 1.1em;
+    }
+
+    .total-hours {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+  }
+
+  .info-detail-item {
+    margin-top: 8px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+}

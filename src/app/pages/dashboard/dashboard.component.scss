@@ -1104,3 +1104,40 @@
     }
   }
 }
+
+// dashboard.component.scss
+
+.duration-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+
+  .duration-stat-item {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+
+    .duration-stat-label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-bottom: 4px;
+    }
+
+    .duration-stat-value {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    .duration-stat-detail {
+      display: block;
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-top: 2px;
+    }
+  }
+}

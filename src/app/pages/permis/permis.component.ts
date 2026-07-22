@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { TypePermissionsService } from '../../services/type-permissions.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DurationCalculatorService } from '../../services/duration-calculator.service';
 
 declare var bootstrap: any;
 
@@ -51,7 +52,8 @@ export class PermisComponent implements OnInit {
     private snackbar: MatSnackBar,
     private router: Router,
     private typePermissionService: TypePermissionsService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private durationCalculator: DurationCalculatorService
   ) {}
 
   ngOnInit(): void {
@@ -97,7 +99,7 @@ export class PermisComponent implements OnInit {
       next: (response) => {
         this.isLoadingToutes = false;
         this.toutesPermissions1 = response;
-        this.toutesPermissions = this.toutesPermissions1.filter(p => p.statut !== 1); 
+        this.toutesPermissions = this.toutesPermissions1.filter(p => p.statut !== 1);
         this.permissionsEnAttente = this.toutesPermissions1.filter(p => p.statut === 1);
       },
       error: (error) => {
@@ -321,15 +323,47 @@ export class PermisComponent implements OnInit {
     }
   }
 
+  // calculerDuree(debut: string, fin: string): string {
+  //   const dateDebut = new Date(debut);
+  //   const dateFin = new Date(fin);
+  //   const diffMs = Math.abs(dateFin.getTime() - dateDebut.getTime());
+  //   const totalHeures = Math.floor(diffMs / (1000 * 60 * 60));
+  //   const jours = Math.floor(totalHeures / 24);
+  //   const heures = totalHeures % 24;
+  //   const heuresFormattees = heures.toString().padStart(2, '0');
+  //   return `${jours}j ${heuresFormattees}h`;
+  // }
+
   calculerDuree(debut: string, fin: string): string {
-    const dateDebut = new Date(debut);
-    const dateFin = new Date(fin);
-    const diffMs = Math.abs(dateFin.getTime() - dateDebut.getTime());
-    const totalHeures = Math.floor(diffMs / (1000 * 60 * 60));
-    const jours = Math.floor(totalHeures / 24);
-    const heures = totalHeures % 24;
-    const heuresFormattees = heures.toString().padStart(2, '0');
-    return `${jours}j ${heuresFormattees}h`;
+    return this.durationCalculator.formaterDuree(
+      this.durationCalculator.calculerDureeOuvrable(debut, fin)
+    );
+  }
+
+  calculerDureeLongue(debut: string, fin: string): string {
+    return this.durationCalculator.formaterDureeLongue(
+      this.durationCalculator.calculerDureeOuvrable(debut, fin)
+    );
+  }
+
+  getDureeEnHeures(debut: string, fin: string): number {
+    return this.durationCalculator.calculerDureeOuvrable(debut, fin);
+  }
+
+  getJoursOuvrables(debut: string, fin: string): number {
+    return this.durationCalculator.compterJoursOuvrables(debut, fin);
+  }
+
+  getDetailDuree(debut: string, fin: string) {
+    return this.durationCalculator.getDetailDuree(debut, fin);
+  }
+
+  getResumeDuree(debut: string, fin: string) {
+    return this.durationCalculator.getResumeDuree(debut, fin);
+  }
+
+  formaterDuree(heures: number): string {
+    return this.durationCalculator.formaterDuree(heures);
   }
 
   formatDateSort(date: string): string {

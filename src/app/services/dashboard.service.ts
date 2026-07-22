@@ -60,7 +60,7 @@ export interface TempsTraitement {
 
 export interface TopEmploye {
   employe: string;
-  total: number;
+  total: string;
   total_minutes: number;
 }
 
@@ -114,6 +114,14 @@ export interface Alerte {
   dates?: string[];
 }
 
+export interface StatistiquesDurees {
+  total: string;
+  total_heures: number;
+  moyenne: string;
+  moyenne_heures: number;
+  nombre_demandes: number;
+  nombre_valide: number;
+}
 export interface DashboardData {
   kpis: KPIs;
   evolution: EvolutionData[];
@@ -128,6 +136,7 @@ export interface DashboardData {
   comparaison_periode: ComparaisonPeriode;
   alertes: Alerte[];
   liste_employes: EmployeOption[];
+  statistiques_durees: StatistiquesDurees;
 }
 
 @Injectable({
