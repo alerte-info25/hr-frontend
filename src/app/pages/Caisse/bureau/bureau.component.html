@@ -346,31 +346,52 @@
       </span>
       <nav>
         <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage() === 1">
+          <!-- Bouton Précédent -->
+          <li
+            class="page-item"
+            [class.disabled]="currentPage() === 1 || loader()"
+          >
             <a
               class="page-link"
               style="cursor: pointer"
-              (click)="goToPage(currentPage() - 1)"
-              >Précédent</a
+              (click)="!loader() && goToPage(currentPage() - 1)"
             >
+              Précédent
+            </a>
           </li>
-          @for (page of pages(); track page) {
-            <li class="page-item" [class.active]="page === currentPage()">
-              <a
-                class="page-link"
-                style="cursor: pointer"
-                (click)="goToPage(page)"
-                >{{ page }}</a
-              >
-            </li>
+
+          <!-- Pages avec ellipses -->
+          @for (page of visiblePages(); track $index) {
+            @if (page === -1 || page === -2) {
+              <li class="page-item disabled">
+                <span class="page-link">…</span>
+              </li>
+            } @else {
+              <li class="page-item" [class.active]="page === currentPage()">
+                <a
+                  class="page-link"
+                  style="cursor: pointer"
+                  [class.text-muted]="loader()"
+                  (click)="!loader() && goToPage(page)"
+                >
+                  {{ page }}
+                </a>
+              </li>
+            }
           }
-          <li class="page-item" [class.disabled]="currentPage() === lastPage()">
+
+          <!-- Bouton Suivant -->
+          <li
+            class="page-item"
+            [class.disabled]="currentPage() === lastPage() || loader()"
+          >
             <a
               class="page-link"
               style="cursor: pointer"
-              (click)="goToPage(currentPage() + 1)"
-              >Suivant</a
+              (click)="!loader() && goToPage(currentPage() + 1)"
             >
+              Suivant
+            </a>
           </li>
         </ul>
       </nav>

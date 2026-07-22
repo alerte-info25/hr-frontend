@@ -271,40 +271,54 @@
                 </small>
                 <nav>
                   <ul class="pagination pagination-sm mb-0">
+                    <!-- Bouton Précédent -->
                     <li
                       class="page-item"
-                      [class.disabled]="currentPage() === 1"
+                      [class.disabled]="currentPage() === 1 || loader()"
                     >
                       <button
                         type="button"
                         class="page-link"
-                        (click)="onPageChange(currentPage() - 1)"
+                        (click)="!loader() && onPageChange(currentPage() - 1)"
                       >
                         <i class="fas fa-chevron-left"></i>
                       </button>
                     </li>
-                    @for (page of pageRange(); track page) {
-                      <li
-                        class="page-item"
-                        [class.active]="page === currentPage()"
-                      >
-                        <button
-                          type="button"
-                          class="page-link"
-                          (click)="onPageChange(page)"
+
+                    <!-- Pages avec ellipses -->
+                    @for (page of visiblePages(); track $index) {
+                      @if (page === -1 || page === -2) {
+                        <li class="page-item disabled">
+                          <span class="page-link">…</span>
+                        </li>
+                      } @else {
+                        <li
+                          class="page-item"
+                          [class.active]="page === currentPage()"
                         >
-                          {{ page }}
-                        </button>
-                      </li>
+                          <button
+                            type="button"
+                            class="page-link"
+                            [class.text-muted]="loader()"
+                            (click)="!loader() && onPageChange(page)"
+                          >
+                            {{ page }}
+                          </button>
+                        </li>
+                      }
                     }
+
+                    <!-- Bouton Suivant -->
                     <li
                       class="page-item"
-                      [class.disabled]="currentPage() === lastPage()"
+                      [class.disabled]="
+                        currentPage() === lastPage() || loader()
+                      "
                     >
                       <button
                         type="button"
                         class="page-link"
-                        (click)="onPageChange(currentPage() + 1)"
+                        (click)="!loader() && onPageChange(currentPage() + 1)"
                       >
                         <i class="fas fa-chevron-right"></i>
                       </button>

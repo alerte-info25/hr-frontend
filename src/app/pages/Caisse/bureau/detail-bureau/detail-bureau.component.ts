@@ -22,6 +22,38 @@ import { ExerciceModel } from '../../../../models/Caisse/exercice-comptable.mode
 import { Periode } from '../../../../models/Caisse/periode.model';
 import { LoaderComponent } from '../../../../sharedCaisse/components/loader/loader.component';
 
+// ✅ Fonction utilitaire pour la pagination
+function getVisiblePages(
+  current: number,
+  total: number,
+  delta: number = 2,
+): number[] {
+  if (total <= 1) return [1];
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  pages.push(1);
+
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  if (current - delta <= 2) {
+    end = Math.min(total - 1, 5);
+  }
+  if (current + delta >= total - 1) {
+    start = Math.max(2, total - 4);
+  }
+
+  if (start > 2) pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push(-2);
+  pages.push(total);
+
+  return pages;
+}
+
 @Component({
   selector: 'app-detail-bureau',
   standalone: true,
@@ -77,21 +109,16 @@ export class DetailBureauComponent implements OnInit {
     return data?.operations.last_page ?? 1;
   });
 
-  // Affichage des pages
-  pages = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: total }, (_, i) => i + 1);
-  });
+  // ✅ Getter pour les pages visibles avec ellipses (remplace pages computed)
+  get visiblePages(): number[] {
+    return getVisiblePages(this.currentPage(), this.totalPages());
+  }
 
   ngOnInit(): void {
     // Récupérer le rfk depuis l'URL
     const rfk = this.route.snapshot.paramMap.get('rfk');
     if (rfk) {
       this.bureauRfk.set(rfk);
-      // On ne charge les opérations qu'une fois le filtre d'exercice
-      // déterminé (voir loadExercices), pour éviter toute divergence
-      // entre le total affiché en page 1 et celui utilisé par les
-      // requêtes de pagination suivantes.
       this.loadExercices();
     } else {
       this.error.set('Aucun bureau spécifié.');
@@ -101,13 +128,12 @@ export class DetailBureauComponent implements OnInit {
   // Charger la liste des exercices
   private loadExercices(): void {
     this.exerciceService
-      .getAll({ per_page: 100 }) // on récupère tous (ou un grand nombre)
+      .getAll({ per_page: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           const exercices = res.data;
           this.exercices.set(exercices);
-          // Sélectionner l'exercice actif par défaut
           const actif = exercices.find((e) => e.est_actif && !e.est_cloture);
           if (actif) {
             this.selectedExerciceId.set(actif.id);
@@ -116,13 +142,10 @@ export class DetailBureauComponent implements OnInit {
             this.selectedExerciceId.set(exercices[0].id);
             this.loadPeriodes(exercices[0].id);
           }
-          // Chargement initial des opérations, une fois le filtre
-          // d'exercice connu (avec ou sans exercice trouvé).
           this.loadData();
         },
         error: () => {
           this.error.set('Impossible de charger les exercices.');
-          // On tente quand même de charger les opérations sans filtre
           this.loadData();
         },
       });
@@ -171,9 +194,6 @@ export class DetailBureauComponent implements OnInit {
           this.bureauData.set(data);
           this.loading.set(false);
 
-          // Filet de sécurité : si la page courante dépasse le nombre
-          // réel de pages (ex. changement de filtre réduisant le total),
-          // on se replie sur la dernière page valide et on recharge.
           const lastPage = data.operations.last_page ?? 1;
           if (this.currentPage() > lastPage) {
             this.currentPage.set(lastPage);
@@ -192,7 +212,7 @@ export class DetailBureauComponent implements OnInit {
   // Changement d'exercice
   onExerciceChange(exerciceId: number | null): void {
     this.selectedExerciceId.set(exerciceId);
-    this.selectedPeriodeId.set(null); // réinitialiser la période
+    this.selectedPeriodeId.set(null);
     this.currentPage.set(1);
     if (exerciceId) {
       this.loadPeriodes(exerciceId);

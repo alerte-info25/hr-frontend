@@ -7,7 +7,43 @@ import { LoaderComponent } from '../../../../sharedCaisse/components/loader/load
 import { ServiceProposeService } from '../../../../services/Caisse/service-propose.service';
 import { RecouvrementService } from '../../../../services/Caisse/recouvrement.service';
 import { ServicePropose } from '../../../../models/Caisse/service-propose.model';
-import { MODE_PAIEMENT_ICONS, MODE_PAIEMENT_LABELS, Recouvrement } from '../../../../models/Caisse/recouvrement.model';
+import {
+  MODE_PAIEMENT_ICONS,
+  MODE_PAIEMENT_LABELS,
+  Recouvrement,
+} from '../../../../models/Caisse/recouvrement.model';
+
+// ✅ Fonction utilitaire pour la pagination
+function getVisiblePages(
+  current: number,
+  total: number,
+  delta: number = 2,
+): number[] {
+  if (total <= 1) return [1];
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  pages.push(1);
+
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  if (current - delta <= 2) {
+    end = Math.min(total - 1, 5);
+  }
+  if (current + delta >= total - 1) {
+    start = Math.max(2, total - 4);
+  }
+
+  if (start > 2) pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push(-2);
+  pages.push(total);
+
+  return pages;
+}
 
 @Component({
   selector: 'app-detail-service-propose',
@@ -64,6 +100,11 @@ export class DetailServiceProposeComponent implements OnInit {
   readonly modePaiementIcons = MODE_PAIEMENT_ICONS;
   readonly Math = Math;
 
+  // ✅ Getter pour les pages visibles avec ellipses
+  get visiblePages(): number[] {
+    return getVisiblePages(this.currentPage(), this.lastPage());
+  }
+
   ngOnInit(): void {
     const rfk = this.route.snapshot.paramMap.get('rfk');
     if (!rfk) {
@@ -80,11 +121,7 @@ export class DetailServiceProposeComponent implements OnInit {
     this.serviceProposeService.getOne(rfk).subscribe({
       next: (serviceData) => {
         this.service.set(serviceData);
-
-        // titre dynamique
         this.title.setTitle(`${serviceData.nom} - Détails des recouvrements`);
-
-        // Charger les recouvrements associés
         this.loadRecouvrements(serviceData.id);
       },
       error: (err) => {
@@ -98,6 +135,8 @@ export class DetailServiceProposeComponent implements OnInit {
   }
 
   private loadRecouvrements(serviceId: number): void {
+    this.isLoading.set(true);
+
     this.recouvrementService
       .getAll({
         service_propose_id: serviceId,
@@ -137,10 +176,6 @@ export class DetailServiceProposeComponent implements OnInit {
     if (id) {
       this.loadRecouvrements(id);
     }
-  }
-
-  pages(): number[] {
-    return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
   }
 
   // Réinitialiser les filtres

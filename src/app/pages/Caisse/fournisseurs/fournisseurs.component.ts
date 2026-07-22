@@ -20,25 +20,57 @@ import { Fournisseur } from '../../../models/Caisse/fournisseur.model';
 import { FournisseurService } from '../../../services/Caisse/fournisseurs.service';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 
+// ✅ Fonction utilitaire pour la pagination
+function getVisiblePages(
+  current: number,
+  total: number,
+  delta: number = 2,
+): number[] {
+  if (total <= 1) return [1];
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  pages.push(1);
+
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  if (current - delta <= 2) {
+    end = Math.min(total - 1, 5);
+  }
+  if (current + delta >= total - 1) {
+    start = Math.max(2, total - 4);
+  }
+
+  if (start > 2) pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push(-2);
+  pages.push(total);
+
+  return pages;
+}
+
 @Component({
   selector: 'app-fournisseur',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, LoaderComponent],
   templateUrl: './fournisseurs.component.html',
   styleUrl: './fournisseurs.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush, //
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FournisseursComponent implements OnInit {
   private fb = inject(FormBuilder);
   private fournisseurService = inject(FournisseurService);
-  private destroyRef = inject(DestroyRef); //
+  private destroyRef = inject(DestroyRef);
 
   isLoadingList = signal(false);
   fournisseurs = signal<Fournisseur[]>([]);
-  searchQuery = signal(''); //
+  searchQuery = signal('');
 
   currentPage = signal(1);
-  perPage = 15; //  RÉDUIT
+  perPage = 15;
   total = signal(0);
   lastPage = signal(1);
 
@@ -58,11 +90,11 @@ export class FournisseursComponent implements OnInit {
   );
 
   totalDepensesMontant = computed(() =>
-  this.fournisseurs().reduce(
-    (sum, f) => sum + Number(f.depenses_sum_montant ?? 0),
-    0,
-  ),
-);
+    this.fournisseurs().reduce(
+      (sum, f) => sum + Number(f.depenses_sum_montant ?? 0),
+      0,
+    ),
+  );
 
   editingRfk = signal<string | null>(null);
   isEditMode = computed(() => this.editingRfk() !== null);
@@ -85,6 +117,11 @@ export class FournisseursComponent implements OnInit {
   deleteError = signal<string | null>(null);
 
   readonly Math = Math;
+
+  // ✅ Getter pour les pages visibles avec ellipses
+  get visiblePages(): number[] {
+    return getVisiblePages(this.currentPage(), this.lastPage());
+  }
 
   trackByRfk(index: number, item: Fournisseur): string {
     return item.rfk;
@@ -125,9 +162,10 @@ export class FournisseursComponent implements OnInit {
     this.loadList();
   }
 
-  pages(): number[] {
-    return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
-  }
+  // ❌ SUPPRIMER cette fonction
+  // pages(): number[] {
+  //   return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
+  // }
 
   resetForm(): void {
     this.editingRfk.set(null);

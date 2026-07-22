@@ -58,6 +58,60 @@ export class DepenseComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // Ajoute cette propriété computed après les autres computed
+  visiblePages = computed(() => {
+    const current = this.currentPage();
+    const total = this.lastPage();
+    const delta = 2; // Nombre de pages autour de la page actuelle
+
+    // Si pas de pages ou une seule page
+    if (total <= 1) {
+      return [1];
+    }
+
+    // Si peu de pages, on affiche tout
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: number[] = [];
+
+    // Toujours la première page
+    pages.push(1);
+
+    // Calcul de la plage autour de la page actuelle
+    let start = Math.max(2, current - delta);
+    let end = Math.min(total - 1, current + delta);
+
+    // Ajustement pour avoir toujours un affichage cohérent
+    if (current - delta <= 2) {
+      end = Math.min(total - 1, 5);
+    }
+    if (current + delta >= total - 1) {
+      start = Math.max(2, total - 4);
+    }
+
+    // Ellipse avant si nécessaire
+    if (start > 2) {
+      pages.push(-1); // -1 représente "..."
+    }
+
+    // Pages de la plage
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    // Ellipse après si nécessaire
+    if (end < total - 1) {
+      pages.push(-2); // -2 représente "..."
+    }
+
+    // Toujours la dernière page
+    pages.push(total);
+
+    return pages;
+  });
+
   // skeleton loading
   get skeletonArray(): number[] {
     return Array(this.perPage).fill(0);
@@ -229,10 +283,6 @@ export class DepenseComponent implements OnInit {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
     this.loadList();
-  }
-
-  pages(): number[] {
-    return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
   }
 
   // Formulaire

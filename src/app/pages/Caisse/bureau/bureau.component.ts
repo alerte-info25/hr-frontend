@@ -65,9 +65,37 @@ export class BureauComponent implements OnInit {
 
   private rechercheSubject = new Subject<string>();
 
-  pages = computed(() =>
-    Array.from({ length: this.lastPage() }, (_, i) => i + 1),
-  );
+  // Pages visibles avec ellipses
+  visiblePages = computed(() => {
+    const current = this.currentPage();
+    const total = this.lastPage();
+    const delta = 2;
+
+    if (total <= 1) return [1];
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: number[] = [];
+    pages.push(1);
+
+    let start = Math.max(2, current - delta);
+    let end = Math.min(total - 1, current + delta);
+
+    if (current - delta <= 2) {
+      end = Math.min(total - 1, 5);
+    }
+    if (current + delta >= total - 1) {
+      start = Math.max(2, total - 4);
+    }
+
+    if (start > 2) pages.push(-1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(-2);
+    pages.push(total);
+
+    return pages;
+  });
 
   ngOnInit(): void {
     this.loadGlobalStats();

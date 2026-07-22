@@ -23,13 +23,13 @@ import {
   imports: [ReactiveFormsModule, LoaderComponent, CommonModule],
   templateUrl: './exercice.component.html',
   styleUrl: './exercice.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush, // 
+  changeDetection: ChangeDetectionStrategy.OnPush, //
 })
 export class ExerciceComponent implements OnInit {
   private fb = inject(FormBuilder);
   private exerciceService = inject(ExerciceComptableService);
   private router = inject(Router);
-  private destroyRef = inject(DestroyRef); // 
+  private destroyRef = inject(DestroyRef); //
 
   loader = signal(false);
   success = signal(false);
@@ -43,13 +43,35 @@ export class ExerciceComponent implements OnInit {
   total = signal(0);
   perPage = signal(15); //  RÉDUIT
 
-  pageRange = computed(() => {
+  visiblePages = computed(() => {
     const current = this.currentPage();
-    const last = this.lastPage();
-    if (last <= 1) return [];
-    const start = Math.max(1, current - 2);
-    const end = Math.min(last, current + 2);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    const total = this.lastPage();
+    const delta = 2;
+
+    if (total <= 1) return [1];
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: number[] = [];
+    pages.push(1);
+
+    let start = Math.max(2, current - delta);
+    let end = Math.min(total - 1, current + delta);
+
+    if (current - delta <= 2) {
+      end = Math.min(total - 1, 5);
+    }
+    if (current + delta >= total - 1) {
+      start = Math.max(2, total - 4);
+    }
+
+    if (start > 2) pages.push(-1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(-2);
+    pages.push(total);
+
+    return pages;
   });
 
   pageStart = computed(() =>

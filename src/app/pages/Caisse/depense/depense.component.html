@@ -544,12 +544,13 @@
             <table class="table expense-table mb-0">
               <thead>
                 <tr>
-                  <th width="4%">N°</th>
+                  <th width="3%">N°</th>
                   <th width="9%">Date</th>
                   <th width="15%">Type</th>
                   <th width="14%">Fournisseur</th>
                   <th width="8%">Description</th>
-                  <th width="13%">Période</th>
+                  <th width="10%">Période</th>
+                  <th width="10%">Compte comptable</th>
                   <th width="10%">Mode</th>
                   <th width="11%" class="text-end">Montant (F)</th>
                   <th width="10%" class="text-center">Actions</th>
@@ -560,7 +561,7 @@
                   <!-- 🟡 Squelette de chargement -->
                   @for (_ of skeletonArray; track $index) {
                     <tr>
-                      <td colspan="9">
+                      <td colspan="10">
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
@@ -598,7 +599,7 @@
                     </td>
                   </tr>
                 } @else {
-                  <!-- ✅ Lignes de données -->
+                  <!--  Lignes de données -->
                   @for (d of depenses(); track d.rfk; let i = $index) {
                     <tr [class.table-warning]="editingRfk() === d.rfk">
                       <td class="text-muted">
@@ -626,6 +627,9 @@
                       </td>
                       <td class="text-muted">
                         {{ d.periode?.libelle ?? "—" }}
+                      </td>
+                      <td class="text-muted">
+                        {{ d.compte_comptable?.libelle ?? "—" }}
                       </td>
                       <td>
                         @if (d.mode_paiement) {
@@ -714,24 +718,42 @@
             </span>
             <nav>
               <ul class="pagination pagination-sm mb-0">
+                <!-- Bouton Précédent -->
                 <li class="page-item" [class.disabled]="currentPage() === 1">
                   <a
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() - 1)"
-                    >Précédent</a
                   >
+                    Précédent
+                  </a>
                 </li>
-                @for (page of pages(); track page) {
-                  <li class="page-item" [class.active]="page === currentPage()">
-                    <a
-                      class="page-link"
-                      style="cursor: pointer"
-                      (click)="goToPage(page)"
-                      >{{ page }}</a
+
+                <!-- Pages avec ellipses -->
+                @for (page of visiblePages(); track $index) {
+                  @if (page === -1 || page === -2) {
+                    <!-- Affichage des ellipses -->
+                    <li class="page-item disabled">
+                      <span class="page-link">…</span>
+                    </li>
+                  } @else {
+                    <!-- Page normale -->
+                    <li
+                      class="page-item"
+                      [class.active]="page === currentPage()"
                     >
-                  </li>
+                      <a
+                        class="page-link"
+                        style="cursor: pointer"
+                        (click)="goToPage(page)"
+                      >
+                        {{ page }}
+                      </a>
+                    </li>
+                  }
                 }
+
+                <!-- Bouton Suivant -->
                 <li
                   class="page-item"
                   [class.disabled]="currentPage() === lastPage()"
@@ -740,8 +762,9 @@
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() + 1)"
-                    >Suivant</a
                   >
+                    Suivant
+                  </a>
                 </li>
               </ul>
             </nav>

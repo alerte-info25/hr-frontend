@@ -13,6 +13,7 @@ export interface Operation {
   montant: number;
   mode_paiement: string;
   categorie: string;
+  compte_comptable_libelle?: string;
   periode_rfk?: string;
 }
 
@@ -27,6 +28,8 @@ export class DetailExerciceComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private exerciceService = inject(ExerciceComptableService);
+
+  readonly Math = Math;
 
   // State
   isLoading = signal(true);
@@ -71,6 +74,55 @@ export class DetailExerciceComponent implements OnInit {
     }
 
     return ops;
+  });
+
+  // 🔥 PAGINATION CLIENT (CORRIGÉ)
+  currentPage = signal(1);
+  perPage = 15;
+
+  totalItems = computed(() => this.operations().length);
+
+  paginatedOperations = computed(() => {
+    const allOps = this.operations();
+    const start = (this.currentPage() - 1) * this.perPage;
+    const end = start + this.perPage;
+    return allOps.slice(start, end);
+  });
+
+  lastPage = computed(() => {
+    const total = this.totalItems();
+    return Math.ceil(total / this.perPage) || 1;
+  });
+
+  visiblePages = computed(() => {
+    const current = this.currentPage();
+    const total = this.lastPage();
+    const delta = 2;
+
+    if (total <= 1) return [1];
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: number[] = [];
+    pages.push(1);
+
+    let start = Math.max(2, current - delta);
+    let end = Math.min(total - 1, current + delta);
+
+    if (current - delta <= 2) {
+      end = Math.min(total - 1, 5);
+    }
+    if (current + delta >= total - 1) {
+      start = Math.max(2, total - 4);
+    }
+
+    if (start > 2) pages.push(-1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(-2);
+    pages.push(total);
+
+    return pages;
   });
 
   totalDepensesFiltre = computed(() =>
@@ -134,6 +186,7 @@ export class DetailExerciceComponent implements OnInit {
       montant: Number(d.montant),
       mode_paiement: d.mode_paiement,
       categorie: d.type_depense?.libelle ?? '—',
+      compte_comptable_libelle: d.compte_comptable?.libelle ?? '—',
       periode_rfk: d.periode?.rfk ?? undefined,
     }));
 
@@ -146,6 +199,7 @@ export class DetailExerciceComponent implements OnInit {
         montant: Number(r.montant),
         mode_paiement: r.mode_paiement,
         categorie: r.service_propose?.nom ?? '—',
+        compte_comptable_libelle: r.compte_comptable?.libelle ?? '—',
         periode_rfk: r.periode?.rfk ?? undefined,
       }),
     );
@@ -155,17 +209,29 @@ export class DetailExerciceComponent implements OnInit {
     );
 
     this.allOperations.set(merged);
+    this.currentPage.set(1); // Reset à la page 1
   }
 
   // Actions filtres
   applyFilters(): void {
-    // Forcer la mise à jour
+    this.currentPage.set(1);
     this.allOperations.set([...this.allOperations()]);
   }
 
   setNature(nature: string): void {
     this.filterNature = nature;
     this.applyFilters();
+  }
+
+  // 🔥 Navigation pagination
+  goToPage(page: number): void {
+    if (page < 1 || page > this.lastPage()) return;
+    this.currentPage.set(page);
+    // Scroll en haut du tableau
+    document.querySelector('.table-container')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 
   // Clôture exercice

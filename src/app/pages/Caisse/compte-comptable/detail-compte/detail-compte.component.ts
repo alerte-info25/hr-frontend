@@ -18,6 +18,38 @@ import {
 } from '../../../../models/Caisse/compte-comptable.model';
 import { LoaderComponent } from '../../../../sharedCaisse/components/loader/loader.component';
 
+// ✅ Fonction utilitaire pour la pagination
+function getVisiblePages(
+  current: number,
+  total: number,
+  delta: number = 2,
+): number[] {
+  if (total <= 1) return [1];
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  pages.push(1);
+
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  if (current - delta <= 2) {
+    end = Math.min(total - 1, 5);
+  }
+  if (current + delta >= total - 1) {
+    start = Math.max(2, total - 4);
+  }
+
+  if (start > 2) pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push(-2);
+  pages.push(total);
+
+  return pages;
+}
+
 @Component({
   selector: 'app-detail-compte',
   standalone: true,
@@ -46,10 +78,9 @@ export class DetailCompteComponent implements OnInit, OnDestroy {
   perPage = 10;
   totalItems = 0;
   totalPages = 0;
-  pagesArray: number[] = [];
+  // ❌ SUPPRIMÉ : pagesArray: number[] = [];
 
-  // États de chargement séparés : un loader global aurait masqué toute la page
-  // à chaque pagination/filtre, alors qu'on veut juste griser le tableau
+  // États de chargement séparés
   isLoadingCompte = false;
   isLoadingStats = false;
   isLoadingOperations = false;
@@ -80,8 +111,6 @@ export class DetailCompteComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    // Debounce : on attend 300ms après la dernière frappe et on ignore
-    // les valeurs identiques pour éviter de spammer le backend
     this.search$
       .pipe(takeUntil(this.destroy$), debounceTime(300), distinctUntilChanged())
       .subscribe(() => this.onFilterChange());
@@ -90,6 +119,11 @@ export class DetailCompteComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ✅ Getter pour les pages visibles avec ellipses
+  get visiblePages(): number[] {
+    return getVisiblePages(this.currentPage, this.totalPages);
   }
 
   private loadAllData(rfk: string): void {
@@ -155,10 +189,7 @@ export class DetailCompteComponent implements OnInit, OnDestroy {
           this.totalItems = data.operations.total;
           this.totalPages = data.operations.last_page;
           this.currentPage = data.operations.current_page;
-          this.pagesArray = Array.from(
-            { length: this.totalPages },
-            (_, i) => i + 1,
-          );
+          // ❌ SUPPRIMÉ : this.pagesArray = Array.from(...)
           this.isLoadingOperations = false;
         },
         error: (err) => {
@@ -178,7 +209,6 @@ export class DetailCompteComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Branché sur (input) de la zone de recherche : pousse dans le Subject debounced
   onSearchInput(): void {
     this.search$.next(this.filterSearch);
   }

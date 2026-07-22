@@ -181,7 +181,9 @@
                   {{ (currentPage() - 1) * perPage + i + 1 }}
                 </td>
                 <td>
-                  <small class="font-monospace text-muted">{{ d.reference_paiement }}</small>
+                  <small class="font-monospace text-muted">{{
+                    d.reference_paiement
+                  }}</small>
                 </td>
                 <td>{{ d.date_depense | date: "dd/MM/yyyy" }}</td>
                 <td style="max-width: 200px" [title]="d.description">
@@ -232,7 +234,7 @@
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- ✅ Pagination avec ellipses -->
       @if (depenses().length > 0) {
         <div class="pagination-info">
           <span class="text-muted">
@@ -242,34 +244,51 @@
           </span>
           <nav>
             <ul class="pagination pagination-sm mb-0">
-              <li class="page-item" [class.disabled]="currentPage() === 1">
-                <a
-                  class="page-link"
-                  style="cursor: pointer"
-                  (click)="goToPage(currentPage() - 1)"
-                >
-                  Précédent
-                </a>
-              </li>
-              @for (page of pages(); track page) {
-                <li class="page-item" [class.active]="page === currentPage()">
-                  <a
-                    class="page-link"
-                    style="cursor: pointer"
-                    (click)="goToPage(page)"
-                  >
-                    {{ page }}
-                  </a>
-                </li>
-              }
+              <!-- Bouton Précédent -->
               <li
                 class="page-item"
-                [class.disabled]="currentPage() === lastPage()"
+                [class.disabled]="currentPage() === 1 || isLoading()"
               >
                 <a
                   class="page-link"
                   style="cursor: pointer"
-                  (click)="goToPage(currentPage() + 1)"
+                  (click)="!isLoading() && goToPage(currentPage() - 1)"
+                >
+                  Précédent
+                </a>
+              </li>
+
+              <!-- Pages avec ellipses -->
+              @for (page of visiblePages; track $index) {
+                @if (page === -1 || page === -2) {
+                  <!-- Ellipses -->
+                  <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                  </li>
+                } @else {
+                  <!-- Page normale -->
+                  <li class="page-item" [class.active]="page === currentPage()">
+                    <a
+                      class="page-link"
+                      style="cursor: pointer"
+                      [class.text-muted]="isLoading()"
+                      (click)="!isLoading() && goToPage(page)"
+                    >
+                      {{ page }}
+                    </a>
+                  </li>
+                }
+              }
+
+              <!-- Bouton Suivant -->
+              <li
+                class="page-item"
+                [class.disabled]="currentPage() === lastPage() || isLoading()"
+              >
+                <a
+                  class="page-link"
+                  style="cursor: pointer"
+                  (click)="!isLoading() && goToPage(currentPage() + 1)"
                 >
                   Suivant
                 </a>

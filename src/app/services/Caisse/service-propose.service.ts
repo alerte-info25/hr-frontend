@@ -2,7 +2,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.developpement';
-import { ApiResponse, PaginatedResponse, ServicePropose, ServiceProposeFilters, ServiceProposePayload } from '../../models/Caisse/service-propose.model';
+import {
+  ApiResponse,
+  PaginatedResponse,
+  ServicePropose,
+  ServiceProposeFilters,
+  ServiceProposePayload,
+} from '../../models/Caisse/service-propose.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +27,13 @@ export class ServiceProposeService {
       });
     }
     return params;
+  }
+
+  // AJOUTER CETTE MÉTHODE
+  getListe(): Observable<ServicePropose[]> {
+    return this.http
+      .get<ApiResponse<ServicePropose[]>>(`${this.url}/liste`)
+      .pipe(map((res) => res.data ?? []));
   }
 
   getAll(

@@ -1,7 +1,7 @@
 <!-- Loader global uniquement pendant le tout premier chargement du compte -->
 <app-loader *ngIf="isLoadingCompte && !compte" />
 
-<!-- Erreur de chargement du compte : on ne bloque plus l'utilisateur sans rien lui dire -->
+<!-- Erreur de chargement du compte -->
 <div class="container-fluid px-4" *ngIf="errorCompte && !compte">
   <div
     class="alert alert-danger d-flex justify-content-between align-items-center"
@@ -35,8 +35,8 @@
           </span>
         </div>
 
-        <div class="account-name-large">{{ compte.libelle }}</div>
-        <div class="account-desc">{{ compte.description }}</div>
+        <div class="account-name-large">Compte : {{ compte.libelle }}</div>
+        <div class="account-desc">Description : {{ compte.description }}</div>
       </div>
     </div>
   </div>
@@ -115,7 +115,6 @@
 
   <!-- Toolbar pour les opérations -->
   <div class="operations-toolbar">
-    <!-- Filtre de recherche -->
     <div class="search-box position-relative">
       <input
         type="text"
@@ -161,8 +160,6 @@
 
   <!-- Tableau des opérations -->
   <div class="operations-table-container position-relative">
-    <!-- Overlay de chargement : visible pendant pagination/filtre/recherche,
-         le tableau précédent reste affiché en dessous (pas de flash de contenu vide) -->
     <div class="table-loading-overlay" *ngIf="isLoadingOperations">
       <i class="fas fa-spinner fa-spin"></i>
       <span>Chargement…</span>
@@ -242,21 +239,15 @@
     <div class="totals-row" *ngIf="operationsData">
       <div class="total-item">
         <span class="total-label">Total Entrées:</span>
-        <span class="total-value" style="color: var(--success)"
-          >{{
-            operationsData.totaux.total_entrees | number: "1.2-2"
-          }}
-          Fcfa</span
-        >
+        <span class="total-value" style="color: var(--success)">
+          {{ operationsData.totaux.total_entrees | number: "1.2-2" }} Fcfa
+        </span>
       </div>
       <div class="total-item">
         <span class="total-label">Total Sorties:</span>
-        <span class="total-value" style="color: var(--danger)"
-          >{{
-            operationsData.totaux.total_sorties | number: "1.2-2"
-          }}
-          Fcfa</span
-        >
+        <span class="total-value" style="color: var(--danger)">
+          {{ operationsData.totaux.total_sorties | number: "1.2-2" }} Fcfa
+        </span>
       </div>
       <div class="total-item">
         <span class="total-label">Solde période:</span>
@@ -273,9 +264,10 @@
       </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- ✅ Pagination avec ellipses -->
     <nav *ngIf="totalPages > 1">
       <ul class="pagination">
+        <!-- Bouton Précédent -->
         <li
           class="page-item"
           [class.disabled]="currentPage === 1 || isLoadingOperations"
@@ -283,21 +275,39 @@
           <button
             type="button"
             class="page-link"
-            (click)="goToPage(currentPage - 1)"
+            (click)="!isLoadingOperations && goToPage(currentPage - 1)"
           >
             Précédent
           </button>
         </li>
-        <li
-          class="page-item"
-          *ngFor="let p of pagesArray"
-          [class.active]="currentPage === p"
-          [class.disabled]="isLoadingOperations"
-        >
-          <button type="button" class="page-link" (click)="goToPage(p)">
-            {{ p }}
-          </button>
-        </li>
+
+        <!-- Pages avec ellipses -->
+        <ng-container *ngFor="let p of visiblePages; let i = index">
+          <ng-container *ngIf="p === -1 || p === -2">
+            <!-- Ellipses -->
+            <li class="page-item disabled">
+              <span class="page-link">…</span>
+            </li>
+          </ng-container>
+          <ng-container *ngIf="p !== -1 && p !== -2">
+            <!-- Page normale -->
+            <li
+              class="page-item"
+              [class.active]="currentPage === p"
+              [class.disabled]="isLoadingOperations"
+            >
+              <button
+                type="button"
+                class="page-link"
+                (click)="!isLoadingOperations && goToPage(p)"
+              >
+                {{ p }}
+              </button>
+            </li>
+          </ng-container>
+        </ng-container>
+
+        <!-- Bouton Suivant -->
         <li
           class="page-item"
           [class.disabled]="currentPage === totalPages || isLoadingOperations"
@@ -305,7 +315,7 @@
           <button
             type="button"
             class="page-link"
-            (click)="goToPage(currentPage + 1)"
+            (click)="!isLoadingOperations && goToPage(currentPage + 1)"
           >
             Suivant
           </button>

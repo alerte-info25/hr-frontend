@@ -585,10 +585,11 @@
                 <tr>
                   <th width="4%">N°</th>
                   <th width="9%">Date</th>
-                  <th width="15%">Client</th>
+                  <th width="12%">Client</th>
                   <th width="14%">Service</th>
                   <th width="8%">Description</th>
                   <th width="12%">Période</th>
+                  <th width="10%">Compte Comptable</th>
                   <th width="10%">Mode</th>
                   <th width="11%" class="text-end">Montant (F)</th>
                   <th width="10%" class="text-center">Actions</th>
@@ -599,7 +600,7 @@
                   <!-- Squelette de chargement -->
                   @for (_ of skeletonArray; track $index) {
                     <tr>
-                      <td colspan="9">
+                      <td colspan="10">
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
@@ -673,12 +674,16 @@
 
                       <td>
                         <small class="text-muted font-monospace">{{
-                          r.description
+                          r.description ?? "—"
                         }}</small>
                       </td>
 
                       <td class="text-muted">
                         {{ r.periode?.libelle ?? "—" }}
+                      </td>
+
+                      <td class="text-muted">
+                        {{ r.compte_comptable?.libelle ?? "—" }}
                       </td>
 
                       <td>
@@ -765,29 +770,47 @@
               @if (!isLoadingList() && total() > 0) {
                 Affichage de {{ (currentPage() - 1) * perPage + 1 }} à
                 {{ Math.min(currentPage() * perPage, total()) }} sur
-                {{ total() }} entrées {{ total() > 1 ? "s" : "" }}
+                {{ total() }} entrées{{ total() > 1 ? "s" : "" }}
               }
             </span>
             <nav>
               <ul class="pagination pagination-sm mb-0">
+                <!-- Bouton Précédent -->
                 <li class="page-item" [class.disabled]="currentPage() === 1">
                   <a
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() - 1)"
-                    >Précédent</a
                   >
+                    Précédent
+                  </a>
                 </li>
-                @for (page of pages(); track page) {
-                  <li class="page-item" [class.active]="page === currentPage()">
-                    <a
-                      class="page-link"
-                      style="cursor: pointer"
-                      (click)="goToPage(page)"
-                      >{{ page }}</a
+
+                <!-- Pages avec ellipses -->
+                @for (page of visiblePages(); track $index) {
+                  @if (page === -1 || page === -2) {
+                    <!-- Ellipses -->
+                    <li class="page-item disabled">
+                      <span class="page-link">…</span>
+                    </li>
+                  } @else {
+                    <!-- Page normale -->
+                    <li
+                      class="page-item"
+                      [class.active]="page === currentPage()"
                     >
-                  </li>
+                      <a
+                        class="page-link"
+                        style="cursor: pointer"
+                        (click)="goToPage(page)"
+                      >
+                        {{ page }}
+                      </a>
+                    </li>
+                  }
                 }
+
+                <!-- Bouton Suivant -->
                 <li
                   class="page-item"
                   [class.disabled]="currentPage() === lastPage()"
@@ -796,8 +819,9 @@
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() + 1)"
-                    >Suivant</a
                   >
+                    Suivant
+                  </a>
                 </li>
               </ul>
             </nav>

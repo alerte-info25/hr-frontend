@@ -20,6 +20,38 @@ import { Client } from '../../../models/Caisse/client.model';
 import { ClientService } from '../../../services/Caisse/clients.service';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 
+// ✅ Fonction utilitaire pour la pagination
+function getVisiblePages(
+  current: number,
+  total: number,
+  delta: number = 2,
+): number[] {
+  if (total <= 1) return [1];
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  pages.push(1);
+
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  if (current - delta <= 2) {
+    end = Math.min(total - 1, 5);
+  }
+  if (current + delta >= total - 1) {
+    start = Math.max(2, total - 4);
+  }
+
+  if (start > 2) pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push(-2);
+  pages.push(total);
+
+  return pages;
+}
+
 @Component({
   selector: 'app-client',
   standalone: true,
@@ -87,6 +119,11 @@ export class ClientsComponent implements OnInit {
 
   readonly Math = Math;
 
+  // ✅ Getter pour les pages visibles avec ellipses
+  get visiblePages(): number[] {
+    return getVisiblePages(this.currentPage(), this.lastPage());
+  }
+
   trackByRfk(index: number, item: Client): string {
     return item.rfk;
   }
@@ -126,9 +163,10 @@ export class ClientsComponent implements OnInit {
     this.loadList();
   }
 
-  pages(): number[] {
-    return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
-  }
+  // ❌ SUPPRIMER cette fonction
+  // pages(): number[] {
+  //   return Array.from({ length: this.lastPage() }, (_, i) => i + 1);
+  // }
 
   resetForm(): void {
     this.editingRfk.set(null);

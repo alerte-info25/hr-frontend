@@ -432,24 +432,42 @@
             </span>
             <nav>
               <ul class="pagination pagination-sm mb-0">
+                <!-- Bouton Précédent -->
                 <li class="page-item" [class.disabled]="currentPage() === 1">
                   <a
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() - 1)"
-                    >Précédent</a
                   >
+                    Précédent
+                  </a>
                 </li>
-                @for (page of pages(); track page) {
-                  <li class="page-item" [class.active]="page === currentPage()">
-                    <a
-                      class="page-link"
-                      style="cursor: pointer"
-                      (click)="goToPage(page)"
-                      >{{ page }}</a
+
+                <!-- Pages avec ellipses -->
+                @for (page of visiblePages(); track $index) {
+                  @if (page === -1 || page === -2) {
+                    <!-- Ellipses -->
+                    <li class="page-item disabled">
+                      <span class="page-link">…</span>
+                    </li>
+                  } @else {
+                    <!-- Page normale -->
+                    <li
+                      class="page-item"
+                      [class.active]="page === currentPage()"
                     >
-                  </li>
+                      <a
+                        class="page-link"
+                        style="cursor: pointer"
+                        (click)="goToPage(page)"
+                      >
+                        {{ page }}
+                      </a>
+                    </li>
+                  }
                 }
+
+                <!-- Bouton Suivant -->
                 <li
                   class="page-item"
                   [class.disabled]="currentPage() === lastPage()"
@@ -458,8 +476,9 @@
                     class="page-link"
                     style="cursor: pointer"
                     (click)="goToPage(currentPage() + 1)"
-                    >Suivant</a
                   >
+                    Suivant
+                  </a>
                 </li>
               </ul>
             </nav>

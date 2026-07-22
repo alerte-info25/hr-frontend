@@ -29,6 +29,13 @@ export class ClientService {
     return params;
   }
 
+  // AJOUTER CETTE MÉTHODE
+  getListe(): Observable<Client[]> {
+    return this.http
+      .get<ApiResponse<Client[]>>(`${this.url}/liste`)
+      .pipe(map((res) => res.data ?? []));
+  }
+
   getAll(filters?: ClientFilters): Observable<PaginatedResponse<Client>> {
     return this.http
       .get<ApiResponse<PaginatedResponse<Client>>>(this.url, {

@@ -24,7 +24,10 @@
         }
       </div>
       <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a routerLink="/caisse/services-propose" class="btn btn-outline-primary">
+        <a
+          routerLink="/caisse/services-propose"
+          class="btn btn-outline-primary"
+        >
           <i class="fas fa-arrow-left me-2"></i>
           Retour à la liste
         </a>
@@ -63,7 +66,9 @@
           <i class="fas fa-chart-bar"></i>
         </div>
         <div class="stat-label">Moyenne par recouvrement</div>
-        <div class="stat-value">{{ moyenneRecouvrement() | number: "1.0-0" }} F</div>
+        <div class="stat-value">
+          {{ moyenneRecouvrement() | number: "1.0-0" }} F
+        </div>
       </div>
     </div>
 
@@ -181,7 +186,9 @@
                   {{ (currentPage() - 1) * perPage + i + 1 }}
                 </td>
                 <td>
-                  <small class="font-monospace text-muted">{{ r.reference_paiement }}</small>
+                  <small class="font-monospace text-muted">{{
+                    r.reference_paiement
+                  }}</small>
                 </td>
                 <td>{{ r.date_recouvrement | date: "dd/MM/yyyy" }}</td>
                 <td style="max-width: 200px" [title]="r.description || ''">
@@ -192,7 +199,7 @@
                     class="fas fa-user me-1 opacity-50"
                     style="font-size: 11px"
                   ></i>
-                  {{ r.client ? r.client.nom + ' ' + r.client.prenom : "—" }}
+                  {{ r.client ? r.client.nom + " " + r.client.prenom : "—" }}
                 </td>
                 <td class="text-muted">{{ r.periode?.libelle || "—" }}</td>
                 <td>
@@ -232,7 +239,7 @@
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- ✅ Pagination avec ellipses -->
       @if (recouvrements().length > 0) {
         <div class="pagination-info">
           <span class="text-muted">
@@ -242,34 +249,51 @@
           </span>
           <nav>
             <ul class="pagination pagination-sm mb-0">
-              <li class="page-item" [class.disabled]="currentPage() === 1">
-                <a
-                  class="page-link"
-                  style="cursor: pointer"
-                  (click)="goToPage(currentPage() - 1)"
-                >
-                  Précédent
-                </a>
-              </li>
-              @for (page of pages(); track page) {
-                <li class="page-item" [class.active]="page === currentPage()">
-                  <a
-                    class="page-link"
-                    style="cursor: pointer"
-                    (click)="goToPage(page)"
-                  >
-                    {{ page }}
-                  </a>
-                </li>
-              }
+              <!-- Bouton Précédent -->
               <li
                 class="page-item"
-                [class.disabled]="currentPage() === lastPage()"
+                [class.disabled]="currentPage() === 1 || isLoading()"
               >
                 <a
                   class="page-link"
                   style="cursor: pointer"
-                  (click)="goToPage(currentPage() + 1)"
+                  (click)="!isLoading() && goToPage(currentPage() - 1)"
+                >
+                  Précédent
+                </a>
+              </li>
+
+              <!-- Pages avec ellipses -->
+              @for (page of visiblePages; track $index) {
+                @if (page === -1 || page === -2) {
+                  <!-- Ellipses -->
+                  <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                  </li>
+                } @else {
+                  <!-- Page normale -->
+                  <li class="page-item" [class.active]="page === currentPage()">
+                    <a
+                      class="page-link"
+                      style="cursor: pointer"
+                      [class.text-muted]="isLoading()"
+                      (click)="!isLoading() && goToPage(page)"
+                    >
+                      {{ page }}
+                    </a>
+                  </li>
+                }
+              }
+
+              <!-- Bouton Suivant -->
+              <li
+                class="page-item"
+                [class.disabled]="currentPage() === lastPage() || isLoading()"
+              >
+                <a
+                  class="page-link"
+                  style="cursor: pointer"
+                  (click)="!isLoading() && goToPage(currentPage() + 1)"
                 >
                   Suivant
                 </a>
