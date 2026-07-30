@@ -25,9 +25,9 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="stats-label">Total des sorties (page)</p>
+              <p class="stats-label">Total des sorties</p>
               <h3 class="stats-value text-danger">
-                @if (isLoadingList()) {
+                @if (isLoadingStats()) {
                   <span class="placeholder col-6"></span>
                 } @else {
                   {{ totalMontant() | number: "1.0-0" }}
@@ -71,12 +71,12 @@
             <div>
               <p class="stats-label">Moyenne par dépense</p>
               <h3 class="stats-value text-warning">
-                @if (isLoadingList()) {
+                @if (isLoadingStats()) {
                   <span class="placeholder col-6"></span>
                 } @else {
                   {{
-                    depenses().length > 0
-                      ? (totalMontant() / depenses().length | number: "1.0-0")
+                    nombreDepenses() > 0
+                      ? (totalMontant() / nombreDepenses() | number: "1.0-0")
                       : 0
                   }}
                   <small class="fs-6 fw-normal">F</small>
@@ -694,7 +694,7 @@
                       }}) :
                     </td>
                     <td class="text-end text-danger">
-                      {{ totalMontant() | number: "1.0-0" }} F
+                      {{ pageTotal() | number: "1.0-0" }} F
                     </td>
                     <td></td>
                   </tr>

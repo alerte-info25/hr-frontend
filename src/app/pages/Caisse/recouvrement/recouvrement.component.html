@@ -27,10 +27,10 @@
             <div>
               <p class="stats-label">Total des entrées</p>
               <h3 class="stats-value text-success">
-                @if (isLoadingList()) {
+                @if (isLoadingStats()) {
                   <span class="placeholder col-6"></span>
                 } @else {
-                  {{ totalMontant() | number: "1.0-0" }}
+                  {{ statsTotalMontant() | number: "1.0-0" }}
                   <small class="fs-6 fw-normal">F</small>
                 }
               </h3>
@@ -71,15 +71,10 @@
             <div>
               <p class="stats-label">Moyenne par recouvrement</p>
               <h3 class="stats-value text-warning">
-                @if (isLoadingList()) {
+                @if (isLoadingStats()) {
                   <span class="placeholder col-6"></span>
                 } @else {
-                  {{
-                    recouvrements().length > 0
-                      ? (totalMontant() / recouvrements().length
-                        | number: "1.0-0")
-                      : 0
-                  }}
+                  {{ statsMoyenne() | number: "1.0-0" }}
                   <small class="fs-6 fw-normal">F</small>
                 }
               </h3>
@@ -751,7 +746,7 @@
                       }}) :
                     </td>
                     <td class="text-end text-success">
-                      {{ totalMontant() | number: "1.0-0" }} F
+                      {{ pageTotal() | number: "1.0-0" }} F
                     </td>
                     <td></td>
                   </tr>

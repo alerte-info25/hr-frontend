@@ -65,32 +65,39 @@ export class RecouvrementComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
-  // Ajoute cette propriété computed après les autres computed
+  // Stats globales (indépendantes de la pagination, recalculées uniquement
+  // quand les FILTRES changent, jamais quand on change de page)
+  isLoadingStats = signal(false);
+  statsTotalMontant = signal(0);
+  statsCount = signal(0);
+  statsMoyenne = computed(() =>
+    this.statsCount() > 0 ? this.statsTotalMontant() / this.statsCount() : 0,
+  );
+
+  // Total de la page courante uniquement (pour le footer du tableau)
+  pageTotal = computed(() =>
+    this.recouvrements().reduce((sum, r) => sum + Number(r.montant), 0),
+  );
+
   visiblePages = computed(() => {
     const current = this.currentPage();
     const total = this.lastPage();
-    const delta = 2; // Nombre de pages autour de la page actuelle
+    const delta = 2;
 
-    // Si pas de pages ou une seule page
     if (total <= 1) {
       return [1];
     }
 
-    // Si peu de pages, on affiche tout
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
 
     const pages: number[] = [];
-
-    // Toujours la première page
     pages.push(1);
 
-    // Calcul de la plage autour de la page actuelle
     let start = Math.max(2, current - delta);
     let end = Math.min(total - 1, current + delta);
 
-    // Ajustement pour avoir toujours un affichage cohérent
     if (current - delta <= 2) {
       end = Math.min(total - 1, 5);
     }
@@ -98,28 +105,23 @@ export class RecouvrementComponent implements OnInit {
       start = Math.max(2, total - 4);
     }
 
-    // Ellipse avant si nécessaire
     if (start > 2) {
-      pages.push(-1); // -1 représente "..."
+      pages.push(-1);
     }
 
-    // Pages de la plage
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
 
-    // Ellipse après si nécessaire
     if (end < total - 1) {
-      pages.push(-2); // -2 représente "..."
+      pages.push(-2);
     }
 
-    // Toujours la dernière page
     pages.push(total);
 
     return pages;
   });
 
-  // Skeleton pour le chargement
   get skeletonArray(): number[] {
     return Array(this.perPage).fill(0);
   }
@@ -131,11 +133,6 @@ export class RecouvrementComponent implements OnInit {
   filterMode = '';
   filterSearch = '';
   filterActif = '';
-
-  // Stats dérivées
-  totalMontant = computed(() =>
-    this.recouvrements().reduce((sum, r) => sum + Number(r.montant), 0),
-  );
 
   // Formulaire
   editingRfk = signal<string | null>(null);
@@ -171,19 +168,16 @@ export class RecouvrementComponent implements OnInit {
   ][];
   readonly Math = Math;
 
-  // Lifecycle
   ngOnInit(): void {
     this.loadReferentiels();
   }
 
-  // Chargement SÉQUENTIEL des référentiels
   private loadReferentiels(): void {
     this.isLoadingRefs.set(true);
     this.loadExercices();
   }
 
   private loadExercices(): void {
-    // Utiliser getListe() au lieu de getAll()
     this.exerciceService.getListe().subscribe({
       next: (data) => {
         this.exercices.set(data.filter((e) => !e.est_cloture));
@@ -199,7 +193,6 @@ export class RecouvrementComponent implements OnInit {
   }
 
   private loadServices(): void {
-    // Utiliser getListe() au lieu de getAll()
     this.serviceProposeService.getListe().subscribe({
       next: (data) => {
         this.services.set(data);
@@ -210,7 +203,6 @@ export class RecouvrementComponent implements OnInit {
   }
 
   private loadComptes(): void {
-    // Utiliser getListe() au lieu de getAll()
     this.compteService.getListe().subscribe({
       next: (data) => {
         this.comptes.set(data);
@@ -221,7 +213,6 @@ export class RecouvrementComponent implements OnInit {
   }
 
   private loadClients(): void {
-    // Utiliser getListe() au lieu de getAll()
     this.clientService.getListe().subscribe({
       next: (data) => {
         this.clients.set(data);
@@ -232,12 +223,12 @@ export class RecouvrementComponent implements OnInit {
   }
 
   private loadBureaux(): void {
-    // Utiliser getListe() au lieu de getAll()
     this.bureauService.getListe().subscribe({
       next: (data) => {
         this.bureaux.set(data);
         this.isLoadingRefs.set(false);
         this.loadList();
+        this.loadStats();
       },
       error: () => {
         this.isLoadingRefs.set(false);
@@ -245,7 +236,6 @@ export class RecouvrementComponent implements OnInit {
     });
   }
 
-  // Changement d'exercice → recharge périodes
   onExerciceChange(exerciceId: number | string): void {
     this.form.patchValue({ periode_id: null });
     this.periodes.set([]);
@@ -261,7 +251,7 @@ export class RecouvrementComponent implements OnInit {
       });
   }
 
-  // Chargement liste
+  // Chargement liste (paginée)
   loadList(): void {
     this.isLoadingList.set(true);
     this.recouvrementService
@@ -291,15 +281,44 @@ export class RecouvrementComponent implements OnInit {
       });
   }
 
+  // Chargement stats (sur TOUTES les données filtrées, indépendant de la page)
+  loadStats(): void {
+    this.isLoadingStats.set(true);
+    this.recouvrementService
+      .getStats({
+        search: this.filterSearch || undefined,
+        exercice_id: this.filterExerciceId
+          ? Number(this.filterExerciceId)
+          : undefined,
+        service_propose_id: this.filterServiceId
+          ? Number(this.filterServiceId)
+          : undefined,
+        client_id: this.filterClientId
+          ? Number(this.filterClientId)
+          : undefined,
+        mode_paiement: (this.filterMode as ModePaiement) || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          this.statsTotalMontant.set(res.total_montant);
+          this.statsCount.set(res.nombre);
+          this.isLoadingStats.set(false);
+        },
+        error: () => this.isLoadingStats.set(false),
+      });
+  }
+
   onFilterChange(): void {
     this.currentPage.set(1);
     this.loadList();
+    this.loadStats();
   }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
     this.loadList();
+    // Pas de loadStats() ici : les stats restent fixes lors du changement de page
   }
 
   // Formulaire
@@ -378,6 +397,7 @@ export class RecouvrementComponent implements OnInit {
         this.isSaving.set(false);
         this.resetForm();
         this.loadList();
+        this.loadStats();
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Une erreur est survenue.');
@@ -405,6 +425,7 @@ export class RecouvrementComponent implements OnInit {
       next: () => {
         this.isDeleting.set(null);
         this.loadList();
+        this.loadStats();
       },
       error: (err) => {
         this.deleteError.set(

@@ -50,6 +50,33 @@ export class RecouvrementService {
       );
   }
 
+  getStats(
+    filters: {
+      search?: string;
+      bureau_id?: number;
+      exercice_id?: number;
+      periode_id?: number;
+      client_id?: number;
+      service_propose_id?: number;
+      mode_paiement?: string;
+    } = {},
+  ): Observable<{
+    total_montant: number;
+    nombre: number;
+    par_service: any[];
+    par_bureau: any[];
+    par_mode_paiement: any[];
+    top_clients: any[];
+    evolution: any[];
+  }> {
+    return this.http
+      .get<{
+        success: boolean;
+        data: any;
+      }>(`${this.url}/stats`, { params: this.buildParams(filters) })
+      .pipe(map((res) => res.data));
+  }
+
   getOne(rfk: string): Observable<Recouvrement> {
     return this.http
       .get<ApiResponse<Recouvrement>>(`${this.url}/${rfk}`)

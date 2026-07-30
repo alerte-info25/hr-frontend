@@ -58,6 +58,20 @@ export class DepenseComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
+  // Statistiques
+  isLoadingStats = signal(false);
+  statsData = signal<any>(null);
+  totalMontant = signal<number>(0);
+  nombreDepenses = signal<number>(0);
+  statsParType = signal<any[]>([]);
+  statsParBureau = signal<any[]>([]);
+  statsParModePaiement = signal<any[]>([]);
+  statsEvolution = signal<any[]>([]);
+
+  pageTotal = computed(() =>
+    this.depenses().reduce((sum, d) => sum + Number(d.montant), 0),
+  );
+
   // Ajoute cette propriété computed après les autres computed
   visiblePages = computed(() => {
     const current = this.currentPage();
@@ -122,11 +136,6 @@ export class DepenseComponent implements OnInit {
   filterTypeId = '';
   filterMode = '';
   filterSearch = '';
-
-  // Stats dérivées
-  totalMontant = computed(() =>
-    this.depenses().reduce((sum, d) => sum + Number(d.montant), 0),
-  );
 
   // Formulaire
   editingRfk = signal<string | null>(null);
@@ -224,6 +233,7 @@ export class DepenseComponent implements OnInit {
         this.bureaux.set(data);
         this.isLoadingRefs.set(false);
         this.loadList();
+        this.loadStats();
       },
       error: () => this.isLoadingRefs.set(false),
     });
@@ -274,9 +284,54 @@ export class DepenseComponent implements OnInit {
       });
   }
 
+  // Chargement des statistiques
+  loadStats(): void {
+    this.isLoadingStats.set(true);
+    const filters: any = {};
+
+    // Ajout des filtres si présents
+    if (this.filterExerciceId) {
+      filters.exercice_id = Number(this.filterExerciceId);
+    }
+    if (this.filterTypeId) {
+      filters.type_depense_id = Number(this.filterTypeId);
+    }
+    if (this.filterMode) {
+      filters.mode_paiement = this.filterMode;
+    }
+    if (this.filterSearch) {
+      filters.search = this.filterSearch;
+    }
+
+    this.depenseService.getStats(filters).subscribe({
+      next: (response) => {
+        this.isLoadingStats.set(false);
+        this.statsData.set(response);
+        this.totalMontant.set(response.total_montant || 0);
+        this.nombreDepenses.set(response.nombre || 0);
+        this.statsParType.set(response.par_type || []);
+        this.statsParBureau.set(response.par_bureau || []);
+        this.statsParModePaiement.set(response.par_mode_paiement || []);
+        this.statsEvolution.set(response.evolution || []);
+      },
+      error: (error) => {
+        this.isLoadingStats.set(false);
+        console.error('Erreur lors du chargement des statistiques:', error);
+        // Réinitialisation en cas d'erreur
+        this.totalMontant.set(0);
+        this.nombreDepenses.set(0);
+        this.statsParType.set([]);
+        this.statsParBureau.set([]);
+        this.statsParModePaiement.set([]);
+        this.statsEvolution.set([]);
+      },
+    });
+  }
+
   onFilterChange(): void {
     this.currentPage.set(1);
     this.loadList();
+    this.loadStats(); // Recharger les stats quand les filtres changent
   }
 
   goToPage(page: number): void {
@@ -367,6 +422,7 @@ export class DepenseComponent implements OnInit {
         this.isSaving.set(false);
         this.resetForm();
         this.loadList();
+        this.loadStats(); // Recharger les stats après création/modification
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Une erreur est survenue.');
@@ -390,6 +446,7 @@ export class DepenseComponent implements OnInit {
       next: () => {
         this.isDeleting.set(null);
         this.loadList();
+        this.loadStats(); // Recharger les stats après suppression
       },
       error: (err) => {
         this.deleteError.set(

@@ -45,6 +45,31 @@ export class DepenseService {
       );
   }
 
+  getStats(
+    filters: {
+      search?: string;
+      bureau_id?: number;
+      exercice_id?: number;
+      periode_id?: number;
+      type_depense_id?: number;
+      mode_paiement?: string;
+    } = {},
+  ): Observable<{
+    total_montant: number;
+    nombre: number;
+    par_type: any[];
+    par_bureau: any[];
+    par_mode_paiement: any[];
+    evolution: any[];
+  }> {
+    return this.http
+      .get<{
+        success: boolean;
+        data: any;
+      }>(`${this.url}/stats`, { params: this.buildParams(filters) })
+      .pipe(map((res) => res.data));
+  }
+
   getOne(rfk: string): Observable<Depense> {
     return this.http
       .get<ApiResponse<Depense>>(`${this.url}/${rfk}`)
