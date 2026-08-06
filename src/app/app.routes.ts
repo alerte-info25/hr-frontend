@@ -291,7 +291,7 @@ export const routes: Routes = [
         path: 'dossiers',
         component: DocumentsComponent,
         canActivate: [AuthGuard],
-        title: 'Documents',
+        title: 'Dossiers',
       },
       {
         path: 'dossier/:id',
@@ -522,49 +522,57 @@ export const routes: Routes = [
         path: 'equipements',
         loadComponent: () =>
           import('./features/infrastructures/pages/equipements/equipements.component')
-            .then(m => m.EquipementsComponent)
+            .then(m => m.EquipementsComponent),
+        title: 'Équipements'
       },
       {
         path: 'employes',
         loadComponent: () =>
           import('./features/infrastructures/pages/list-employes/list-employes.component')
-            .then(m => m.ListEmployesComponent)
+            .then(m => m.ListEmployesComponent),
+          title: 'Employés'
       },
       {
         path: 'mouvements',
         loadComponent: () =>
           import('./features/infrastructures/pages/mouvements/mouvements.component')
-            .then(m => m.MouvementsComponent)
+            .then(m => m.MouvementsComponent),
+          title: 'Mouvements'
       },
       {
         path: 'categories',
         loadComponent: () =>
           import('./features/infrastructures/pages/categorie/categorie.component')
-            .then(m => m.CategorieComponent)
+            .then(m => m.CategorieComponent),
+          title: 'Catégories'
       },
       {
         path: 'bureaux',
         loadComponent: () =>
           import('./features/infrastructures/pages/infras-bureaux/infras-bureaux.component')
-            .then(m => m.InfrasBureauxComponent)
+            .then(m => m.InfrasBureauxComponent),
+          title: 'Bureaux'
       },
       {
         path: 'pieces',
         loadComponent: () =>
           import('./features/infrastructures/pages/infras-zones/infras-zones.component')
-              .then(m => m.InfrasZonesComponent)
+              .then(m => m.InfrasZonesComponent),
+          title: 'Pièces'
       },
       {
         path: 'fournisseurs',
         loadComponent: () =>
           import('./features/infrastructures/pages/infras-fournisseur/infras-fournisseur.component')
-              .then(m => m.InfrasFournisseurComponent)
+              .then(m => m.InfrasFournisseurComponent),
+          title: 'Fournisseurs'
       },
       {
         path: 'affectations',
         loadComponent: () =>
           import('./features/infrastructures/pages/infras-affectation/infras-affectation.component')
-              .then(m => m.InfrasAffectationComponent)
+              .then(m => m.InfrasAffectationComponent),
+          title: 'Affectations'
 
       },
       {

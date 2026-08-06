@@ -234,6 +234,8 @@ export class BilanDirecteurComponent implements OnInit {
         `${b.employe.prenom} ${b.employe.nom}`.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (b.service?.nom?.toLowerCase().includes(this.searchTerm.toLowerCase()));
       return matchService && matchStatut && matchSearch;
+
+
     });
   }
 

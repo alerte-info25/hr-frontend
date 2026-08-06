@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { LoadingComponent } from '../loading/loading.component';
+import { DurationCalculatorService } from '../../services/duration-calculator.service';
 
 declare var bootstrap: any;
 
@@ -65,9 +66,9 @@ export class PermissionEmployeComponent implements OnInit {
   searchQuery = '';
   selectedStatus: number | null = null;
   selectedType: string | null = null;
-
   constructor(
     private typePermissionService: TypePermissionsService,
+    private durationCalculator: DurationCalculatorService,
     private snackBar: MatSnackBar,
     private permissionSvr: PermissionService,
     private authSvr: AuthService,
@@ -595,4 +596,48 @@ export class PermissionEmployeComponent implements OnInit {
   createObjectURL(file: File): string {
     return URL.createObjectURL(file);
   }
+
+  calculerDuree(debut: string, fin: string): string {
+    return this.durationCalculator.formaterDuree(
+      this.durationCalculator.calculerDureeOuvrable(debut, fin)
+    );
+  }
+
+  calculerDureeLongue(debut: string, fin: string): string {
+    return this.durationCalculator.formaterDureeLongue(
+      this.durationCalculator.calculerDureeOuvrable(debut, fin)
+    );
+  }
+
+  getDureeEnHeures(debut: string, fin: string): number {
+    return this.durationCalculator.calculerDureeOuvrable(debut, fin);
+  }
+
+  getJoursOuvrables(debut: string, fin: string): number {
+    return this.durationCalculator.compterJoursOuvrables(debut, fin);
+  }
+
+  getDetailDuree(debut: string, fin: string) {
+    return this.durationCalculator.getDetailDuree(debut, fin);
+  }
+
+  getResumeDuree(debut: string, fin: string) {
+    return this.durationCalculator.getResumeDuree(debut, fin);
+  }
+
+  formaterDuree(heures: number): string {
+    return this.durationCalculator.formaterDuree(heures);
+  }
+
+  formatDateSort(date: string): string {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+
 }

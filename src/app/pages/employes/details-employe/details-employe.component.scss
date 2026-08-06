@@ -374,6 +374,90 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+/* Style pour l'accès à la caisse */
+.caisse-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #6c757d;
+  transition: all 0.3s ease;
+}
+
+.caisse-item.is-caisse {
+  background: #f0f8ff;
+  border-left-color: #28a745;
+}
+
+.caisse-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.badge.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge.secondary {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.badge .material-icons {
+  font-size: 18px;
+}
+
+.caisse-note {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Style pour le responsable équipements (existant) */
+.responsable-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #6c757d;
+  transition: all 0.3s ease;
+}
+
+.responsable-item.is-responsable {
+  background: #f0f8ff;
+  border-left-color: #007bff;
+}
+
+.responsable-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.responsable-note {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
 // Message d'erreur
 .text-danger {
   color: $danger-color;

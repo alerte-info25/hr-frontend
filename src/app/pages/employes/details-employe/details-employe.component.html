@@ -50,6 +50,26 @@
       </div>
     </div>
 
+    <div class="detail-item caisse-item" [class.is-caisse]="theEmployee?.caisse_permission === true">
+      <strong>
+        <span class="material-icons">payments</span>
+        Accès à la Caisse :
+      </strong>
+      <div class="caisse-badge" *ngIf="theEmployee?.caisse_permission === true">
+        <span class="badge success">
+          <span class="material-icons">check_circle</span>
+          Autorisé
+        </span>
+        <span class="caisse-note">(Peut accéder au module de caisse)</span>
+      </div>
+      <div class="caisse-badge" *ngIf="theEmployee?.caisse_permission === false || !theEmployee?.caisse_permission">
+        <span class="badge secondary">
+          <span class="material-icons">block</span>
+          Non autorisé
+        </span>
+      </div>
+    </div>
+
     <div class="detail-item">
       <strong><span class="material-icons">wc</span> Genre :</strong>
       <span>{{ getLabelGenre(theEmployee?.genre) || '' }}</span>

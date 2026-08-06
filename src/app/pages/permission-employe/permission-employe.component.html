@@ -358,6 +358,40 @@
           </div>
         </div>
 
+        <div class="card mb-3" *ngIf="getDetailDuree(permissionSelectionnee.debut, permissionSelectionnee.fin) as detail">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="bi bi-clock-history me-2"></i>
+              Détail de la durée par jour
+            </h6>
+            <div class="duration-detail-list">
+              <div *ngFor="let heure of detail.heuresParJour; let i = index" class="day-detail-item">
+                <span class="day-label">Jour {{ i + 1 }} :</span>
+                <span class="day-duration">{{ formaterDuree(heure) }}</span>
+                <span class="day-hours">({{ heure }}h)</span>
+              </div>
+              <div class="total-detail-item">
+                <span class="total-label"><strong>Total :</strong></span>
+                <span class="total-duration"><strong>{{ formaterDuree(detail.totalHeures) }}</strong></span>
+                <span class="total-hours">({{ detail.totalHeures }}h)</span>
+              </div>
+              <div class="info-detail-item">
+                <small class="text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Jours ouvrables : {{ detail.joursOuvrables }} |
+                  Plage horaire : 08:00 - 18:00 |
+                  Pause déjeuner : 12:30 - 14:30 (exclue)
+                </small>
+                <br>
+                <small class="text-muted">
+                  <i class="bi bi-calculator me-1"></i>
+                  Une journée = 8 heures de travail effectif
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="detail-item full-width">
           <div class="detail-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

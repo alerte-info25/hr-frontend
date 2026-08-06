@@ -86,7 +86,7 @@
             <div class="employee-info">
               @if(conge.employe){
                 <div class="avatar">
-                  {{ conge?.employe?.prenom?.charAt(0) || '' }}{{ conge?.employe?.nom?.charAt(0) || '' }}
+                  {{ conge?.employe?.prenom?.charAt(0) || 'I' }}{{ conge?.employe?.nom?.charAt(0) || '' }}
                 </div>
               }@else{
                 <div class="avatar">I</div>
