@@ -37,7 +37,7 @@ export class DemandeService {
   }
 
   getDemandeDetail(slug: string): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}demandes/${slug}`);
+    return this.http.get<any>(`${environment.apiUrl}demande-details/${slug}`);
   }
 
   updateReponse(reponseSlug: string, reponseData: any): Observable<any> {

@@ -87,7 +87,8 @@
   </div>
 
   <!-- Dashboard Content -->
-  <div *ngIf="!isLoading() && dashboardData()" class="dashboard-content">
+   @if(!isLoading() && dashboardData()){
+  <div  class="dashboard-content">
     <div *ngIf="selectedEmployeId()" class="active-filter-badge">
       <span class="material-icons">person</span>
       <span>
@@ -165,7 +166,7 @@
       <div class="chart-card chart-large">
         <h3 class="chart-title">
           <span class="material-icons">trending_up</span>
-          Évolution des demandes
+          Évolution des demandes de permissions
         </h3>
         <div class="chart-container">
           <canvas id="evolutionChart"></canvas>
@@ -331,7 +332,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let demande of dashboardData()!.demandes_recentes">
+            <tr class="demande-permission-cell" *ngFor="let demande of dashboardData()!.demandes_recentes" (click)="openDemandeListe()">
               <td class="employe-cell">{{ demande.employe }}</td>
               <td><span class="type-badge">{{ demande.type }}</span></td>
               <td>{{ demande.date_demande }}</td>
@@ -346,5 +347,632 @@
       </div>
     </div>
   </div>
+  }
 </div>
 
+<!-- dashboard.component.html - Section Congés -->
+
+<!-- ========================================================== -->
+<!-- SECTION 2: CONGÉS                                          -->
+<!-- ========================================================== -->
+
+<div class="section-divider section-divider-conges">
+  <span class="section-divider-icon">🏖️</span>
+  <h2 class="section-divider-title">Congés 2026</h2>
+  <span class="section-divider-line"></span>
+  <span class="section-divider-badge">Solde 2026</span>
+</div>
+
+<!-- KPIs Congés -->
+<div class="kpis-grid">
+  <!-- Employés éligibles -->
+  <div class="kpi-card kpi-success">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">verified</span>
+      <span class="kpi-label">Employés éligibles</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.anciennete?.eligibles || 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.anciennete?.taux_eligibilite || 0 }}%</span>
+      <span class="kpi-footer-text">des employés</span>
+    </div>
+  </div>
+
+  <!-- Total droits acquis -->
+  <div class="kpi-card kpi-info">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">event_available</span>
+      <span class="kpi-label">Droits acquis 2026</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.anciennete?.total_droits || 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.anciennete?.total_droits_semaines || 0 }} sem.</span>
+      <span class="kpi-footer-text">au total</span>
+    </div>
+  </div>
+
+  <!-- Total pris 2026 -->
+  <div class="kpi-card kpi-warning">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">checklist</span>
+      <span class="kpi-label">Pris en 2026</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.anciennete?.total_pris || 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.anciennete?.total_pris_semaines || 0 }} sem.</span>
+      <span class="kpi-footer-text">au total</span>
+    </div>
+  </div>
+
+  <!-- Solde restant 2026 -->
+  <div class="kpi-card"
+       [class.kpi-success]="(dashboardData()?.anciennete?.total_restants || 0) > 20"
+       [class.kpi-info]="(dashboardData()?.anciennete?.total_restants || 0) <= 20 && (dashboardData()?.anciennete?.total_restants || 0) > 10"
+       [class.kpi-warning]="(dashboardData()?.anciennete?.total_restants || 0) <= 10 && (dashboardData()?.anciennete?.total_restants || 0) > 5"
+       [class.kpi-danger]="(dashboardData()?.anciennete?.total_restants || 0) <= 5">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">savings</span>
+      <span class="kpi-label">Solde restant 2026</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.anciennete?.total_restants || 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.anciennete?.total_restants_semaines || 0 }} sem.</span>
+      <span class="kpi-footer-text">moy. {{ dashboardData()?.anciennete?.moyenne_restants || 0 }} j/emp</span>
+    </div>
+  </div>
+</div>
+
+  <!-- Alertes soldes critiques -->
+  <div *ngIf="(dashboardData()?.anciennete?.solde_critique || 0) > 0 || (dashboardData()?.anciennete?.solde_negatif || 0) > 0"
+      class="alertes-soldes">
+    <div *ngIf="(dashboardData()?.anciennete?.solde_critique || 0) > 0" class="alerte alerte-warning">
+      <span class="alerte-icon">⚠️</span>
+      <span>{{ dashboardData()?.anciennete?.solde_critique }} employé(s) ont un solde critique (< 5 jours restants)</span>
+    </div>
+    <div *ngIf="(dashboardData()?.anciennete?.solde_negatif || 0) > 0" class="alerte alerte-danger">
+      <span class="alerte-icon">❌</span>
+      <span>{{ dashboardData()?.anciennete?.solde_negatif }} employé(s) ont un solde négatif !</span>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <!-- Graphique d'évolution des congés -->
+    <div class="chart-card chart-large">
+      <h3 class="chart-title">
+        <span class="material-icons">trending_up</span>
+        Évolution des congés 2026
+        <span class="badge badge-info" *ngIf="dashboardData()?.statistiques_conges?.total_demandes">
+          {{ dashboardData()?.statistiques_conges?.total_demandes }} demandes
+        </span>
+      </h3>
+      <div class="chart-container">
+        <canvas id="evolutionCongesChart"></canvas>
+      </div>
+      <div class="chart-footer">
+        <div class="chart-legend-info">
+          <span class="legend-dot" style="background: #8B5CF6;"></span>
+          <span>Total jours</span>
+          <span class="legend-dot" style="background: #10B981;"></span>
+          <span>Approuvés</span>
+          <span class="legend-dot" style="background: #F59E0B;"></span>
+          <span>En attente</span>
+          <span class="legend-dot" style="background: #EF4444;"></span>
+          <span>Refusés</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique de répartition par type des congés -->
+    <div class="chart-card">
+      <h3 class="chart-title">
+        <span class="material-icons">pie_chart</span>
+        Répartition par type de congé
+      </h3>
+      <div class="chart-container">
+        <canvas id="repartitionTypesCongesChart"></canvas>
+      </div>
+      <div class="chart-info" *ngIf="dashboardData()?.statistiques_conges?.total_jours">
+        <div class="info-item">
+          <span class="info-label">Total jours</span>
+          <span class="info-value">{{ dashboardData()?.statistiques_conges?.total_jours }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Total demandes</span>
+          <span class="info-value">{{ dashboardData()?.statistiques_conges?.total_demandes }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Moyenne par demande</span>
+          <span class="info-value">{{ dashboardData()?.statistiques_conges?.moyenne_jours_par_demande | number:'1.1-1' }} j</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Top 10 Congés -->
+<div class="section-card">
+  <div class="section-header">
+    <h3 class="section-title">
+      <span class="material-icons">leaderboard</span>
+      Top 10 - Congés pris en 2026
+      <span class="badge badge-info" *ngIf="(dashboardData()?.statistiques_conges?.total_jours || 0) > 0">
+        {{ dashboardData()?.statistiques_conges?.total_formate || '0 jour' }} au total
+      </span>
+      <span class="badge badge-secondary" *ngIf="(dashboardData()?.statistiques_conges?.total_jours || 0) === 0">
+        Aucun congé pris
+      </span>
+    </h3>
+  </div>
+
+  <!-- Liste des employés avec congés -->
+  <div *ngIf="!!dashboardData()?.top_conges && dashboardData()?.top_conges!.length > 0" class="top-list">
+    <div
+      *ngFor="let employe of dashboardData()?.top_conges; let i = index"
+      class="top-item">
+      <div class="top-rank" [class.medal]="i < 3">
+        <span *ngIf="i === 0" class="medal-icon gold">🥇</span>
+        <span *ngIf="i === 1" class="medal-icon silver">🥈</span>
+        <span *ngIf="i === 2" class="medal-icon bronze">🥉</span>
+        <span *ngIf="i >= 3">{{ i + 1 }}</span>
+      </div>
+
+      <div class="top-name">
+        {{ employe.employe }}
+        <span class="badge badge-secondary">Anc. {{ employe.anciennete | number:'1.1-1' }} ans</span>
+        <span class="badge"
+              [class.badge-success]="employe.solde_restant > 10"
+              [class.badge-warning]="employe.solde_restant <= 10 && employe.solde_restant > 5"
+              [class.badge-danger]="employe.solde_restant <= 5">
+          {{ getSoldeIcon(employe.solde_restant) }} Solde: {{ employe.solde_restant }} j
+        </span>
+      </div>
+
+      <div class="top-bar-container">
+        <div
+          class="top-bar"
+          [style.width.%]="getTopCongeBarWidth(employe)"
+          [style.background-color]="getTopCongeColor(i)">
+          <span class="top-bar-label" *ngIf="employe.total_jours > 0">
+            {{ employe.total_formate }} ({{ employe.total_semaines }} sem.)
+          </span>
+        </div>
+      </div>
+
+      <div class="top-value">
+        {{ employe.total_jours }} j
+      </div>
+    </div>
+  </div>
+
+  <!-- Message si aucun congé -->
+  <div *ngIf="!!dashboardData()?.top_conges && dashboardData()?.top_conges!.length === 0" class="no-data">
+    <span class="material-icons">info</span>
+    <p>Aucun congé pris en 2026</p>
+  </div>
+</div>
+
+<!-- Congés par service -->
+<div class="section-card">
+  <h3 class="section-title">
+    <span class="material-icons">business</span>
+    Congés 2026 par service
+    <span class="badge badge-info" *ngIf="!!dashboardData()?.conges_par_service && dashboardData()?.conges_par_service!.length > 0">
+      {{ dashboardData()?.conges_par_service?.length }} services
+    </span>
+  </h3>
+
+  <div class="table-container">
+    <table class="services-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Demandes</th>
+          <th>Jours</th>
+          <th>Semaines</th>
+          <th>Moyenne/demande</th>
+          <th>Moyenne/semaine</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let service of dashboardData()?.conges_par_service || []">
+          <td class="service-name">{{ service.service_nom }}</td>
+          <td class="text-center"><strong>{{ service.total_demandes }}</strong></td>
+          <td class="text-center">{{ service.total_jours }}</td>
+          <td class="text-center">{{ service.total_semaines | number:'1.1-1' }}</td>
+          <td class="text-center">{{ service.moyenne_jours }} j</td>
+          <td class="text-center">{{ service.moyenne_semaines | number:'1.1-1' }}</td>
+        </tr>
+        <tr *ngIf="!!dashboardData()?.conges_par_service && dashboardData()?.conges_par_service!.length === 0">
+          <td colspan="6" class="empty-cell">Aucune donnée disponible</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Statistiques générales congés -->
+<div class="section-card">
+  <h3 class="section-title">
+    <span class="material-icons">analytics</span>
+    Statistiques générales des congés 2026
+  </h3>
+  <div class="stats-grid">
+    <div class="stat-item">
+      <span class="stat-label">Total demandes</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.total_demandes || 0 }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total jours</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.total_jours || 0 }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total semaines</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.total_semaines || 0 | number:'1.1-1' }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Employés concernés</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.total_employes || 0 }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Moyenne par demande</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.moyenne_jours_par_demande || 0 }} j</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Moyenne par employé</span>
+      <span class="stat-value">{{ dashboardData()?.statistiques_conges?.moyenne_jours_par_employe || 0 }} j</span>
+    </div>
+  </div>
+</div>
+
+<!-- Alertes des congés -->
+<div *ngIf="dashboardData() as data" class="section-card">
+  <div *ngIf="data['alertes_conges'] && data['alertes_conges'].length > 0">
+    <h3 class="section-title">
+      <span class="material-icons">notifications</span>
+      Alertes congés & permissions
+    </h3>
+    <div class="alertes-container">
+      <div *ngFor="let alerte of data['alertes_conges']"
+           class="alerte"
+           [class.alerte-warning]="alerte.type === 'warning'"
+           [class.alerte-danger]="alerte.type === 'error'"
+           [class.alerte-info]="alerte.type === 'info'"
+           [class.alerte-success]="alerte.type === 'success'">
+        <span class="alerte-icon">{{ alerte.icon || getAlerteIcon(alerte.type) }}</span>
+        <span>{{ alerte.message }}</span>
+        <span *ngIf="alerte.count && alerte.count > 1" class="alerte-badge">{{ alerte.count }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- SECTION 3: DEMANDES D'EXPLICATION ET SANCTIONS     -->
+<!-- ========================================================== -->
+
+<div class="section-divider section-divider-explications">
+  <span class="section-divider-icon">📝</span>
+  <h2 class="section-divider-title">Demandes d'explication</h2>
+  <span class="section-divider-line"></span>
+  <span class="section-divider-badge"
+        [class.text-danger]="(dashboardData()?.statistiques_explications?.en_attente ?? 0) > 0">
+    {{ dashboardData()?.statistiques_explications?.en_attente ?? 0 }} en attente
+  </span>
+</div>
+
+<!-- KPIs -->
+<div class="kpis-grid">
+  <div class="kpi-card kpi-primary">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">assignment</span>
+      <span class="kpi-label">Total demandes</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_explications?.total ?? 0 }}</div>
+  </div>
+
+  <div class="kpi-card kpi-warning" *ngIf="(dashboardData()?.statistiques_explications?.en_attente ?? 0) > 0">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">hourglass_empty</span>
+      <span class="kpi-label">En attente</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_explications?.en_attente ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage negative">⚠️ {{ dashboardData()?.statistiques_explications?.urgentes ?? 0 }} urgentes</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-success">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">check_circle</span>
+      <span class="kpi-label">Répondues</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_explications?.repondues ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage positive">{{ dashboardData()?.statistiques_explications?.taux_reponse ?? 0 }}%</span>
+      <span class="kpi-footer-text">taux de réponse</span>
+    </div>
+  </div>
+
+  <div class="kpi-card" [class.kpi-danger]="(dashboardData()?.statistiques_explications?.sanctionnees ?? 0) > 0">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">gavel</span>
+      <span class="kpi-label">Avec sanction</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_explications?.sanctionnees ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage negative">{{ dashboardData()?.statistiques_explications?.taux_sanction ?? 0 }}%</span>
+      <span class="kpi-footer-text">taux de sanction</span>
+    </div>
+  </div>
+</div>
+
+<!-- Demandes urgentes -->
+<div *ngIf="(dashboardData()?.demandes_explications_urgentes?.length ?? 0) > 0"
+     class="section-card" style="border-left: 4px solid #dc3545;">
+  <h3 class="section-title" style="color: #dc3545;">
+    <span class="material-icons" style="color: #dc3545;">warning</span>
+    Demandes urgentes (sans réponse > 5 jours)
+    <span class="badge badge-danger">{{ dashboardData()?.demandes_explications_urgentes?.length }}</span>
+  </h3>
+  <div class="table-container">
+    <table class="services-table">
+      <thead>
+        <tr>
+          <th>Employé</th>
+          <th>Objet</th>
+          <th>Date demande</th>
+          <th>Jours</th>
+          <th>Motif</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let demande of dashboardData()?.demandes_explications_urgentes">
+          <td class="employe-cell">{{ demande.employe_nom }}</td>
+          <td><span class="type-badge">{{ demande.objet_libelle }}</span></td>
+          <td>{{ demande.date_demande }}</td>
+          <td>
+            <span class="badge badge-danger">{{ demande.delai_jours }} j</span>
+          </td>
+          <td class="raison-cell">{{ demande.description }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Historique des demandes -->
+<div class="section-card">
+  <h3 class="section-title">
+    <span class="material-icons">history</span>
+    Historique des demandes d'explication
+  </h3>
+  <div class="table-container">
+    <table class="services-table">
+      <thead>
+        <tr>
+          <th>Employé</th>
+          <th>Objet</th>
+          <th>Date</th>
+          <th>Statut</th>
+          <th>Délai</th>
+          <th>Sanction</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="demande-permission-cell" *ngFor="let demande of dashboardData()?.demandes_explications" (click)="openDemandeExplicationsDetails(demande.slug)">
+          <td class="employe-cell">{{ demande.employe_nom }}</td>
+          <td><span class="type-badge">{{ demande.objet_libelle }}</span></td>
+          <td>{{ demande.date_demande }}</td>
+          <td>
+            <span class="badge"
+                  [class.badge-warning]="demande.statut === 1"
+                  [class.badge-success]="demande.statut === 2">
+              {{ demande.statut_label }}
+            </span>
+          </td>
+          <td>
+            <div class="delai-container" *ngIf="demande.delai_jours !== null">
+              <span class="delai-badge" [ngClass]="getDelaiBadgeClass(demande.delai_jours)">
+                {{ formatDelaiAvecCategorie(demande.delai_jours) }}
+              </span>
+            </div>
+            <span *ngIf="demande.delai_jours === null" class="text-muted">-</span>
+          </td>
+          <td>
+            <span *ngIf="demande.a_sanction" class="badge badge-danger">
+              ⚖️ Sanction
+            </span>
+            <span *ngIf="!demande.a_sanction" class="text-muted">-</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Graphiques Demandes d'explication -->
+<div class="charts-grid">
+  <!-- Évolution -->
+  <div class="chart-card">
+    <h3 class="chart-title">
+      <span class="material-icons">trending_up</span>
+      Évolution des demandes d'explication
+    </h3>
+    <div class="chart-container">
+      <canvas id="evolutionExplicationsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Répartition par objet -->
+  <div class="chart-card">
+    <h3 class="chart-title">
+      <span class="material-icons">category</span>
+      Répartition par objet
+    </h3>
+    <div class="chart-container">
+      <canvas id="repartitionExplicationsObjetChart"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<div class="section-divider section-divider-sanctions">
+  <span class="section-divider-icon">⚖️</span>
+  <h2 class="section-divider-title">Sanctions disciplinaires</h2>
+  <span class="section-divider-line"></span>
+  <span class="section-divider-badge"
+        [class.text-write]="(dashboardData()?.statistiques_sanctions?.total ?? 0) > 0">
+    {{ dashboardData()?.statistiques_sanctions?.total ?? 0 }} au total
+  </span>
+</div>
+
+<!-- KPIs -->
+<div class="kpis-grid">
+  <div class="kpi-card kpi-danger">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">gavel</span>
+      <span class="kpi-label">Total sanctions</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_sanctions?.total ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage negative">{{ dashboardData()?.statistiques_sanctions?.taux_sanction_global ?? 0 }}%</span>
+      <span class="kpi-footer-text">des employés</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-warning">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">warning</span>
+      <span class="kpi-label">Avertissements</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_sanctions?.par_type?.avertissement ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.statistiques_sanctions?.taux_avertissement ?? 0 }}%</span>
+      <span class="kpi-footer-text">des sanctions</span>
+    </div>
+  </div>
+
+  <div class="kpi-card" [class.kpi-danger]="(dashboardData()?.statistiques_sanctions?.par_type?.licenciement ?? 0) > 0">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">exit_to_app</span>
+      <span class="kpi-label">Licenciements</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_sanctions?.par_type?.licenciement ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage negative">{{ dashboardData()?.statistiques_sanctions?.taux_licenciement ?? 0 }}%</span>
+      <span class="kpi-footer-text">des sanctions</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-info">
+    <div class="kpi-header">
+      <span class="kpi-icon material-icons">link</span>
+      <span class="kpi-label">Avec demande</span>
+    </div>
+    <div class="kpi-value">{{ dashboardData()?.statistiques_sanctions?.avec_demande ?? 0 }}</div>
+    <div class="kpi-footer">
+      <span class="kpi-percentage">{{ dashboardData()?.statistiques_sanctions?.sans_demande ?? 0 }} sans</span>
+      <span class="kpi-footer-text">demande préalable</span>
+    </div>
+  </div>
+</div>
+
+<!-- Liste des sanctions -->
+<div class="section-card">
+  <h3 class="section-title">
+    <span class="material-icons">list</span>
+    Sanctions récentes
+  </h3>
+  <div class="table-container">
+    <table class="services-table">
+      <thead>
+        <tr>
+          <th>Employé</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Motif</th>
+          <th>Demande associée</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="demande-sanction-cell" *ngFor="let sanction of dashboardData()?.sanctions" (click)="openSanctionListe()">
+          <td class="employe-cell">{{ sanction.employe_nom }}</td>
+          <td>
+            <span class="badge"
+                  [style.background-color]="sanction.type_couleur"
+                  style="color: white;">
+              {{ sanction.type_label }}
+            </span>
+          </td>
+          <td>{{ sanction.date_sanction_formatee }}</td>
+          <td class="raison-cell">{{ sanction.motif }}</td>
+          <td>
+            <span *ngIf="sanction.a_demande" class="badge badge-info">
+              ✅ Oui
+            </span>
+            <span *ngIf="!sanction.a_demande" class="badge badge-secondary">
+              ❌ Non
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Top employés sanctionnés -->
+<div class="section-card" *ngIf="(dashboardData()?.top_employes_sanctions?.length ?? 0) > 0">
+  <h3 class="section-title">
+    <span class="material-icons">groups</span>
+    Top 10 - Employés sanctionnés
+  </h3>
+  <div class="top-list">
+    <div *ngFor="let employe of dashboardData()?.top_employes_sanctions; let i = index" class="top-item">
+      <div class="top-rank" [class.medal]="i < 3">
+        <span *ngIf="i === 0" class="medal-icon gold">🥇</span>
+        <span *ngIf="i === 1" class="medal-icon silver">🥈</span>
+        <span *ngIf="i === 2" class="medal-icon bronze">🥉</span>
+        <span *ngIf="i >= 3">{{ i + 1 }}</span>
+      </div>
+      <div class="top-name">
+        {{ employe.employe }}
+        <span class="badge badge-danger">{{ employe.total_sanctions }} sanctions</span>
+      </div>
+      <div class="top-bar-container">
+        <div class="top-bar"
+             [style.width.%]="(employe.total_sanctions / (dashboardData()?.top_employes_sanctions?.[0]?.total_sanctions || 1)) * 100"
+             style="background: linear-gradient(90deg, #EF4444, #DC2626);">
+          <span class="top-bar-label">
+            {{ employe.total_sanctions }} sanction(s)
+          </span>
+        </div>
+      </div>
+      <div class="top-value">{{ employe.total_sanctions }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Graphiques Sanctions -->
+<div class="charts-grid">
+  <!-- Évolution -->
+  <div class="chart-card">
+    <h3 class="chart-title">
+      <span class="material-icons">trending_up</span>
+      Évolution des sanctions
+    </h3>
+    <div class="chart-container">
+      <canvas id="evolutionSanctionsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Répartition par type -->
+  <div class="chart-card">
+    <h3 class="chart-title">
+      <span class="material-icons">pie_chart</span>
+      Répartition par type
+    </h3>
+    <div class="chart-container">
+      <canvas id="repartitionSanctionsTypeChart"></canvas>
+    </div>
+  </div>
+</div>

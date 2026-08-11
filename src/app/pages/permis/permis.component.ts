@@ -72,7 +72,7 @@ export class PermisComponent implements OnInit {
   }
 
   get totalAcceptees(): number {
-    return this.toutesPermissions.filter(p => p.statut === 2).length;
+    return this.toutesPermissions.filter(p => p.statut == 2).length;
   }
 
   get totalRefusees(): number {
