@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MaterialModule } from '../../../../material.module';
 import { DashboardService, DashboardData, DashboardFilters } from '../../services/dashboard.service';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { AbsPipe } from '../../abs.pipe';
@@ -10,7 +11,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, AbsPipe],
+  imports: [CommonModule, FormsModule, AbsPipe, MaterialModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -1142,265 +1143,141 @@ export class DashboardComponent implements OnInit {
     ctx.fillText(message, canvas.width / 2, canvas.height / 2);
   }
 
-//   createEvolutionCongesChart(data: DashboardData): void {
-//   const canvas = document.getElementById('evolutionCongesChart') as HTMLCanvasElement;
-//   if (!canvas) return;
+  createEvolutionCongesChart(data: DashboardData): void {
+    const canvas = document.getElementById('evolutionCongesChart') as HTMLCanvasElement;
+    if (!canvas) return;
 
-//   const ctx = canvas.getContext('2d');
-//   if (!ctx) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-//   // Vérifier si des données existent
-//   if (!data.evolution_conges || data.evolution_conges.length === 0) {
-//     this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée d\'évolution des congés disponible');
-//     return;
-//   }
+    // Utiliser evolution_conges ou evolution
+    const evolutionData = data.evolution_conges && data.evolution_conges.length > 0
+      ? data.evolution_conges
+      : data.evolution;
 
-//   // Vérifier si les données ont des valeurs
-//   const hasTotal = data.evolution_conges.some(e => (e.total || 0) > 0);
-//   if (!hasTotal) {
-//     this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée de congés disponible pour cette période');
-//     return;
-//   }
-
-//   const config: ChartConfiguration = {
-//     type: 'line',
-//     data: {
-//       labels: data.evolution_conges.map(e => e.periode),
-//       datasets: [
-//         {
-//           label: 'Total',
-//           data: data.evolution_conges.map(e => e.total || 0), 
-//           borderColor: '#8B5CF6',
-//           backgroundColor: 'rgba(139, 92, 246, 0.1)',
-//           tension: 0.4,
-//           fill: true,
-//           borderWidth: 3
-//         },
-//         {
-//           label: 'Approuvées',
-//           data: data.evolution_conges.map(e => e.approuvees || 0), 
-//           borderColor: '#10B981',
-//           backgroundColor: 'rgba(16, 185, 129, 0.1)',
-//           tension: 0.4,
-//           fill: true,
-//           borderWidth: 2
-//         },
-//         {
-//           label: 'En attente',
-//           data: data.evolution_conges.map(e => e.en_attente || 0), 
-//           borderColor: '#F59E0B',
-//           backgroundColor: 'rgba(245, 158, 11, 0.1)',
-//           tension: 0.4,
-//           fill: true,
-//           borderWidth: 2,
-//           borderDash: [5, 5]
-//         },
-//         {
-//           label: 'Refusées',
-//           data: data.evolution_conges.map(e => e.refusees || 0), // Convertir undefined en 0
-//           borderColor: '#EF4444',
-//           backgroundColor: 'rgba(239, 68, 68, 0.1)',
-//           tension: 0.4,
-//           fill: true,
-//           borderWidth: 2
-//         }
-//       ]
-//     },
-//     options: {
-//       responsive: true,
-//       maintainAspectRatio: false,
-//       plugins: {
-//         legend: {
-//           position: 'top',
-//           labels: {
-//             usePointStyle: true,
-//             padding: 15,
-//             font: { 
-//               size: 12,
-//               weight: 'bold'
-//             },
-//             boxWidth: 12
-//           }
-//         },
-//         tooltip: {
-//           mode: 'index',
-//           intersect: false,
-//           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-//           padding: 12,
-//           cornerRadius: 8,
-//           callbacks: {
-//             label: function(context) {
-//               let label = context.dataset.label || '';
-//               let value = context.parsed.y || 0;
-//               return `${label}: ${value} jour(s)`;
-//             }
-//           }
-//         }
-//       },
-//       scales: {
-//         y: {
-//           beginAtZero: true,
-//           grid: {
-//             color: 'rgba(0, 0, 0, 0.05)'
-//           },
-//           ticks: {
-//             stepSize: 1,
-//             callback: function(value) {
-//               return value + ' j';
-//             }
-//           }
-//         },
-//         x: {
-//           grid: {
-//             display: false
-//           }
-//         }
-//       },
-//       interaction: {
-//         mode: 'index',
-//         intersect: false
-//       }
-//     }
-//   };
-
-//   this.charts['evolutionConges'] = new Chart(ctx, config);
-// }
-
-createEvolutionCongesChart(data: DashboardData): void {
-  const canvas = document.getElementById('evolutionCongesChart') as HTMLCanvasElement;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  // Utiliser evolution_conges ou evolution
-  const evolutionData = data.evolution_conges && data.evolution_conges.length > 0 
-    ? data.evolution_conges 
-    : data.evolution;
-
-  if (!evolutionData || evolutionData.length === 0) {
-    this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée d\'évolution disponible');
-    return;
-  }
-
-  // Vérifier si les données ont des valeurs
-  const hasData = evolutionData.some((e: any) => {
-    const total = e.total || e.total_jours || 0;
-    return total > 0;
-  });
-
-  if (!hasData) {
-    this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée de congés disponible');
-    return;
-  }
-
-  // Préparer les labels
-  const labels = evolutionData.map((e: any) => e.periode);
-
-  // Préparer les datasets
-  const datasets: any[] = [];
-
-  // Total jours (priorité à total_jours, puis total)
-  const totalData = evolutionData.map((e: any) => e.total_jours || e.total || 0);
-  if (totalData.some((v: number) => v > 0)) {
-    datasets.push({
-      label: 'Total jours',
-      data: totalData,
-      borderColor: '#8B5CF6',
-      backgroundColor: 'rgba(139, 92, 246, 0.1)',
-      tension: 0.4,
-      fill: true,
-      borderWidth: 3
-    });
-  }
-
-  // Total demandes
-  const demandesData = evolutionData.map((e: any) => e.total_demandes || 0);
-  if (demandesData.some((v: number) => v > 0)) {
-    datasets.push({
-      label: 'Total demandes',
-      data: demandesData,
-      borderColor: '#F59E0B',
-      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      tension: 0.4,
-      fill: true,
-      borderWidth: 2,
-      borderDash: [5, 5]
-    });
-  }
-
-  // Si aucun dataset n'a été ajouté
-  if (datasets.length === 0) {
-    this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée de congés disponible');
-    return;
-  }
-
-  const config: any = {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            padding: 15,
-            font: { 
-              size: 12,
-              weight: 'bold'
-            },
-            boxWidth: 12
-          }
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          cornerRadius: 8,
-          callbacks: {
-            label: function(context: any) {
-              let label = context.dataset.label || '';
-              let value = context.parsed.y || 0;
-              let unite = label.includes('demandes') ? 'demande(s)' : 'jour(s)';
-              return `${label}: ${value} ${unite}`;
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          ticks: {
-            stepSize: 1,
-            callback: function(value: any) {
-              return value;
-            }
-          }
-        },
-        x: {
-          grid: {
-            display: false
-          }
-        }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false
-      }
+    if (!evolutionData || evolutionData.length === 0) {
+      this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée d\'évolution disponible');
+      return;
     }
-  };
 
-  this.charts['evolutionConges'] = new Chart(ctx, config);
-}
+    // Vérifier si les données ont des valeurs
+    const hasData = evolutionData.some((e: any) => {
+      const total = e.total || e.total_jours || 0;
+      return total > 0;
+    });
+
+    if (!hasData) {
+      this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée de congés disponible');
+      return;
+    }
+
+    // Préparer les labels
+    const labels = evolutionData.map((e: any) => e.periode);
+
+    // Préparer les datasets
+    const datasets: any[] = [];
+
+    // Total jours (priorité à total_jours, puis total)
+    const totalData = evolutionData.map((e: any) => e.total_jours || e.total || 0);
+    if (totalData.some((v: number) => v > 0)) {
+      datasets.push({
+        label: 'Total jours',
+        data: totalData,
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+        borderWidth: 3
+      });
+    }
+
+    // Total demandes
+    const demandesData = evolutionData.map((e: any) => e.total_demandes || 0);
+    if (demandesData.some((v: number) => v > 0)) {
+      datasets.push({
+        label: 'Total demandes',
+        data: demandesData,
+        borderColor: '#F59E0B',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        tension: 0.4,
+        fill: true,
+        borderWidth: 2,
+        borderDash: [5, 5]
+      });
+    }
+
+    // Si aucun dataset n'a été ajouté
+    if (datasets.length === 0) {
+      this.showNoDataMessage('evolutionCongesChart', 'Aucune donnée de congés disponible');
+      return;
+    }
+
+    const config: any = {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12,
+                weight: 'bold'
+              },
+              boxWidth: 12
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context: any) {
+                let label = context.dataset.label || '';
+                let value = context.parsed.y || 0;
+                let unite = label.includes('demandes') ? 'demande(s)' : 'jour(s)';
+                return `${label}: ${value} ${unite}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              stepSize: 1,
+              callback: function(value: any) {
+                return value;
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        }
+      }
+    };
+
+    this.charts['evolutionConges'] = new Chart(ctx, config);
+  }
 
   createRepartitionTypesCongesChart(data: DashboardData): void {
   const canvas = document.getElementById('repartitionTypesCongesChart') as HTMLCanvasElement;
@@ -1441,7 +1318,7 @@ createEvolutionCongesChart(data: DashboardData): void {
     type: 'doughnut',
     data: {
       // Utiliser type_nom au lieu de type
-      labels: sortedData.map(item => 
+      labels: sortedData.map(item =>
         `${item.type_nom} (${item.total_jours} - ${((item.total_jours / total) * 100).toFixed(1)}%)`
       ),
       datasets: [{
@@ -1510,6 +1387,30 @@ createEvolutionCongesChart(data: DashboardData): void {
 
   openSanctionListe(){
     this.router.navigate(['sanctions']);
+  }
+
+  hasRHData(): boolean {
+    return !!this.dashboardData()?.employes_kpis;
+  }
+
+  getMoins30AnsPercentage(): number {
+    const total = this.dashboardData()?.employes_kpis?.total || 0;
+    const moins30 = this.dashboardData()?.employes_kpis?.moins_30_ans || 0;
+    return total > 0 ? (moins30 / total) * 100 : 0;
+  }
+
+  getContratPercentage(total: number): number {
+    const totalEmployes = this.dashboardData()?.employes_kpis?.total || 0;
+    return totalEmployes > 0 ? (total / totalEmployes) * 100 : 0;
+  }
+
+  getContratBarWidth(total: number): number {
+    const totalEmployes = this.dashboardData()?.employes_kpis?.total || 0;
+    return totalEmployes > 0 ? (total / totalEmployes) * 100 : 0;
+  }
+
+  openEmployeDetails(emplooyeSlug: string){
+    this.router.navigate(['detail-employe', emplooyeSlug ]);
   }
 
 
