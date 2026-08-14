@@ -3,7 +3,7 @@
   <div class="dashboard-header">
     <div>
       <h1 class="dashboard-title">Tableau de bord</h1>
-      <p class="dashboard-subtitle">Vue d'ensemble des permissions</p>
+      <p class="dashboard-subtitle">Vue d'ensemble des employés</p>
     </div>
 
     <!-- Filtres -->
@@ -86,269 +86,449 @@
     <p>Chargement des données...</p>
   </div>
 
-  <!-- Dashboard Content -->
-   @if(!isLoading() && dashboardData()){
-  <div  class="dashboard-content">
+  <div *ngIf="!isLoading()">
+
     <div *ngIf="selectedEmployeId()" class="active-filter-badge">
-      <span class="material-icons">person</span>
-      <span>
-        Filtré par employé : {{ selectedEmployeNom }}
+        <span class="material-icons">person</span>
+        <span>
+          Filtré par employé : {{ selectedEmployeNom }}
+        </span>
+        <button (click)="onEmployeChange('')" class="btn-close-filter">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    <div class="section-divider section-divider-rh">
+      <span class="section-divider-icon">👥</span>
+      <h2 class="section-divider-title">Ressources Humaines</h2>
+      <span class="section-divider-line"></span>
+      <span class="section-divider-badge">
+        {{ (dashboardData()?.employes_kpis?.total || 0) }} employés
       </span>
-      <button (click)="onEmployeChange('')" class="btn-close-filter">
-        <span class="material-icons">close</span>
-      </button>
     </div>
-    <!-- KPIs Cards -->
-    <div class="kpis-grid">
-      <!-- Total -->
+
+    <!-- KPIs RH - Ligne 1 -->
+    <div class="kpis-grid" *ngIf="hasRHData()">
+      <!-- Total employés -->
       <div class="kpi-card kpi-primary">
         <div class="kpi-header">
-          <span class="kpi-icon material-icons">bar_chart</span>
-          <span class="kpi-label">{{ dashboardData()!.kpis.total.libelle }}</span>
+          <span class="kpi-icon material-icons">groups</span>
+          <span class="kpi-label">Total employés</span>
         </div>
-        <div class="kpi-value">{{ dashboardData()!.kpis.total.valeur }}</div>
-        <div class="kpi-footer" *ngIf="dashboardData()!.kpis.total.tendance !== undefined">
-          <span [class.positive]="dashboardData()!.kpis.total.tendance! > 0"
-                [class.negative]="dashboardData()!.kpis.total.tendance! < 0">
-            {{ dashboardData()!.kpis.total.tendance! > 0 ? '↑' : '↓' }}
-            <!-- {{ Math.abs(dashboardData()!.kpis.total.tendance) }}% -->
-            {{ dashboardData()!.kpis.total.tendance | abs }}%
-           </span>
-          <span class="kpi-footer-text">vs période précédente</span>
-        </div>
-      </div>
-
-      <!-- En attente -->
-      <div class="kpi-card kpi-warning">
-        <div class="kpi-header">
-          <span class="material-icons">hourglass_empty</span>
-          <span class="kpi-label">{{ dashboardData()!.kpis.en_attente.libelle }}</span>
-        </div>
-        <div class="kpi-value">{{ dashboardData()!.kpis.en_attente.valeur }}</div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.total || 0 }}</div>
         <div class="kpi-footer">
-          <span class="kpi-percentage">{{ dashboardData()!.kpis.en_attente.pourcentage }}%</span>
-          <span class="kpi-footer-text">du total</span>
+          <span class="kpi-footer-text">
+            <mat-icon>man</mat-icon>
+            {{ dashboardData()?.employes_kpis?.taux_hommes || 0 }}%
+
+            <mat-icon>woman</mat-icon>
+            {{ dashboardData()?.employes_kpis?.taux_femmes || 0 }}%
+          </span>
         </div>
       </div>
 
-      <!-- Approuvées -->
+      <!-- Hommes -->
+      <div class="kpi-card" style="border-left: 4px solid #3B82F6;">
+        <div class="kpi-header">
+          <span class="kpi-icon" style="color: #3B82F6;"><mat-icon class="gender-icon">man</mat-icon></span>
+          <span class="kpi-label">Hommes</span>
+        </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.hommes || 0 }}</div>
+        <div class="kpi-footer">
+          <span class="kpi-percentage">{{ dashboardData()?.employes_kpis?.taux_hommes || 0 }}%</span>
+        </div>
+      </div>
+
+      <!-- Femmes -->
+      <div class="kpi-card" style="border-left: 4px solid #EC4899;">
+        <div class="kpi-header">
+          <span class="kpi-icon" style="color: #EC4899;"><mat-icon class="gender-icon">woman</mat-icon></span>
+          <span class="kpi-label">Femmes</span>
+        </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.femmes || 0 }}</div>
+        <div class="kpi-footer">
+          <span class="kpi-percentage">{{ dashboardData()?.employes_kpis?.taux_femmes || 0 }}%</span>
+        </div>
+      </div>
+
+      <!-- Moins de 30 ans -->
+      <div class="kpi-card kpi-info">
+        <div class="kpi-header">
+          <span class="kpi-icon material-icons">young</span>
+          <span class="kpi-label">Moins de 30 ans</span>
+        </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.moins_30_ans || 0 }}</div>
+        <div class="kpi-footer">
+          <span class="kpi-percentage">
+            {{ getMoins30AnsPercentage() | number:'1.1-1' }}%
+          </span>
+          <span class="kpi-footer-text">des employés</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis-grid" *ngIf="hasRHData()">
+      <!-- CDI -->
       <div class="kpi-card kpi-success">
         <div class="kpi-header">
-          <span class="material-icons">check_circle</span>
-          <span class="kpi-label">{{ dashboardData()!.kpis.approuvees.libelle }}</span>
+          <span class="kpi-icon material-icons">verified</span>
+          <span class="kpi-label">CDI</span>
         </div>
-        <div class="kpi-value">{{ dashboardData()!.kpis.approuvees.valeur }}</div>
-        <div class="kpi-footer">
-          <span class="kpi-percentage">{{ dashboardData()!.kpis.approuvees.pourcentage }}%
-
-          </span>
-          <span class="kpi-footer-text">du total</span>
-        </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.cdi || 0 }}</div>
       </div>
 
-      <!-- Refusées -->
-      <div class="kpi-card kpi-danger">
+      <!-- CDD -->
+      <div class="kpi-card kpi-warning">
         <div class="kpi-header">
-          <span class="material-icons">cancel</span>
-          <span class="kpi-label">{{ dashboardData()!.kpis.refusees.libelle }}</span>
+          <span class="kpi-icon material-icons">schedule</span>
+          <span class="kpi-label">CDD</span>
         </div>
-        <div class="kpi-value">{{ dashboardData()!.kpis.refusees.valeur }}</div>
-        <div class="kpi-footer">
-          <span class="kpi-percentage">{{ dashboardData()!.kpis.refusees.pourcentage }}%</span>
-          <span class="kpi-footer-text">du total</span>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.cdd || 0 }}</div>
+      </div>
+
+      <!-- Stage -->
+      <div class="kpi-card kpi-info">
+        <div class="kpi-header">
+          <span class="kpi-icon material-icons">school</span>
+          <span class="kpi-label">Stagiaires</span>
         </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.stage || 0 }}</div>
+      </div>
+
+      <!-- Sans contrat -->
+      <div class="kpi-card" [class.kpi-danger]="(dashboardData()?.employes_kpis?.sans_contrat || 0) > 0">
+        <div class="kpi-header">
+          <span class="kpi-icon material-icons">warning</span>
+          <span class="kpi-label">Sans contrat</span>
+        </div>
+        <div class="kpi-value">{{ dashboardData()?.employes_kpis?.sans_contrat || 0 }}</div>
       </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="charts-grid">
-      <!-- Évolution -->
-      <div class="chart-card chart-large">
-        <h3 class="chart-title">
-          <span class="material-icons">trending_up</span>
-          Évolution des demandes de permissions
-        </h3>
-        <div class="chart-container">
-          <canvas id="evolutionChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Répartition par statut -->
-      <div class="chart-card">
-        <h3 class="chart-title">
-          <span class="material-icons">donut_small</span>
-          Répartition par statut
-        </h3>
-        <div class="chart-container">
-          <canvas id="statutChart"></canvas>
-        </div>
-        <div class="chart-info">
-          <div class="info-item">
-            <span class="info-label">Taux d'approbation</span>
-            <span class="info-value">{{ dashboardData()!.kpis.taux_approbation }}%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Répartition par type -->
-      <div class="chart-card">
-        <h3 class="chart-title">
-          <span class="material-icons">assignment</span>
-          Répartition par type
-        </h3>
-        <div class="chart-container">
-          <canvas id="typeChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Répartition par genre -->
-      <div class="chart-card">
-        <h3 class="chart-title">
-          <span class="material-icons">people</span>
-          Répartition par genre
-        </h3>
-        <div class="chart-container">
-          <canvas id="genreChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Répartition par service -->
-      <div class="chart-card chart-large">
-        <h3 class="chart-title">
-          <span class="material-icons">business</span>
-          Répartition par service
-        </h3>
-        <div class="chart-container">
-          <canvas id="serviceChart"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Top employés -->
-    <div class="section-card">
+    <div class="section-card" *ngIf="hasRHData()">
       <h3 class="section-title">
-        <span class="material-icons">groups</span>
-        Top 10 des employés (durée totale)
-      </h3>
-
-      <div class="top-list">
-        <div
-          *ngFor="let employe of dashboardData()!.top_employes; let i = index"
-          class="top-item">
-
-          <!-- Rang avec médaille pour le top 3 -->
-          <div class="top-rank" [class.medal]="i < 3">
-            <span *ngIf="i === 0" class="medal-icon gold">🥇</span>
-            <span *ngIf="i === 1" class="medal-icon silver">🥈</span>
-            <span *ngIf="i === 2" class="medal-icon bronze">🥉</span>
-            <span *ngIf="i >= 3">{{ i + 1 }}</span>
-          </div>
-
-          <!-- Nom de l'employé -->
-          <div class="top-name">{{ employe.employe }}</div>
-
-          <!-- Barre de progression -->
-          <div class="top-bar-container">
-            <div
-              class="top-bar"
-              [style.width.%]="getTopEmployeBarWidth(employe)"
-              [style.background-color]="getTopEmployeColor(i)">
-            </div>
-          </div>
-
-          <!-- Durée formatée -->
-          <div class="top-value">{{ employe.total }}</div>
-        </div>
-      </div>
-
-      <!-- Message si aucune donnée -->
-      <div *ngIf="dashboardData()!.top_employes.length === 0" class="no-data">
-        <span class="material-icons">info</span>
-        <p>Aucune donnée disponible pour cette période</p>
-      </div>
-    </div>
-
-    <!--  Tableau des services -->
-    <div class="section-card">
-      <h3 class="section-title">
-        <span class="material-icons">business</span>
-        Détails par service
+        <span class="material-icons">person_add</span>
+        Derniers employés embauchés
       </h3>
       <div class="table-container">
         <table class="services-table">
           <thead>
             <tr>
+              <th>Employé</th>
               <th>Service</th>
-              <th>Total</th>
-              <th>Approuvées</th>
-              <th>En attente</th>
-              <th>Refusées</th>
-              <th>Taux d'approbation</th>
+              <th>Fonction</th>
+              <th>Date d'embauche</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let service of dashboardData()!.repartition_services">
-              <td class="service-name">{{ service.service }}</td>
-              <td class="text-center"><strong>{{ service.total }}</strong></td>
-              <td class="text-center">
-                <span class="badge badge-success">{{ service.approuvees }}</span>
-              </td>
-              <td class="text-center">
-                <span class="badge badge-warning">{{ service.en_attente }}</span>
-              </td>
-              <td class="text-center">
-                <span class="badge badge-danger">{{ service.refusees }}</span>
-              </td>
-              <td class="text-center">
-                <span class="taux-approbation">
-                  {{ service.total > 0 ? ((service.approuvees / service.total) * 100).toFixed(1) : 0 }}%
+            <tr class="demande-permission-cell" *ngFor="let employe of dashboardData()?.derniers_employes" (click)="openEmployeDetails(employe.slug)">
+              <td class="employe-cell">{{ employe.nom_complet }}</td>
+              <td>{{ employe.service }}</td>
+              <td>{{ employe.fonction }}</td>
+              <td>
+                <span [class.text-muted]="employe.date_embauche === 'Non renseignée'">
+                  {{ employe.date_embauche }}
                 </span>
               </td>
             </tr>
-            <tr *ngIf="dashboardData()!.repartition_services.length === 0">
-              <td colspan="6" class="empty-cell">Aucune donnée disponible</td>
+            <tr *ngIf="!dashboardData()?.derniers_employes || dashboardData()?.derniers_employes?.length === 0">
+              <td colspan="4" class="empty-cell">Aucun employé récent</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Demandes récentes -->
-    <div class="section-card">
+    <div class="section-card" *ngIf="dashboardData()?.employes_par_type_contrat && hasRHData()">
       <h3 class="section-title">
-        <span class="material-icons">notifications_active</span>
-        Demandes récentes en attente
+        <span class="material-icons">description</span>
+        Résumé des contrats
       </h3>
-      <div class="table-container">
-        <table class="demandes-table">
-          <thead>
-            <tr>
-              <th>Employé</th>
-              <th>Type</th>
-              <th>Date demande</th>
-              <th>Période</th>
-              <th>Raison</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="demande-permission-cell" *ngFor="let demande of dashboardData()!.demandes_recentes" (click)="openDemandeListe()">
-              <td class="employe-cell">{{ demande.employe }}</td>
-              <td><span class="type-badge">{{ demande.type }}</span></td>
-              <td>{{ demande.date_demande }}</td>
-              <td>{{ demande.debut }} - {{ demande.fin }}</td>
-              <td class="raison-cell">{{ demande.raison }}</td>
-            </tr>
-            <tr *ngIf="dashboardData()!.demandes_recentes.length === 0">
-              <td colspan="5" class="empty-cell">Aucune demande en attente</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="contract-summary">
+        <div class="contract-item" *ngFor="let contrat of dashboardData()?.employes_par_type_contrat">
+          <div class="contract-info">
+            <span class="contract-dot" [style.background-color]="contrat.couleur"></span>
+            <span class="contract-name">{{ contrat.type }}</span>
+          </div>
+          <div class="contract-count">
+            <span class="contract-number">{{ contrat.total }}</span>
+            <span class="contract-percentage">
+              {{ getContratPercentage(contrat.total) | number:'1.1-1' }}%
+            </span>
+          </div>
+          <div class="contract-bar">
+            <div class="contract-bar-fill"
+                [style.width.%]="getContratBarWidth(contrat.total)"
+                [style.background-color]="contrat.couleur"></div>
+          </div>
+        </div>
       </div>
     </div>
+
+
+  <!-- Dashboard Content -->
+   @if(!isLoading() && dashboardData()){
+    <div class="section-divider section-divider-rh">
+      <span class="section-divider-icon">👥</span>
+      <h2 class="section-divider-title">Demande de permissions</h2>
+      <span class="section-divider-line"></span>
+      <span class="section-divider-badge">
+        {{ (dashboardData()!.kpis?.total?.valeur || 0) }} demandes
+      </span>
+    </div>
+    <div  class="dashboard-content">
+      <p class="dashboard-subtitle">Vue d'ensemble des permissions</p>
+
+      <!-- KPIs Cards -->
+      <div class="kpis-grid">
+        <!-- Total -->
+        <div class="kpi-card kpi-primary">
+          <div class="kpi-header">
+            <span class="kpi-icon material-icons">bar_chart</span>
+            <span class="kpi-label">{{ dashboardData()!.kpis.total.libelle }}</span>
+          </div>
+          <div class="kpi-value">{{ dashboardData()!.kpis.total.valeur }}</div>
+          <div class="kpi-footer" *ngIf="dashboardData()!.kpis.total.tendance !== undefined">
+            <span [class.positive]="dashboardData()!.kpis.total.tendance! > 0"
+                  [class.negative]="dashboardData()!.kpis.total.tendance! < 0">
+              {{ dashboardData()!.kpis.total.tendance! > 0 ? '↑' : '↓' }}
+              <!-- {{ Math.abs(dashboardData()!.kpis.total.tendance) }}% -->
+              {{ dashboardData()!.kpis.total.tendance | abs }}%
+            </span>
+            <span class="kpi-footer-text">vs période précédente</span>
+          </div>
+        </div>
+
+        <!-- En attente -->
+        <div class="kpi-card kpi-warning">
+          <div class="kpi-header">
+            <span class="material-icons">hourglass_empty</span>
+            <span class="kpi-label">{{ dashboardData()!.kpis.en_attente.libelle }}</span>
+          </div>
+          <div class="kpi-value">{{ dashboardData()!.kpis.en_attente.valeur }}</div>
+          <div class="kpi-footer">
+            <span class="kpi-percentage">{{ dashboardData()!.kpis.en_attente.pourcentage }}%</span>
+            <span class="kpi-footer-text">du total</span>
+          </div>
+        </div>
+
+        <!-- Approuvées -->
+        <div class="kpi-card kpi-success">
+          <div class="kpi-header">
+            <span class="material-icons">check_circle</span>
+            <span class="kpi-label">{{ dashboardData()!.kpis.approuvees.libelle }}</span>
+          </div>
+          <div class="kpi-value">{{ dashboardData()!.kpis.approuvees.valeur }}</div>
+          <div class="kpi-footer">
+            <span class="kpi-percentage">{{ dashboardData()!.kpis.approuvees.pourcentage }}%
+
+            </span>
+            <span class="kpi-footer-text">du total</span>
+          </div>
+        </div>
+
+        <!-- Refusées -->
+        <div class="kpi-card kpi-danger">
+          <div class="kpi-header">
+            <span class="material-icons">cancel</span>
+            <span class="kpi-label">{{ dashboardData()!.kpis.refusees.libelle }}</span>
+          </div>
+          <div class="kpi-value">{{ dashboardData()!.kpis.refusees.valeur }}</div>
+          <div class="kpi-footer">
+            <span class="kpi-percentage">{{ dashboardData()!.kpis.refusees.pourcentage }}%</span>
+            <span class="kpi-footer-text">du total</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-grid">
+        <!-- Évolution -->
+        <div class="chart-card chart-large">
+          <h3 class="chart-title">
+            <span class="material-icons">trending_up</span>
+            Évolution des demandes de permissions
+          </h3>
+          <div class="chart-container">
+            <canvas id="evolutionChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Répartition par statut -->
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <span class="material-icons">donut_small</span>
+            Répartition par statut
+          </h3>
+          <div class="chart-container">
+            <canvas id="statutChart"></canvas>
+          </div>
+          <div class="chart-info">
+            <div class="info-item">
+              <span class="info-label">Taux d'approbation</span>
+              <span class="info-value">{{ dashboardData()!.kpis.taux_approbation }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Répartition par type -->
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <span class="material-icons">assignment</span>
+            Répartition par type
+          </h3>
+          <div class="chart-container">
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Répartition par genre -->
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <span class="material-icons">people</span>
+            Répartition par genre
+          </h3>
+          <div class="chart-container">
+            <canvas id="genreChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Répartition par service -->
+        <div class="chart-card chart-large">
+          <h3 class="chart-title">
+            <span class="material-icons">business</span>
+            Répartition par service
+          </h3>
+          <div class="chart-container">
+            <canvas id="serviceChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Top employés -->
+      <div class="section-card">
+        <h3 class="section-title">
+          <span class="material-icons">groups</span>
+          Top 10 des employés (durée totale)
+        </h3>
+
+        <div class="top-list">
+          <div
+            *ngFor="let employe of dashboardData()!.top_employes; let i = index"
+            class="top-item">
+
+            <!-- Rang avec médaille pour le top 3 -->
+            <div class="top-rank" [class.medal]="i < 3">
+              <span *ngIf="i === 0" class="medal-icon gold">🥇</span>
+              <span *ngIf="i === 1" class="medal-icon silver">🥈</span>
+              <span *ngIf="i === 2" class="medal-icon bronze">🥉</span>
+              <span *ngIf="i >= 3">{{ i + 1 }}</span>
+            </div>
+
+            <!-- Nom de l'employé -->
+            <div class="top-name">{{ employe.employe }}</div>
+
+            <!-- Barre de progression -->
+            <div class="top-bar-container">
+              <div
+                class="top-bar"
+                [style.width.%]="getTopEmployeBarWidth(employe)"
+                [style.background-color]="getTopEmployeColor(i)">
+              </div>
+            </div>
+
+            <!-- Durée formatée -->
+            <div class="top-value">{{ employe.total }}</div>
+          </div>
+        </div>
+
+        <!-- Message si aucune donnée -->
+        <div *ngIf="dashboardData()!.top_employes.length === 0" class="no-data">
+          <span class="material-icons">info</span>
+          <p>Aucune donnée disponible pour cette période</p>
+        </div>
+      </div>
+
+      <!--  Tableau des services -->
+      <div class="section-card">
+        <h3 class="section-title">
+          <span class="material-icons">business</span>
+          Détails par service
+        </h3>
+        <div class="table-container">
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Total</th>
+                <th>Approuvées</th>
+                <th>En attente</th>
+                <th>Refusées</th>
+                <th>Taux d'approbation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let service of dashboardData()!.repartition_services">
+                <td class="service-name">{{ service.service }}</td>
+                <td class="text-center"><strong>{{ service.total }}</strong></td>
+                <td class="text-center">
+                  <span class="badge badge-success">{{ service.approuvees }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge badge-warning">{{ service.en_attente }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge badge-danger">{{ service.refusees }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="taux-approbation">
+                    {{ service.total > 0 ? ((service.approuvees / service.total) * 100).toFixed(1) : 0 }}%
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="dashboardData()!.repartition_services.length === 0">
+                <td colspan="6" class="empty-cell">Aucune donnée disponible</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Demandes récentes -->
+      <div class="section-card">
+        <h3 class="section-title">
+          <span class="material-icons">notifications_active</span>
+          Demandes récentes en attente
+        </h3>
+        <div class="table-container">
+          <table class="demandes-table">
+            <thead>
+              <tr>
+                <th>Employé</th>
+                <th>Type</th>
+                <th>Date demande</th>
+                <th>Période</th>
+                <th>Raison</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="demande-permission-cell" *ngFor="let demande of dashboardData()!.demandes_recentes" (click)="openDemandeListe()">
+                <td class="employe-cell">{{ demande.employe }}</td>
+                <td><span class="type-badge">{{ demande.type }}</span></td>
+                <td>{{ demande.date_demande }}</td>
+                <td>{{ demande.debut }} - {{ demande.fin }}</td>
+                <td class="raison-cell">{{ demande.raison }}</td>
+              </tr>
+              <tr *ngIf="dashboardData()!.demandes_recentes.length === 0">
+                <td colspan="5" class="empty-cell">Aucune demande en attente</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    }
   </div>
-  }
-</div>
 
 <!-- dashboard.component.html - Section Congés -->
 

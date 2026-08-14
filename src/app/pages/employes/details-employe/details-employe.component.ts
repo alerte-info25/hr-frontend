@@ -5,7 +5,7 @@ import { EmployesService } from '../../../services/employes.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoadingComponent } from '../../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
-
+import { Location } from '@angular/common';
 @Component({
   selector: 'app-details-empleoye',
   imports: [CommonModule, RouterLink, LoadingComponent,ConfirmDeleteDialogComponent],
@@ -22,7 +22,8 @@ export class DetailsEmployeComponent {
     private route: ActivatedRoute,
     private router: Router,
     private employeSvr: EmployesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -46,7 +47,8 @@ export class DetailsEmployeComponent {
   }
 
   goBack() {
-    this.router.navigate(['/employes']);
+    this.location.back();
+    // this.router.navigate(['/employes']);
   }
 
   getInitials(): string {

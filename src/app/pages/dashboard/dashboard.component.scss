@@ -1299,3 +1299,143 @@
     height: 10px;
   }
 }
+
+// Section RH
+.section-divider-rh {
+  border-color: #8B5CF6;
+  margin-top: 40px;
+  
+  .section-divider-icon {
+    background: #8B5CF6;
+  }
+}
+
+// Stats grid pour l'ancienneté
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 16px;
+  
+  .stat-item {
+    .stat-label {
+      display: block;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    
+    .stat-value {
+      display: block;
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    
+    .stat-bar {
+      height: 6px;
+      background: #f3f4f6;
+      border-radius: 3px;
+      overflow: hidden;
+      
+      .stat-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+      }
+    }
+  }
+}
+
+// Résumé des contrats
+.contract-summary {
+  padding: 16px;
+  
+  .contract-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .contract-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 150px;
+      
+      .contract-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      
+      .contract-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #111827;
+      }
+    }
+    
+    .contract-count {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 80px;
+      
+      .contract-number {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+      }
+      
+      .contract-percentage {
+        font-size: 13px;
+        color: #6b7280;
+      }
+    }
+    
+    .contract-bar {
+      flex: 1;
+      height: 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      overflow: hidden;
+      
+      .contract-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+      }
+    }
+  }
+}
+
+// Ajustement des badges dans les KPIs
+.kpi-card {
+  .kpi-icon {
+    font-size: 24px;
+    margin-right: 8px;
+  }
+}
+
+// Text muted
+.text-muted {
+  color: #9ca3af;
+}
+
+// Badge info
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-left: 8px;
+}

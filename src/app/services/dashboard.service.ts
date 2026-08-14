@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment.developpement';
 
 export interface DashboardFilters {
-  periode?: 'jour' | 'semaine' | 'mois' | 'annee' | 'personnalise';
+  periode?: 'jour' | 'semaine' | 'mois' | 'trimestre' | 'semestre' | 'annee' | 'personnalise';
   date_debut?: string;
   date_fin?: string;
   statut?: string;
@@ -384,6 +384,61 @@ export interface RepartitionSanctionType {
   couleur: string;
 }
 
+// DOnnées RH
+export interface EmployesKPIs {
+  total: number;
+  hommes: number;
+  femmes: number;
+  moins_30_ans: number;
+  cdd: number;
+  cdi: number;
+  stage: number;
+  sans_contrat: number;
+  interim: number;
+  freelance: number;
+  total_conges_droits: number;
+  total_conges_pris: number;
+  total_conges_restants: number;
+  taux_hommes: number;
+  taux_femmes: number;
+}
+
+export interface EmployeParService {
+  service: string;
+  total: number;
+}
+
+export interface EmployeParTypeContrat {
+  type: string;
+  total: number;
+  couleur: string;
+}
+
+export interface EmployeParTrancheAge {
+  tranche: string;
+  total: number;
+  couleur: string;
+}
+
+export interface DernierEmploye {
+  slug: string;
+  nom_complet: string;
+  service: string;
+  fonction: string;
+  date_embauche: string;
+}
+
+export interface StatistiquesAnciennete {
+  moyenne_ans: number;
+  total_employes: number;
+  repartition: {
+    moins_1_an: number;
+    '1-3_ans': number;
+    '3-5_ans': number;
+    '5-10_ans': number;
+    plus_10_ans: number;
+  };
+}
 
 export interface DashboardData {
   kpis: KPIs;
@@ -422,7 +477,16 @@ export interface DashboardData {
   top_employes_sanctions: TopEmployeSanction[];
   evolution_sanctions: EvolutionSanction[];
   repartition_sanctions_par_type: RepartitionSanctionType[];
+
+  // RH
+  employes_kpis: EmployesKPIs;
+  employes_par_service: EmployeParService[];
+  employes_par_type_contrat: EmployeParTypeContrat[];
+  employes_par_tranche_age: EmployeParTrancheAge[];
+  derniers_employes: DernierEmploye[];
+  statistiques_anciennete: StatistiquesAnciennete;
 }
+
 
 @Injectable({
   providedIn: 'root'
