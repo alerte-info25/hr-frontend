@@ -21,6 +21,9 @@ import {
   MODE_PAIEMENT_LABELS,
   ModePaiement,
   Recouvrement,
+  TypeOperation,
+  TYPE_OPERATION_LABELS,
+  TYPE_OPERATION_OPTIONS,
 } from '../../../models/Caisse/recouvrement.model';
 import { LoaderComponent } from '../../../sharedCaisse/components/loader/loader.component';
 
@@ -65,8 +68,7 @@ export class RecouvrementComponent implements OnInit {
   total = signal(0);
   lastPage = signal(1);
 
-  // Stats globales (indépendantes de la pagination, recalculées uniquement
-  // quand les FILTRES changent, jamais quand on change de page)
+  // Stats globales
   isLoadingStats = signal(false);
   statsTotalMontant = signal(0);
   statsCount = signal(0);
@@ -74,7 +76,7 @@ export class RecouvrementComponent implements OnInit {
     this.statsCount() > 0 ? this.statsTotalMontant() / this.statsCount() : 0,
   );
 
-  // Total de la page courante uniquement (pour le footer du tableau)
+  // Total de la page courante
   pageTotal = computed(() =>
     this.recouvrements().reduce((sum, r) => sum + Number(r.montant), 0),
   );
@@ -132,7 +134,9 @@ export class RecouvrementComponent implements OnInit {
   filterClientId = '';
   filterMode = '';
   filterSearch = '';
-  filterActif = '';
+  // NOUVEAUX FILTRES
+  filterTypeOperation = '';
+  filterAComptabiliser = '';
 
   // Formulaire
   editingRfk = signal<string | null>(null);
@@ -153,6 +157,9 @@ export class RecouvrementComponent implements OnInit {
     mode_paiement: [null, Validators.required],
     reference_paiement: [''],
     description: ['', [Validators.maxLength(500)]],
+    // NOUVEAUX CHAMPS
+    type_operation: ['courant'],
+    a_comptabiliser: [true],
   });
 
   // Suppression
@@ -166,6 +173,9 @@ export class RecouvrementComponent implements OnInit {
     ModePaiement,
     string,
   ][];
+  // NOUVEAU
+  readonly typeOperationOptions = TYPE_OPERATION_OPTIONS;
+  readonly typeOperationLabels = TYPE_OPERATION_LABELS;
   readonly Math = Math;
 
   ngOnInit(): void {
@@ -267,6 +277,13 @@ export class RecouvrementComponent implements OnInit {
           ? Number(this.filterClientId)
           : undefined,
         mode_paiement: (this.filterMode as ModePaiement) || undefined,
+        // NOUVEAUX FILTRES
+        type_operation:
+          (this.filterTypeOperation as TypeOperation) || undefined,
+        a_comptabiliser:
+          this.filterAComptabiliser !== ''
+            ? this.filterAComptabiliser === 'true'
+            : undefined,
         page: this.currentPage(),
         per_page: this.perPage,
       })
@@ -281,7 +298,7 @@ export class RecouvrementComponent implements OnInit {
       });
   }
 
-  // Chargement stats (sur TOUTES les données filtrées, indépendant de la page)
+  // Chargement stats
   loadStats(): void {
     this.isLoadingStats.set(true);
     this.recouvrementService
@@ -318,7 +335,29 @@ export class RecouvrementComponent implements OnInit {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
     this.loadList();
-    // Pas de loadStats() ici : les stats restent fixes lors du changement de page
+  }
+
+  // NOUVEAU : Toggle de comptabilisation
+  toggleComptabilisation(recouvrement: Recouvrement): void {
+    const newValue = !recouvrement.a_comptabiliser;
+    this.recouvrementService
+      .toggleComptabilisation(recouvrement.rfk, newValue)
+      .subscribe({
+        next: () => {
+          const updated = this.recouvrements().map((r) =>
+            r.rfk === recouvrement.rfk
+              ? { ...r, a_comptabiliser: newValue }
+              : r,
+          );
+          this.recouvrements.set(updated);
+          this.loadStats();
+        },
+        error: (err) => {
+          this.formError.set(
+            err?.error?.message ?? 'Erreur lors de la mise à jour.',
+          );
+        },
+      });
   }
 
   // Formulaire
@@ -338,6 +377,8 @@ export class RecouvrementComponent implements OnInit {
       mode_paiement: null,
       reference_paiement: '',
       description: '',
+      type_operation: 'courant',
+      a_comptabiliser: true,
     });
     const actif = this.exercices().find((e) => e.est_actif);
     if (actif) {
@@ -366,6 +407,8 @@ export class RecouvrementComponent implements OnInit {
       mode_paiement: r.mode_paiement,
       reference_paiement: r.reference_paiement,
       description: r.description,
+      type_operation: r.type_operation || 'courant',
+      a_comptabiliser: r.a_comptabiliser,
     });
     document
       .getElementById('recouvrementForm')

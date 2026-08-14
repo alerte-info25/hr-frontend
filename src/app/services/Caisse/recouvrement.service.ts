@@ -22,7 +22,12 @@ export class RecouvrementService {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          params = params.set(key, String(value));
+          // Pour a_comptabiliser, envoyer "true" ou "false" en string
+          if (key === 'a_comptabiliser') {
+            params = params.set(key, value ? 'true' : 'false');
+          } else {
+            params = params.set(key, String(value));
+          }
         }
       });
     }
@@ -102,5 +107,17 @@ export class RecouvrementService {
     return this.http
       .delete<ApiResponse<null>>(`${this.url}/${rfk}`)
       .pipe(map((res) => res.message!));
+  }
+
+  // NOUVEAU : Toggle de comptabilisation
+  toggleComptabilisation(
+    rfk: string,
+    aComptabiliser: boolean,
+  ): Observable<Recouvrement> {
+    return this.http
+      .post<
+        ApiResponse<Recouvrement>
+      >(`${this.url}/${rfk}/toggle-comptabilisation`, { a_comptabiliser: aComptabiliser })
+      .pipe(map((res) => res.data!));
   }
 }

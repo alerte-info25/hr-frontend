@@ -4,7 +4,28 @@ export type { ApiResponse, PaginatedResponse };
 
 export type ModePaiement = 'especes' | 'cheque' | 'virement' | 'mobile_money';
 
-//  Modèle principal
+// NOUVEAU : Types d'opérations
+export type TypeOperation =
+  | 'courant'
+  | 'interne_banque_caisse'
+  | 'interne_caisse_banque'
+  | 'interne_banque_banque';
+
+export const TYPE_OPERATION_LABELS: Record<TypeOperation, string> = {
+  courant: 'Opération courante',
+  interne_banque_caisse: 'Retrait banque → Caisse',
+  interne_caisse_banque: 'Dépôt caisse → Banque',
+  interne_banque_banque: 'Virement entre comptes bancaires',
+};
+
+export const TYPE_OPERATION_OPTIONS = [
+  { value: 'courant', label: 'Opération courante' },
+  { value: 'interne_banque_caisse', label: 'Retrait banque → Caisse' },
+  { value: 'interne_caisse_banque', label: 'Dépôt caisse → Banque' },
+  { value: 'interne_banque_banque', label: 'Virement entre comptes bancaires' },
+];
+
+// Modèle principal
 export interface Depense {
   rfk: string;
   type_depense_id: number;
@@ -19,6 +40,9 @@ export interface Depense {
   reference_paiement: string | null;
   description: string;
   date_depense: string;
+  // NOUVEAUX CHAMPS
+  type_operation: TypeOperation | null;
+  a_comptabiliser: boolean;
   // Relations eager-loaded
   type_depense?: { id: number; libelle: string };
   periode?: { id: number; libelle: string };
@@ -31,7 +55,7 @@ export interface Depense {
   updated_at: string;
 }
 
-//  Payload
+// Payload
 export interface DepensePayload {
   type_depense_id: number;
   periode_id: number;
@@ -44,9 +68,12 @@ export interface DepensePayload {
   reference_paiement: string | null;
   description: string;
   date_depense: string;
+  // NOUVEAUX CHAMPS
+  type_operation?: TypeOperation | null;
+  a_comptabiliser?: boolean;
 }
 
-//  Filtres
+// Filtres
 export interface DepenseFilters {
   search?: string;
   bureau_id?: number;
@@ -61,9 +88,12 @@ export interface DepenseFilters {
   montant_max?: number;
   per_page?: number;
   page?: number;
+  // NOUVEAUX FILTRES
+  type_operation?: TypeOperation;
+  a_comptabiliser?: boolean;
 }
 
-//  Labels modes paiement
+// Labels modes paiement
 export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {
   especes: 'Espèces',
   cheque: 'Chèque',
@@ -71,7 +101,7 @@ export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {
   mobile_money: 'Mobile Money',
 };
 
-// mes icones
+// icones
 export const MODE_PAIEMENT_ICONS: Record<ModePaiement, string> = {
   especes: 'fa-money-bill-wave',
   cheque: 'fa-money-check',

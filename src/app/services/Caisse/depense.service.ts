@@ -30,9 +30,25 @@ export class DepenseService {
   }
 
   getAll(filters?: DepenseFilters): Observable<PaginatedResponse<Depense>> {
+    // S'assurer que les paramètres sont correctement formatés
+    const params: any = {};
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          // Pour a_comptabiliser, envoyer "true" ou "false" en string
+          if (key === 'a_comptabiliser') {
+            params[key] = value ? 'true' : 'false';
+          } else {
+            params[key] = String(value);
+          }
+        }
+      });
+    }
+
     return this.http
       .get<ApiResponse<PaginatedResponse<Depense>>>(this.url, {
-        params: this.buildParams(filters),
+        params: this.buildParams(params),
       })
       .pipe(
         map((res) => {
@@ -92,5 +108,17 @@ export class DepenseService {
     return this.http
       .delete<ApiResponse<null>>(`${this.url}/${rfk}`)
       .pipe(map((res) => res.message!));
+  }
+
+  // NOUVEAU : Toggle de comptabilisation
+  toggleComptabilisation(
+    rfk: string,
+    aComptabiliser: boolean,
+  ): Observable<Depense> {
+    return this.http
+      .post<
+        ApiResponse<Depense>
+      >(`${this.url}/${rfk}/toggle-comptabilisation`, { a_comptabiliser: aComptabiliser })
+      .pipe(map((res) => res.data!));
   }
 }

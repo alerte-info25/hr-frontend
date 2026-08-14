@@ -578,3 +578,50 @@ textarea.form-control {
     }
   }
 }
+
+// Ajouter ces styles pour les toggles de comptabilisation
+
+.form-check-input {
+  cursor: pointer;
+
+  &:checked {
+    background-color: #10b981;
+    border-color: #10b981;
+  }
+
+  &:not(:checked) {
+    background-color: #858585;
+    border-color: black;
+  }
+}
+
+.badge-comptabilise {
+  background: #10b981;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge-non-comptabilise {
+  background: #929292;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+// Style des switches dans le tableau
+.table-card .form-switch .form-check-input {
+  width: 2.5em;
+  height: 1.3em;
+  margin: 0;
+}
+
+// Style des badges dans le formulaire
+.form-switch .form-check-input {
+  width: 3em;
+  height: 1.5em;
+}

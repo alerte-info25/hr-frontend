@@ -9,6 +9,27 @@ export type { ApiResponse, PaginatedResponse };
 export type { ModePaiement };
 export { MODE_PAIEMENT_LABELS, MODE_PAIEMENT_ICONS };
 
+// NOUVEAU : Types d'opérations
+export type TypeOperation =
+  | 'courant'
+  | 'interne_banque_caisse'
+  | 'interne_caisse_banque'
+  | 'interne_banque_banque';
+
+export const TYPE_OPERATION_LABELS: Record<TypeOperation, string> = {
+  courant: 'Opération courante',
+  interne_banque_caisse: 'Retrait banque → Caisse',
+  interne_caisse_banque: 'Dépôt caisse → Banque',
+  interne_banque_banque: 'Virement entre comptes bancaires',
+};
+
+export const TYPE_OPERATION_OPTIONS = [
+  { value: 'courant', label: 'Opération courante' },
+  { value: 'interne_banque_caisse', label: 'Retrait banque → Caisse' },
+  { value: 'interne_caisse_banque', label: 'Dépôt caisse → Banque' },
+  { value: 'interne_banque_banque', label: 'Virement entre comptes bancaires' },
+];
+
 //  Modèle principal
 export interface Recouvrement {
   rfk: string;
@@ -24,6 +45,9 @@ export interface Recouvrement {
   reference_paiement: string | null;
   description: string | null;
   date_recouvrement: string;
+  // NOUVEAUX CHAMPS
+  type_operation: TypeOperation | null;
+  a_comptabiliser: boolean;
   // Relations eager-loaded
   service_propose?: { id: number; nom: string };
   periode?: { id: number; libelle: string };
@@ -49,6 +73,9 @@ export interface RecouvrementPayload {
   reference_paiement: string | null;
   description: string | null;
   date_recouvrement: string;
+  // NOUVEAUX CHAMPS
+  type_operation?: TypeOperation | null;
+  a_comptabiliser?: boolean;
 }
 
 //  Filtres
@@ -66,4 +93,7 @@ export interface RecouvrementFilters {
   montant_max?: number;
   per_page?: number;
   page?: number;
+  // NOUVEAUX FILTRES
+  type_operation?: TypeOperation;
+  a_comptabiliser?: boolean;
 }

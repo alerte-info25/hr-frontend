@@ -65,10 +65,7 @@
               <i class="fa-solid fa-arrow-trend-down me-2"></i>Dépense
             </a>
 
-            <a
-              routerLink="/caisse/recouvrements"
-              class="btn btn-success"
-            >
+            <a routerLink="/caisse/recouvrements" class="btn btn-success">
               <i class="fa-solid fa-arrow-trend-up me-2"></i>Recouvrement
             </a>
             <button class="btn btn-danger" (click)="cloturer()">
@@ -384,7 +381,7 @@
         </tbody>
       </table>
 
-      <!-- 🔥 PIED DE TABLEAU AVEC PAGINATION -->
+      <!-- PIED DE TABLEAU AVEC PAGINATION -->
       @if (operations().length > 0) {
         <div class="pagination-info">
           <div

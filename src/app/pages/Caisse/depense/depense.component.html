@@ -398,6 +398,56 @@
                 </div>
               </div>
 
+              <!--  Ligne 7 : Type d'opération et Comptabilisation  -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-tags me-1 text-danger"></i>
+                    Type d'opération
+                  </label>
+                  <select class="form-select" formControlName="type_operation">
+                    @for (opt of typeOperationOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Les opérations internes (retrait banque, etc.) ne seront pas
+                    comptabilisées.
+                  </small>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-check-circle me-1 text-danger"></i>
+                    Comptabilisation
+                  </label>
+                  <div class="form-check form-switch mt-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="aComptabiliser"
+                      formControlName="a_comptabiliser"
+                      style="width: 3em; height: 1.5em; cursor: pointer"
+                    />
+                    <label class="form-check-label ms-2" for="aComptabiliser">
+                      @if (form.get("a_comptabiliser")?.value) {
+                        <span class="badge badge-success">Comptabilisée</span>
+                      } @else {
+                        <span class="badge badge-warning"
+                          >Non comptabilisée</span
+                        >
+                      }
+                    </label>
+                  </div>
+                  <small class="text-muted d-block">
+                    <i class="fas fa-info-circle"></i>
+                    Décochez pour les opérations internes (retrait banque,
+                    virement...)
+                  </small>
+                </div>
+              </div>
+
               <!--  Boutons  -->
               <div class="d-flex gap-2">
                 <button
@@ -473,6 +523,38 @@
 
             <div class="col-md-2">
               <label class="form-label form-label-sm text-muted mb-1"
+                >Type opération</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="filterTypeOperation"
+                (change)="onFilterChange()"
+              >
+                <option value="">Tous les types</option>
+                @for (opt of typeOperationOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- NOUVEAU FILTRE : Comptabilisation -->
+            <div class="col-md-2">
+              <label class="form-label form-label-sm text-muted mb-1"
+                >Comptabilisation</label
+              >
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="filterAComptabiliser"
+                (change)="onFilterChange()"
+              >
+                <option value="">Toutes</option>
+                <option value="true">Comptabilisées</option>
+                <option value="false">Non comptabilisées</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label form-label-sm text-muted mb-1"
                 >Mode paiement</label
               >
               <select
@@ -510,6 +592,8 @@
                   filterTypeId = '';
                   filterMode = '';
                   filterSearch = '';
+                  filterTypeOperation = '';
+                  filterAComptabiliser = '';
                   onFilterChange()
                 "
                 style="height: 43px"
@@ -552,7 +636,9 @@
                   <th width="10%">Période</th>
                   <th width="10%">Compte comptable</th>
                   <th width="10%">Mode</th>
+                  <th width="10%">Type opération</th>
                   <th width="11%" class="text-end">Montant (F)</th>
+                  <th width="8%" class="text-center">Comptab.</th>
                   <th width="10%" class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -561,7 +647,7 @@
                   <!-- 🟡 Squelette de chargement -->
                   @for (_ of skeletonArray; track $index) {
                     <tr>
-                      <td colspan="10">
+                      <td colspan="12">
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
@@ -571,7 +657,7 @@
                 } @else if (depenses().length === 0) {
                   <!-- 🔍 Aucun résultat -->
                   <tr>
-                    <td colspan="9" class="text-center text-muted py-5">
+                    <td colspan="12" class="text-center text-muted py-5">
                       <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
                       Aucune dépense trouvée
                       @if (
@@ -652,8 +738,35 @@
                           <span class="text-muted">—</span>
                         }
                       </td>
+                      <td>
+                        <span class="badge bg-info-subtle text-info">
+                          {{
+                            d.type_operation
+                              ? typeOperationLabels[d.type_operation]
+                              : "Non défini"
+                          }}
+                        </span>
+                      </td>
                       <td class="text-end fw-semibold text-danger">
                         {{ d.montant | number: "1.0-0" }}
+                      </td>
+                      <td class="text-center">
+                        <div
+                          class="form-check form-switch d-flex justify-content-center"
+                        >
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            [checked]="d.a_comptabiliser"
+                            (change)="toggleComptabilisation(d)"
+                            style="width: 2.5em; height: 1.3em; cursor: pointer"
+                            [title]="
+                              d.a_comptabiliser
+                                ? 'Comptabilisée - Cliquer pour décocher'
+                                : 'Non comptabilisée - Cliquer pour cocher'
+                            "
+                          />
+                        </div>
                       </td>
                       <td class="text-center">
                         <button
@@ -688,7 +801,7 @@
               @if (!isLoadingList() && depenses().length > 0) {
                 <tfoot>
                   <tr class="table-light fw-semibold">
-                    <td colspan="7" class="text-end text-muted">
+                    <td colspan="9" class="text-end text-muted">
                       Total de la page ({{ depenses().length }} ligne{{
                         depenses().length > 1 ? "s" : ""
                       }}) :

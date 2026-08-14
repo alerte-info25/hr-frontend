@@ -12,6 +12,9 @@ import {
   MODE_PAIEMENT_LABELS,
   MODE_PAIEMENT_ICONS,
   ModePaiement,
+  TypeOperation,
+  TYPE_OPERATION_LABELS,
+  TYPE_OPERATION_OPTIONS,
 } from '../../../models/Caisse/depense.model';
 import { ExerciceModel } from '../../../models/Caisse/exercice-comptable.model';
 import { Periode } from '../../../models/Caisse/periode.model';
@@ -72,61 +75,31 @@ export class DepenseComponent implements OnInit {
     this.depenses().reduce((sum, d) => sum + Number(d.montant), 0),
   );
 
-  // Ajoute cette propriété computed après les autres computed
   visiblePages = computed(() => {
     const current = this.currentPage();
     const total = this.lastPage();
-    const delta = 2; // Nombre de pages autour de la page actuelle
+    const delta = 2;
 
-    // Si pas de pages ou une seule page
-    if (total <= 1) {
-      return [1];
-    }
-
-    // Si peu de pages, on affiche tout
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
+    if (total <= 1) return [1];
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
 
     const pages: number[] = [];
-
-    // Toujours la première page
     pages.push(1);
 
-    // Calcul de la plage autour de la page actuelle
     let start = Math.max(2, current - delta);
     let end = Math.min(total - 1, current + delta);
 
-    // Ajustement pour avoir toujours un affichage cohérent
-    if (current - delta <= 2) {
-      end = Math.min(total - 1, 5);
-    }
-    if (current + delta >= total - 1) {
-      start = Math.max(2, total - 4);
-    }
+    if (current - delta <= 2) end = Math.min(total - 1, 5);
+    if (current + delta >= total - 1) start = Math.max(2, total - 4);
 
-    // Ellipse avant si nécessaire
-    if (start > 2) {
-      pages.push(-1); // -1 représente "..."
-    }
-
-    // Pages de la plage
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    // Ellipse après si nécessaire
-    if (end < total - 1) {
-      pages.push(-2); // -2 représente "..."
-    }
-
-    // Toujours la dernière page
+    if (start > 2) pages.push(-1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(-2);
     pages.push(total);
 
     return pages;
   });
 
-  // skeleton loading
   get skeletonArray(): number[] {
     return Array(this.perPage).fill(0);
   }
@@ -136,6 +109,9 @@ export class DepenseComponent implements OnInit {
   filterTypeId = '';
   filterMode = '';
   filterSearch = '';
+  // NOUVEAUX FILTRES
+  filterTypeOperation = '';
+  filterAComptabiliser = '';
 
   // Formulaire
   editingRfk = signal<string | null>(null);
@@ -156,6 +132,9 @@ export class DepenseComponent implements OnInit {
     mode_paiement: [null],
     reference_paiement: [''],
     description: ['', [Validators.required, Validators.maxLength(500)]],
+    // NOUVEAUX CHAMPS
+    type_operation: ['courant'],
+    a_comptabiliser: [true],
   });
 
   // Suppression
@@ -169,6 +148,9 @@ export class DepenseComponent implements OnInit {
     ModePaiement,
     string,
   ][];
+  // NOUVEAU
+  readonly typeOperationOptions = TYPE_OPERATION_OPTIONS;
+  readonly typeOperationLabels = TYPE_OPERATION_LABELS;
   readonly Math = Math;
 
   // Lifecycle
@@ -176,7 +158,7 @@ export class DepenseComponent implements OnInit {
     this.loadReferentiels();
   }
 
-  // Chargement SÉQUENTIEL des référentiels (1 connexion à la fois)
+  // Chargement SÉQUENTIEL des référentiels
   private loadReferentiels(): void {
     this.isLoadingRefs.set(true);
     this.loadExercices();
@@ -260,28 +242,35 @@ export class DepenseComponent implements OnInit {
   // Chargement liste
   loadList(): void {
     this.isLoadingList.set(true);
-    this.depenseService
-      .getAll({
-        search: this.filterSearch || undefined,
-        exercice_id: this.filterExerciceId
-          ? Number(this.filterExerciceId)
-          : undefined,
-        type_depense_id: this.filterTypeId
-          ? Number(this.filterTypeId)
-          : undefined,
-        mode_paiement: (this.filterMode as ModePaiement) || undefined,
-        page: this.currentPage(),
-        per_page: this.perPage,
-      })
-      .subscribe({
-        next: (res) => {
-          this.depenses.set(res.data);
-          this.total.set(res.total);
-          this.lastPage.set(res.last_page);
-          this.isLoadingList.set(false);
-        },
-        error: () => this.isLoadingList.set(false),
-      });
+
+    // Construire les filtres correctement
+    const filters: any = {};
+
+    if (this.filterSearch) filters.search = this.filterSearch;
+    if (this.filterExerciceId)
+      filters.exercice_id = Number(this.filterExerciceId);
+    if (this.filterTypeId) filters.type_depense_id = Number(this.filterTypeId);
+    if (this.filterMode) filters.mode_paiement = this.filterMode;
+    if (this.filterTypeOperation)
+      filters.type_operation = this.filterTypeOperation;
+
+    // CORRECTION : Envoyer un booléen ou null
+    if (this.filterAComptabiliser !== '') {
+      filters.a_comptabiliser = this.filterAComptabiliser === 'true';
+    }
+
+    filters.page = this.currentPage();
+    filters.per_page = this.perPage;
+
+    this.depenseService.getAll(filters).subscribe({
+      next: (res) => {
+        this.depenses.set(res.data);
+        this.total.set(res.total);
+        this.lastPage.set(res.last_page);
+        this.isLoadingList.set(false);
+      },
+      error: () => this.isLoadingList.set(false),
+    });
   }
 
   // Chargement des statistiques
@@ -289,7 +278,6 @@ export class DepenseComponent implements OnInit {
     this.isLoadingStats.set(true);
     const filters: any = {};
 
-    // Ajout des filtres si présents
     if (this.filterExerciceId) {
       filters.exercice_id = Number(this.filterExerciceId);
     }
@@ -317,7 +305,6 @@ export class DepenseComponent implements OnInit {
       error: (error) => {
         this.isLoadingStats.set(false);
         console.error('Erreur lors du chargement des statistiques:', error);
-        // Réinitialisation en cas d'erreur
         this.totalMontant.set(0);
         this.nombreDepenses.set(0);
         this.statsParType.set([]);
@@ -331,13 +318,35 @@ export class DepenseComponent implements OnInit {
   onFilterChange(): void {
     this.currentPage.set(1);
     this.loadList();
-    this.loadStats(); // Recharger les stats quand les filtres changent
+    this.loadStats();
   }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
     this.loadList();
+  }
+
+  // NOUVEAU : Toggle de comptabilisation
+  toggleComptabilisation(depense: Depense): void {
+    const newValue = !depense.a_comptabiliser;
+    this.depenseService
+      .toggleComptabilisation(depense.rfk, newValue)
+      .subscribe({
+        next: () => {
+          // Mettre à jour localement
+          const updated = this.depenses().map((d) =>
+            d.rfk === depense.rfk ? { ...d, a_comptabiliser: newValue } : d,
+          );
+          this.depenses.set(updated);
+          this.loadStats(); // Recharger les stats
+        },
+        error: (err) => {
+          this.formError.set(
+            err?.error?.message ?? 'Erreur lors de la mise à jour.',
+          );
+        },
+      });
   }
 
   // Formulaire
@@ -357,6 +366,8 @@ export class DepenseComponent implements OnInit {
       mode_paiement: null,
       reference_paiement: '',
       description: '',
+      type_operation: 'courant',
+      a_comptabiliser: true,
     });
     const actif = this.exercices().find((e) => e.est_actif);
     if (actif) {
@@ -389,6 +400,8 @@ export class DepenseComponent implements OnInit {
       mode_paiement: d.mode_paiement,
       reference_paiement: d.reference_paiement,
       description: d.description,
+      type_operation: d.type_operation || 'courant',
+      a_comptabiliser: d.a_comptabiliser,
     });
 
     document
@@ -422,7 +435,7 @@ export class DepenseComponent implements OnInit {
         this.isSaving.set(false);
         this.resetForm();
         this.loadList();
-        this.loadStats(); // Recharger les stats après création/modification
+        this.loadStats();
       },
       error: (err) => {
         this.formError.set(err?.error?.message ?? 'Une erreur est survenue.');
@@ -446,7 +459,7 @@ export class DepenseComponent implements OnInit {
       next: () => {
         this.isDeleting.set(null);
         this.loadList();
-        this.loadStats(); // Recharger les stats après suppression
+        this.loadStats();
       },
       error: (err) => {
         this.deleteError.set(

@@ -145,6 +145,13 @@ export class TypeDepenseComponent implements OnInit {
     this.loadList();
   }
 
+  // ✅ Réinitialiser la recherche
+  resetSearch(): void {
+    this.searchQuery = '';
+    this.currentPage.set(1);
+    this.loadList();
+  }
+
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);

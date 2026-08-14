@@ -93,7 +93,7 @@
   <!-- Filtres -->
   <div class="filters-container">
     <div class="row g-3 align-items-end">
-      <div class="col-md-3">
+      <div class="col-md-2">
         <label class="filter-label">
           <i class="fas fa-calendar-alt me-1 text-warning"></i>Exercice
         </label>
@@ -108,7 +108,7 @@
           }
         </select>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <label class="filter-label">
           <i class="fas fa-calendar-week me-1 text-warning"></i>Période
         </label>
@@ -140,7 +140,40 @@
           <option value="sortie">Sorties</option>
         </select>
       </div>
-      <div class="col-md-4">
+
+      <!-- NOUVEAU FILTRE : Type d'opération -->
+      <div class="col-md-2">
+        <label class="filter-label">
+          <i class="fas fa-tags me-1 text-warning"></i>Type opération
+        </label>
+        <select
+          class="form-select"
+          [ngModel]="selectedTypeOperation()"
+          (ngModelChange)="onTypeOperationChange($event)"
+        >
+          @for (opt of typeOperationOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- NOUVEAU FILTRE : Comptabilisation -->
+      <div class="col-md-2">
+        <label class="filter-label">
+          <i class="fas fa-check-circle me-1 text-warning"></i>Comptabilisation
+        </label>
+        <select
+          class="form-select"
+          [ngModel]="selectedAComptabiliser()"
+          (ngModelChange)="onAComptabiliserChange($event)"
+        >
+          @for (opt of comptabilisationOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md-12">
         <label class="filter-label">
           <i class="fas fa-search me-1 text-warning"></i>Recherche
         </label>
@@ -159,6 +192,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Bouton Réinitialiser les filtres -->
+    @if (hasActiveFilters()) {
+      <div class="row mt-3">
+        <div class="col-12">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            (click)="resetFilters()"
+          >
+            <i class="fas fa-undo me-1"></i>
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Tableau des opérations -->
@@ -180,22 +228,27 @@
             <th>Référence</th>
             <th>Type</th>
             <th>Mode</th>
-            <th>Tiers (Clients / Fournisseurs)</th>
+            <th>Tiers</th>
             <th>Compte comptable</th>
             <th class="text-end">Montant (Fcfa)</th>
+            <th class="text-center">Comptabilisé</th>
+            <!-- NOUVEAU -->
+            <th>Type opération</th>
+            <!-- NOUVEAU -->
           </tr>
         </thead>
         <tbody>
           @if (loading()) {
             <tr>
-              <td colspan="7" class="text-center py-4">
+              <td colspan="10" class="text-center py-4">
                 <i class="fas fa-spinner fa-spin me-2"></i> Chargement...
               </td>
             </tr>
           } @else if (operations().length === 0) {
             <tr>
-              <td colspan="7" class="text-center py-4 text-muted">
-                Aucune opération trouvée.
+              <td colspan="10" class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                Aucune opération trouvée
               </td>
             </tr>
           } @else {
@@ -227,6 +280,29 @@
                 >
                   {{ formatMontant(op.montant) }}
                 </td>
+                <!-- COLONNE COMPTABILISATION -->
+                <td class="text-center">
+                  <span
+                    class="badge"
+                    style="background-color: {{
+                      op.a_comptabiliser ? '#28a745' : '#dc3545'
+                    }}"
+                  >
+                    {{ op.a_comptabiliser ? "Oui" : "Non" }}
+                  </span>
+                </td>
+                <!-- COLONNE TYPE OPÉRATION -->
+                <td>
+                  <span
+                    class="badge"
+                    [style.background-color]="
+                      getTypeOperationColor(op.type_operation)
+                    "
+                    style="color: white"
+                  >
+                    {{ getTypeOperationLabel(op.type_operation) }}
+                  </span>
+                </td>
               </tr>
             }
           }
@@ -234,7 +310,7 @@
       </table>
     </div>
 
-    <!-- ✅ Pagination avec ellipses -->
+    <!-- Pagination avec ellipses -->
     @if (totalPages() > 1) {
       <div class="pagination-container">
         <span class="text-muted">
@@ -242,7 +318,6 @@
         </span>
         <nav>
           <ul class="pagination pagination-sm mb-0">
-            <!-- Bouton Précédent -->
             <li
               class="page-item"
               [class.disabled]="currentPage() === 1 || loading()"
@@ -256,15 +331,12 @@
               </a>
             </li>
 
-            <!-- Pages avec ellipses -->
             @for (p of visiblePages; track $index) {
               @if (p === -1 || p === -2) {
-                <!-- Ellipses -->
                 <li class="page-item disabled">
                   <span class="page-link">…</span>
                 </li>
               } @else {
-                <!-- Page normale -->
                 <li class="page-item" [class.active]="p === currentPage()">
                   <a
                     class="page-link"
@@ -278,7 +350,6 @@
               }
             }
 
-            <!-- Bouton Suivant -->
             <li
               class="page-item"
               [class.disabled]="currentPage() === totalPages() || loading()"

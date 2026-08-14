@@ -17,12 +17,16 @@ import {
   BureauDetailData,
   BureauOperation,
   BureauOperationsFilters,
+  TypeOperation,
+  TYPE_OPERATION_OPTIONS,
+  COMPTABILISATION_OPTIONS,
+  TYPE_OPERATION_LABELS,
 } from '../../../../models/Caisse/bureau.model';
 import { ExerciceModel } from '../../../../models/Caisse/exercice-comptable.model';
 import { Periode } from '../../../../models/Caisse/periode.model';
 import { LoaderComponent } from '../../../../sharedCaisse/components/loader/loader.component';
 
-// ✅ Fonction utilitaire pour la pagination
+// Fonction utilitaire pour la pagination
 function getVisiblePages(
   current: number,
   total: number,
@@ -89,11 +93,15 @@ export class DetailBureauComponent implements OnInit {
   selectedType = signal<'entree' | 'sortie' | null>(null);
   searchTerm = signal<string>('');
 
+  // NOUVEAUX FILTRES
+  selectedTypeOperation = signal<string>('');
+  selectedAComptabiliser = signal<string>('');
+
   // Pagination
   currentPage = signal(1);
   perPage = 15;
 
-  // Computed pour les opérations paginées (extraites de bureauData)
+  // Computed pour les opérations paginées
   operations = computed(() => {
     const data = this.bureauData();
     return data?.operations.data ?? [];
@@ -109,13 +117,29 @@ export class DetailBureauComponent implements OnInit {
     return data?.operations.last_page ?? 1;
   });
 
-  // ✅ Getter pour les pages visibles avec ellipses (remplace pages computed)
+  // NOUVEAU : Vérifier si des filtres sont actifs
+  hasActiveFilters = computed(() => {
+    return !!(
+      // this.selectedExerciceId() ||
+      // this.selectedPeriodeId() ||
+      this.selectedType() ||
+      this.searchTerm() ||
+      this.selectedTypeOperation() ||
+      this.selectedAComptabiliser()
+    );
+  });
+
+  // NOUVEAU : Libellés des types d'opération
+  readonly typeOperationLabels = TYPE_OPERATION_LABELS;
+  readonly typeOperationOptions = TYPE_OPERATION_OPTIONS;
+  readonly comptabilisationOptions = COMPTABILISATION_OPTIONS;
+
+  // Getter pour les pages visibles avec ellipses
   get visiblePages(): number[] {
     return getVisiblePages(this.currentPage(), this.totalPages());
   }
 
   ngOnInit(): void {
-    // Récupérer le rfk depuis l'URL
     const rfk = this.route.snapshot.paramMap.get('rfk');
     if (rfk) {
       this.bureauRfk.set(rfk);
@@ -184,6 +208,13 @@ export class DetailBureauComponent implements OnInit {
       search: this.searchTerm() || undefined,
       per_page: this.perPage,
       page: this.currentPage(),
+      // NOUVEAUX FILTRES
+      type_operation:
+        (this.selectedTypeOperation() as TypeOperation) || undefined,
+      a_comptabiliser:
+        this.selectedAComptabiliser() !== ''
+          ? this.selectedAComptabiliser() === 'true'
+          : undefined,
     };
 
     this.bureauService
@@ -229,12 +260,39 @@ export class DetailBureauComponent implements OnInit {
     this.loadData();
   }
 
-  // Changement de type
+  // Changement de type (entrée/sortie)
   onTypeChange(type: string): void {
     this.selectedType.set(
       type === 'all' ? null : (type as 'entree' | 'sortie'),
     );
     this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Changement du type d'opération
+  onTypeOperationChange(value: string): void {
+    this.selectedTypeOperation.set(value);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Changement du filtre de comptabilisation
+  onAComptabiliserChange(value: string): void {
+    this.selectedAComptabiliser.set(value);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  // Réinitialiser tous les filtres
+  resetFilters(): void {
+    // Réinitialiser tous les filtres
+    this.selectedType.set(null);
+    this.searchTerm.set('');
+    this.selectedTypeOperation.set('');
+    this.selectedAComptabiliser.set('');
+    this.currentPage.set(1);
+
+    // IMPORTANT : Recharger les données sans filtres
     this.loadData();
   }
 
@@ -256,11 +314,39 @@ export class DetailBureauComponent implements OnInit {
     this.loadData();
   }
 
-  // Formatage des montants (pour l'affichage)
+  // Obtenir le libellé du type d'opération
+  getTypeOperationLabel(type: string | null): string {
+    if (!type) return 'Non définit';
+    return (
+      this.typeOperationLabels[type as keyof typeof this.typeOperationLabels] ||
+      type
+    );
+  }
+
+  // Obtenir le badge de comptabilisation
+  getComptabilisationBadge(aComptabiliser: boolean): string {
+    return aComptabiliser ? 'Comptabilisée' : 'Non comptabilisée';
+  }
+
+  // Formatage des montants
   formatMontant(montant: number): string {
     return new Intl.NumberFormat('fr-FR', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(montant);
+  }
+
+  // NOUVEAU : Obtenir la couleur du type d'opération
+  getTypeOperationColor(type: string | null): string {
+    if (!type) return '#6c757d'; // Gris par défaut
+
+    const colors: Record<string, string> = {
+      courant: '#10B981', // Vert
+      interne_banque_caisse: '#F59E0B', // Orange
+      interne_caisse_banque: '#8B5CF6', // Violet
+      interne_banque_banque: '#3B82F6', // Bleu
+    };
+
+    return colors[type] || '#6c757d';
   }
 }

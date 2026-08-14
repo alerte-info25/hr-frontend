@@ -76,7 +76,7 @@ export class DetailExerciceComponent implements OnInit {
     return ops;
   });
 
-  // 🔥 PAGINATION CLIENT (CORRIGÉ)
+  // PAGINATION CLIENT (CORRIGÉ)
   currentPage = signal(1);
   perPage = 15;
 
@@ -223,7 +223,7 @@ export class DetailExerciceComponent implements OnInit {
     this.applyFilters();
   }
 
-  // 🔥 Navigation pagination
+  // Navigation pagination
   goToPage(page: number): void {
     if (page < 1 || page > this.lastPage()) return;
     this.currentPage.set(page);
