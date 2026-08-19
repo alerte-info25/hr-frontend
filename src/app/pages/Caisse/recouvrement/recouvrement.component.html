@@ -684,7 +684,7 @@
                   <!-- Squelette de chargement -->
                   @for (_ of skeletonArray; track $index) {
                     <tr>
-                      <td colspan="11">
+                      <td colspan="12">
                         <div class="placeholder-glow">
                           <span class="placeholder col-12 rounded"></span>
                         </div>
@@ -694,7 +694,7 @@
                 } @else if (recouvrements().length === 0) {
                   <!-- Aucun résultat -->
                   <tr>
-                    <td colspan="11" class="text-center text-muted py-5">
+                    <td colspan="12" class="text-center text-muted py-5">
                       <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
                       Aucun recouvrement trouvé
                       @if (
