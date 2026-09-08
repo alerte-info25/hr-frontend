@@ -3,11 +3,12 @@
   <!-- En-tête -->
   <div class="mouvements-header">
     <div class="header-title">
-      <span class="material-icons header-icon">swap_horiz</span>
-      <h1>Gestion des mouvements</h1>
+      <span class="material-icons header-icon">history</span>
+      <h1>Historique des mouvements</h1>
+      <span class="badge-total">{{ stats().total }}</span>
     </div>
-    <button class="btn-refresh" (click)="refresh()">
-      <span class="material-icons">refresh</span>
+    <button class="btn-refresh" (click)="refresh()" [disabled]="isLoading()">
+      <span class="material-icons" [class.spinning]="isLoading()">refresh</span>
     </button>
   </div>
 
@@ -24,14 +25,14 @@
       <div class="stat-icon"><span class="material-icons">logout</span></div>
       <div class="stat-info">
         <span class="stat-value">{{ stats().sorties }}</span>
-        <span class="stat-label">Sorties</span>
+        <span class="stat-label">Sorties terrain</span>
       </div>
     </div>
     <div class="stat-card retour">
       <div class="stat-icon"><span class="material-icons">login</span></div>
       <div class="stat-info">
         <span class="stat-value">{{ stats().retours }}</span>
-        <span class="stat-label">Retours</span>
+        <span class="stat-label">Retours terrain</span>
       </div>
     </div>
     <div class="stat-card reforme">
@@ -41,11 +42,11 @@
         <span class="stat-label">Hors service</span>
       </div>
     </div>
-    <div class="stat-card valide">
-      <div class="stat-icon"><span class="material-icons">check_circle</span></div>
+    <div class="stat-card today">
+      <div class="stat-icon"><span class="material-icons">today</span></div>
       <div class="stat-info">
-        <span class="stat-value">{{ stats().valides }}</span>
-        <span class="stat-label">Validés</span>
+        <span class="stat-value">{{ stats().aujourdhui }}</span>
+        <span class="stat-label">Aujourd'hui</span>
       </div>
     </div>
   </div>
@@ -54,29 +55,35 @@
   <div class="filters-bar">
     <div class="search-wrapper">
       <span class="material-icons search-icon">search</span>
-      <input type="text" class="search-input" placeholder="Rechercher..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); onSearchChange()" />
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher un mouvement..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); onSearchChange()" />
     </div>
 
     <div class="filter-wrapper">
       <span class="material-icons filter-icon">category</span>
       <select class="filter-select" [ngModel]="filterType()" (ngModelChange)="filterType.set($event); onTypeChange()">
         <option value="all">Tous les types</option>
-        <option value="sortie_terrain">Sorties</option>
-        <option value="retour_terrain">Retours</option>
+        <option value="sortie_terrain">Sorties terrain</option>
+        <option value="retour_terrain">Retours terrain</option>
         <option value="reforme">Hors service</option>
       </select>
     </div>
 
     <div class="filter-wrapper">
-      <span class="material-icons filter-icon">verified</span>
-      <select class="filter-select" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); onStatusChange()">
-        <option value="all">Tous statuts</option>
-        <option value="en_attente">En attente</option>
-        <option value="valide">Validés</option>
+      <span class="material-icons filter-icon">date_range</span>
+      <select class="filter-select" [ngModel]="filterPeriod()" (ngModelChange)="filterPeriod.set($event); onPeriodChange()">
+        <option value="all">Toutes périodes</option>
+        <option value="today">Aujourd'hui</option>
+        <option value="week">Cette semaine</option>
+        <option value="month">Ce mois</option>
       </select>
     </div>
 
-    <button class="btn-reset" (click)="resetFilters()" title="Réinitialiser">
+    <button class="btn-reset" (click)="resetFilters()" title="Réinitialiser les filtres">
       <span class="material-icons">clear_all</span>
     </button>
   </div>
@@ -96,6 +103,7 @@
           <th>Destination</th>
           <th>Date</th>
           <th>Employé</th>
+          <th>Enregistré par</th>
           <th>Statut</th>
           <th>Actions</th>
         </tr>
@@ -105,10 +113,14 @@
           <!-- Équipement -->
           <td>
             <div class="cell-equipement">
-              <span class="material-icons">computer</span>
-              <span>{{ getEquipementNom(mouvement) }}</span>
+              <span class="material-icons">devices</span>
+              <div class="equipement-info">
+                <span class="equipement-nom">{{ getEquipementNom(mouvement) }}</span>
+                <span class="equipement-code">{{ getEquipementCode(mouvement) }}</span>
+              </div>
             </div>
           </td>
+
           <!-- Type -->
           <td>
             <span class="type-badge" [class]="getTypeClass(mouvement.type)">
@@ -116,35 +128,47 @@
               {{ getTypeLabel(mouvement.type) }}
             </span>
           </td>
-          <!-- Destination (dynamique) -->
+
+          <!-- Destination -->
           <td>
             <div class="cell-destination">
               <span class="material-icons">location_on</span>
               <span>{{ getDestinationDisplay(mouvement) }}</span>
             </div>
           </td>
+
           <!-- Date -->
-          <td>{{ formatDateTime(mouvement.date_mouvement) }}</td>
-          <!-- Employé -->
+          <td>
+            <div class="cell-date">
+              <span class="material-icons">schedule</span>
+              <span>{{ formatDateTime(mouvement.date_mouvement) }}</span>
+            </div>
+          </td>
+
+          <!-- Employé concerné -->
           <td>
             <div class="cell-employe">
               <span class="material-icons">person</span>
-              <span>{{ getUserNom(mouvement) }}</span>
+              <span>{{ getEmployeNom(mouvement) }}</span>
             </div>
           </td>
-          <!-- Statut avec validateur -->
+
+          <!-- Admin qui a enregistré -->
           <td>
-            <div class="status-info">
-              <span class="status-badge" [class.status-valide]="mouvement.valider === 1" [class.status-attente]="mouvement.valider === 0">
-                <span class="material-icons">{{ mouvement.valider === 1 ? 'check_circle' : 'pending' }}</span>
-                {{ mouvement.valider === 1 ? 'Validé' : 'En attente' }}
-              </span>
-              <span *ngIf="mouvement.valider === 1 && mouvement.valider_par" class="validateur">
-                <span class="material-icons small">verified_user</span>
-                {{ getValidateurNom(mouvement) }}
-              </span>
+            <div class="cell-admin">
+              <span class="material-icons">admin_panel_settings</span>
+              <span>{{ getAdminNom(mouvement) }}</span>
             </div>
           </td>
+
+          <!-- Statut (maintenant toujours validé) -->
+          <td>
+            <span class="status-badge status-effectue">
+              <span class="material-icons">check_circle</span>
+              Effectué
+            </span>
+          </td>
+
           <!-- Actions -->
           <td class="actions-cell">
             <div class="actions-group">
@@ -154,22 +178,18 @@
               <div class="actions-dropdown" *ngIf="openActionRowId() === mouvement.id">
                 <button class="action-btn view" (click)="openDetails(mouvement)">
                   <span class="material-icons">visibility</span>
-                  <span class="action-label">Détails</span>
+                  <span class="action-label">Voir détails</span>
                 </button>
-                @if(isDG() || isResponsable()) {
-                <button class="action-btn validate" *ngIf="canValidate(mouvement)" (click)="openValidateModal(mouvement)">
-                  <span class="material-icons">verified</span>
-                  <span class="action-label">Valider</span>
-                </button>
-                }
               </div>
             </div>
           </td>
         </tr>
+
         <tr *ngIf="filteredMouvements().length === 0">
-          <td colspan="7" class="empty-state">
+          <td colspan="8" class="empty-state">
             <span class="material-icons">inbox</span>
             <p>Aucun mouvement trouvé</p>
+            <span class="empty-hint">Ajustez vos filtres ou effectuez un nouveau mouvement</span>
           </td>
         </tr>
       </tbody>
@@ -178,32 +198,28 @@
 
   <!-- Pagination -->
   <div class="pagination" *ngIf="totalPages() > 1 && !isLoading()">
-    <button class="page-btn" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1"><span class="material-icons">chevron_left</span></button>
-    <div class="page-numbers"><button *ngFor="let page of [].constructor(totalPages()); let i = index" class="page-num" [class.active]="currentPage() === i + 1" (click)="goToPage(i + 1)">{{ i + 1 }}</button></div>
-    <button class="page-btn" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()"><span class="material-icons">chevron_right</span></button>
+    <button class="page-btn" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1">
+      <span class="material-icons">chevron_left</span>
+    </button>
+    <div class="page-numbers">
+      <button
+        *ngFor="let page of [].constructor(totalPages()); let i = index"
+        class="page-num"
+        [class.active]="currentPage() === i + 1"
+        (click)="goToPage(i + 1)">
+        {{ i + 1 }}
+      </button>
+    </div>
+    <button class="page-btn" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">
+      <span class="material-icons">chevron_right</span>
+    </button>
   </div>
 
-  <!-- Modal de confirmation validation -->
-  <div class="modal-overlay" *ngIf="showConfirmModal()" (click)="!isLoading() && closeModal()">
-    <div class="modal-confirm" (click)="$event.stopPropagation()">
-        <div class="modal-icon warning">
-            <span class="material-icons">verified</span>
-        </div>
-        <h3>Valider le mouvement</h3>
-        <p>Êtes-vous sûr de vouloir valider ce mouvement ? Cette action est irréversible.</p>
-
-        <!-- Affichage conditionnel -->
-        @if (isLoading()) {
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p>Traitement en cours...</p>
-            </div>
-        } @else {
-            <div class="modal-actions">
-                <button class="btn-cancel" (click)="closeModal()" [disabled]="isLoading()">Annuler</button>
-                <button class="btn-confirm" (click)="confirmValidate()" [disabled]="isLoading()">Valider</button>
-            </div>
-        }
-    </div>
+  <!-- Info footer -->
+  <div class="footer-info" *ngIf="!isLoading()">
+    <span>
+      Affichage de {{ filteredMouvements().length }} mouvement{{ filteredMouvements().length > 1 ? 's' : '' }}
+      sur {{ stats().total }} au total
+    </span>
   </div>
 </div>

@@ -71,6 +71,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return this.hasFonction(this.CAISSE_FONCTIONS) || hasCaissePermission;
   }
 
+  canAccessEquipement(): boolean{
+    return this.isAdmin() || this.userData.employe.responsable_equipement === 1;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

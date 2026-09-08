@@ -19,6 +19,26 @@
   <!-- FORMULAIRE -->
   <form [formGroup]="mouvementForm" (ngSubmit)="onSubmit()" class="modal-body">
 
+    <div class="form-group" @fadeInUp>
+      <label class="form-label">
+        <span class="material-icons">person</span>
+        Employé concerné *
+      </label>
+      <select class="form-control" formControlName="employe_slug"
+              [class.is-invalid]="mouvementForm.get('employe_slug')?.invalid && mouvementForm.get('employe_slug')?.touched">
+        <option value="">Sélectionner un employé</option>
+        <option *ngFor="let employe of employes" [value]="employe.rh_slug">
+          {{ getEmployeDisplay(employe) }}
+        </option>
+      </select>
+      <div class="error-message" *ngIf="mouvementForm.get('employe_slug')?.invalid && mouvementForm.get('employe_slug')?.touched">
+        Veuillez sélectionner un employé
+      </div>
+      <div class="loading-text" *ngIf="isLoadingEmployes">
+        <span class="material-icons">hourglass_empty</span> Chargement des employés...
+      </div>
+    </div>
+
     <!-- Type de mouvement -->
     <div class="form-group" @fadeInUp>
       <label class="form-label">

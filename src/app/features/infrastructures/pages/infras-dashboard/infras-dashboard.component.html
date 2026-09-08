@@ -1,0 +1,461 @@
+<div class="dashboard-container">
+  <!-- En-tête -->
+  <div class="dashboard-header">
+    <div class="header-left">
+      <h1>
+        <span class="material-icons">dashboard</span>
+        Tableau de bord - Direction Générale
+      </h1>
+      <span class="header-subtitle">Vue d'ensemble du parc équipement</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-filters" (click)="toggleFilters()" [class.active]="showFilters()">
+        <span class="material-icons">filter_list</span>
+        <span class="filters-badge" *ngIf="nbFiltresActifs() > 0">{{ nbFiltresActifs() }}</span>
+      </button>
+      <button class="btn-refresh" (click)="refresh()" [disabled]="isLoading()">
+        <span class="material-icons" [class.spinning]="isLoading()">refresh</span>
+      </button>
+    </div>
+  </div>
+
+   <!-- Panel de filtres -->
+<div class="filters-panel" *ngIf="showFilters()" @fadeInOut>
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label>
+        <span class="material-icons">date_range</span>
+        Date début
+      </label>
+      <input type="date" class="filter-input"
+             [ngModel]="filtres().date_debut"
+             (ngModelChange)="updateFiltre('date_debut', $event)"
+             [max]="filtres().date_fin || today">
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <span class="material-icons">date_range</span>
+        Date fin
+      </label>
+      <input type="date" class="filter-input"
+             [ngModel]="filtres().date_fin"
+             (ngModelChange)="updateFiltre('date_fin', $event)"
+             [min]="filtres().date_debut"
+             [max]="today">
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <span class="material-icons">business</span>
+        Bureau
+      </label>
+      <select class="filter-select"
+              [ngModel]="filtres().bureau_slug"
+              (ngModelChange)="updateFiltre('bureau_slug', $event)">
+        <option value="">Tous les bureaux</option>
+        <option *ngFor="let bureau of bureaux()" [value]="bureau.rh_slug || bureau.slug">
+          {{ bureau.acronyme || bureau.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <span class="material-icons">person</span>
+        Employé
+      </label>
+      <select class="filter-select"
+              [ngModel]="filtres().employe_slug"
+              (ngModelChange)="updateFiltre('employe_slug', $event)">
+        <option value="">Tous les employés</option>
+        <option *ngFor="let employe of employes()" [value]="employe.rh_slug || employe.slug">
+          {{ employe.nom_complet || employe.nom }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="filters-actions">
+    <button class="btn-reset-filters" (click)="resetFiltres()">
+      <span class="material-icons">clear_all</span>
+      Réinitialiser
+    </button>
+    <button class="btn-apply-filters" (click)="appliquerFiltres()">
+      <span class="material-icons">check</span>
+      Appliquer les filtres
+    </button>
+  </div>
+</div>
+  <!-- Loader -->
+  <div *ngIf="isLoading()" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Chargement du tableau de bord...</p>
+  </div>
+
+  <!-- Contenu -->
+  <div *ngIf="!isLoading() && stats()">
+
+    <!-- 1. KPI Principaux -->
+    <div class="kpi-grid" @fadeInOut>
+      <div class="kpi-card total">
+        <div class="kpi-icon">
+          <span class="material-icons">inventory_2</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ stats()?.totalEquipements }}</span>
+          <span class="kpi-label">Total équipements</span>
+        </div>
+      </div>
+
+      <div class="kpi-card disponible">
+        <div class="kpi-icon">
+          <span class="material-icons">check_circle</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ stats()?.disponibles }}</span>
+          <span class="kpi-label">Disponibles</span>
+        </div>
+      </div>
+
+      <div class="kpi-card affecte">
+        <div class="kpi-icon">
+          <span class="material-icons">person</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ stats()?.affectes }}</span>
+          <span class="kpi-label">Affectés</span>
+        </div>
+      </div>
+
+      <div class="kpi-card taux">
+        <div class="kpi-icon">
+          <span class="material-icons">trending_up</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ tauxOccupationGlobal() }}%</span>
+          <span class="kpi-label">Taux d'occupation</span>
+        </div>
+      </div>
+
+      <div class="kpi-card maintenance">
+        <div class="kpi-icon">
+          <span class="material-icons">build</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ stats()?.enMaintenance }}</span>
+          <span class="kpi-label">En maintenance</span>
+        </div>
+      </div>
+
+      <div class="kpi-card reforme">
+        <div class="kpi-icon">
+          <span class="material-icons">delete_forever</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ stats()?.reformes }}</span>
+          <span class="kpi-label">Hors service</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Graphiques - Répartition par Bureau -->
+    <div class="charts-grid" @fadeInOut>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Répartition par bureau</h3>
+          <span class="chart-badge">{{ bureauStats().length }} bureaux</span>
+        </div>
+        <div class="bureau-list">
+          <div *ngFor="let bureau of bureauStats()" class="bureau-item" @cardAnimation>
+            <div class="bureau-info">
+              <span class="bureau-name">{{ bureau.acronyme || bureau.bureau }}</span>
+              <span class="bureau-count">{{ bureau.total }} équip.</span>
+            </div>
+            <div class="bureau-bar">
+              <div class="bar-fill"
+                   [style.width.%]="bureau.tauxUtilisation"
+                   [style.background]="bureau.tauxUtilisation > 80 ? '#ef4444' : bureau.tauxUtilisation > 50 ? '#f59e0b' : '#10b981'">
+              </div>
+            </div>
+            <div class="bureau-detail">
+              <span>Utilisés: {{ bureau.affectes }}</span>
+              <span>Dispo: {{ bureau.disponibles }}</span>
+              <span class="taux">{{ bureau.tauxUtilisation }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Répartition par Catégorie -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Répartition par catégorie</h3>
+          <span class="chart-badge">{{ categorieStats().length }} catégories</span>
+        </div>
+        <div class="categorie-list">
+          <div *ngFor="let cat of categorieStats()" class="categorie-item" @cardAnimation>
+            <div class="categorie-info">
+              <span class="categorie-name">{{ cat.categorie }}</span>
+              <span class="categorie-count">{{ cat.total }}</span>
+            </div>
+            <div class="categorie-bar">
+              <div class="bar-fill-dispo" [style.width.%]="(cat.disponibles / cat.total) * 100"></div>
+              <div class="bar-fill-affecte" [style.width.%]="(cat.affectes / cat.total) * 100" [style.left.%]="(cat.disponibles / cat.total) * 100"></div>
+              <div class="bar-fill-panne" [style.width.%]="(cat.enPanne / cat.total) * 100" [style.left.%]="((cat.disponibles + cat.affectes) / cat.total) * 100"></div>
+            </div>
+            <div class="categorie-legend">
+              <span><span class="dot dispo"></span>Dispo: {{ cat.disponibles }}</span>
+              <span><span class="dot affecte"></span>Affectés: {{ cat.affectes }}</span>
+              <span><span class="dot panne"></span>En panne: {{ cat.enPanne }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Mouvements récents + Top employés -->
+    <div class="bottom-grid" @fadeInOut>
+      <!-- Mouvements récents -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Mouvements récents</h3>
+          <button class="btn-link" (click)="navigateTo('/infrastructures/mouvements')">
+            Voir tout <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+        <div class="mouvements-list">
+          <div *ngIf="mouvementsRecents().length === 0" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Aucun mouvement récent</p>
+          </div>
+          <div *ngFor="let mvt of mouvementsRecents()" class="mouvement-item" @cardAnimation>
+            <div class="mvt-left">
+              <span class="type-icon" [class]="getTypeClass(mvt.type)">
+                <span class="material-icons">{{ getTypeIcon(mvt.type) }}</span>
+              </span>
+              <div class="mvt-info">
+                <span class="mvt-equipement">{{ mvt.equipement }}</span>
+                <span class="mvt-destination">
+                  <span class="material-icons">location_on</span>
+                  {{ mvt.destination || 'N/A' }}
+                </span>
+              </div>
+            </div>
+            <div class="mvt-right">
+              <span class="mvt-employe">{{ mvt.employe }}</span>
+              <span class="mvt-date">{{ formatDateTime(mvt.date) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top employés -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Top équipements par employé</h3>
+        </div>
+        <div class="top-employes">
+          <div *ngIf="topEmployes().length === 0" class="empty-state">
+            <span class="material-icons">person_off</span>
+            <p>Aucune donnée</p>
+          </div>
+          <div *ngFor="let emp of topEmployes(); let i = index" class="employe-item" @cardAnimation>
+            <div class="employe-rank">{{ i + 1 }}</div>
+            <div class="employe-info">
+              <span class="employe-nom">{{ emp.nom }}</span>
+              <span class="employe-bureau">{{ emp.bureau }}</span>
+              <span class="employe-matricule">Mat: {{ emp.matricule }}</span>
+            </div>
+            <div class="employe-count">
+              <span class="count-badge">{{ emp.nbEquipements }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Alertes Garantie -->
+    <div class="alertes-section" @fadeInOut>
+      <div class="card">
+        <div class="card-header">
+          <h3>
+            <span class="material-icons">warning</span>
+            Alertes garantie
+          </h3>
+          <span class="badge-alerte" [class.critique]="alertesCritiques().length > 0">
+            {{ alertesCritiques().length }} critique(s)
+          </span>
+        </div>
+        <div *ngIf="alertesGarantie().length === 0" class="empty-state">
+          <span class="material-icons">check_circle</span>
+          <p>Aucune alerte garantie</p>
+        </div>
+        <div class="alertes-grid">
+          <div *ngFor="let alerte of alertesGarantie()"
+               class="alerte-item"
+               [class.critique]="alerte.jours_restants <= 30"
+               [class.attention]="alerte.jours_restants > 30 && alerte.jours_restants <= 90"
+               [class.ok]="alerte.jours_restants > 90"
+               @cardAnimation>
+            <div class="alerte-info">
+              <span class="alerte-equipement">{{ alerte.designation }}</span>
+              <span class="alerte-bureau">{{ alerte.bureau }}</span>
+            </div>
+            <div class="alerte-date">
+              <span class="material-icons">event</span>
+              {{ formatDate(alerte.date_garantie_fin) }}
+            </div>
+            <div class="alerte-jours" [class.critique]="alerte.jours_restants <= 30">
+              {{ getAlerteLabel(alerte.jours_restants) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Évolution mensuelle -->
+    <!-- <div class="evolution-section" @fadeInOut>
+      <div class="card">
+        <div class="card-header">
+          <h3>Évolution des mouvements</h3>
+          <div class="filter-year">
+            <select [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set($event)">
+              <option *ngFor="let year of getAvailableYears()" [value]="year">{{ year }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="evolution-chart">
+          <div *ngIf="evolutionMensuelle().length === 0" class="empty-state">
+            <span class="material-icons">bar_chart</span>
+            <p>Aucune donnée pour cette année</p>
+          </div>
+          <div class="chart-bars">
+            <div *ngFor="let mois of evolutionMensuelle()" class="bar-container">
+              <div class="bar-wrapper">
+                <div class="bar-sortie" [style.height.%]="(mois.sorties / maxValue()) * 100"></div>
+                <div class="bar-retour" [style.height.%]="(mois.retours / maxValue()) * 100"></div>
+                <div class="bar-reforme" [style.height.%]="(mois.reformes / maxValue()) * 100"></div>
+              </div>
+              <span class="bar-label">{{ getMoisLabel(mois.mois) }}</span>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-color sortie"></span>Sorties</span>
+            <span><span class="legend-color retour"></span>Retours</span>
+            <span><span class="legend-color reforme"></span>Hors service</span>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    <!-- Évolution mensuelle -->
+    <div class="evolution-section" @fadeInOut>
+      <div class="card">
+        <div class="card-header">
+          <div class="header-left">
+            <h3>
+              <span class="material-icons">trending_up</span>
+              Évolution des mouvements
+            </h3>
+            <span class="header-subtitle">Répartition mensuelle des mouvements</span>
+          </div>
+          <div class="filter-year">
+            <select [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set($event)">
+              <option *ngFor="let year of getAvailableYears()" [value]="year">{{ year }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="evolution-chart">
+          <div *ngIf="evolutionMensuelle().length === 0" class="empty-state">
+            <span class="material-icons">bar_chart</span>
+            <p>Aucune donnée pour cette année</p>
+          </div>
+
+          <div *ngIf="evolutionMensuelle().length > 0" class="chart-container">
+            <div class="chart-area">
+              <!-- Grille -->
+              <div class="chart-grid">
+                <div class="grid-line" *ngFor="let val of getGridValues()">
+                  <span class="grid-label">{{ val }}</span>
+                </div>
+              </div>
+
+              <!-- Barres -->
+              <div class="bars-container">
+                <div *ngFor="let mois of evolutionMensuelle(); let i = index"
+                    class="bar-group"
+                    (mouseenter)="showTooltip($event, mois)"
+                    (mouseleave)="hideTooltip()">
+                  <div class="bar-wrapper">
+                    <div class="bar-sortie"
+                        [style.height.%]="(mois.sorties / maxValue()) * 100">
+                      <span class="bar-value" *ngIf="mois.sorties > 0">{{ mois.sorties }}</span>
+                    </div>
+                    <div class="bar-retour"
+                        [style.height.%]="(mois.retours / maxValue()) * 100">
+                      <span class="bar-value" *ngIf="mois.retours > 0">{{ mois.retours }}</span>
+                    </div>
+                    <div class="bar-reforme"
+                        [style.height.%]="(mois.reformes / maxValue()) * 100">
+                      <span class="bar-value" *ngIf="mois.reformes > 0">{{ mois.reformes }}</span>
+                    </div>
+                  </div>
+                  <span class="bar-label">{{ mois.moisLabel }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tooltip -->
+            <div class="chart-tooltip"
+                *ngIf="tooltipVisible() && tooltipData()"
+                [style.left.px]="tooltipPosition().x"
+                [style.top.px]="tooltipPosition().y">
+              <div class="tooltip-content">
+                <div class="tooltip-title">{{ tooltipData().moisLabel }} {{ selectedYear() }}</div>
+                <div class="tooltip-item sortie">
+                  <span class="tooltip-color"></span>
+                  <span class="tooltip-label">Sorties:</span>
+                  <span class="tooltip-value">{{ tooltipData().sorties }}</span>
+                </div>
+                <div class="tooltip-item retour">
+                  <span class="tooltip-color"></span>
+                  <span class="tooltip-label">Retours:</span>
+                  <span class="tooltip-value">{{ tooltipData().retours }}</span>
+                </div>
+                <div class="tooltip-item reforme">
+                  <span class="tooltip-color"></span>
+                  <span class="tooltip-label">Hors service:</span>
+                  <span class="tooltip-value">{{ tooltipData().reformes }}</span>
+                </div>
+                <div class="tooltip-total">
+                  <span class="tooltip-label">Total:</span>
+                  <span class="tooltip-value total">{{ tooltipData().total }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Légende -->
+          <div class="chart-legend" *ngIf="evolutionMensuelle().length > 0">
+            <span>
+              <span class="legend-color sortie"></span>
+              Sorties ({{ getTotalByType('sorties') }})
+            </span>
+            <span>
+              <span class="legend-color retour"></span>
+              Retours ({{ getTotalByType('retours') }})
+            </span>
+            <span>
+              <span class="legend-color reforme"></span>
+              Hors service ({{ getTotalByType('reformes') }})
+            </span>
+            <span class="legend-total">
+              Total: {{ getTotalMouvements() }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -30,7 +30,7 @@ export class InfrasSidebarComponent implements OnInit, OnDestroy {
       name: 'Dashboard',
       icon: 'assessment',
       route: '/infrastructures/dashboard',
-      requireDG: true
+      requireDG: false
     },
     {
       name: 'Équipements',
@@ -42,13 +42,13 @@ export class InfrasSidebarComponent implements OnInit, OnDestroy {
       name: 'Employés',
       icon: 'person',
       route: '/infrastructures/employes',
-      requireDG: true
+      requireDG: false
     },
     {
       name: 'Bureaux',
       icon: 'apartment',
       route: '/infrastructures/bureaux',
-      requireDG: true
+      requireDG: false
     },
     {
       name: 'Pièces',
@@ -60,7 +60,7 @@ export class InfrasSidebarComponent implements OnInit, OnDestroy {
       name: 'Categories',
       icon: 'category',
       route: '/infrastructures/categories',
-      requireDG: true
+      requireDG: false
     },
     {
       name: 'Affectations',
@@ -78,7 +78,7 @@ export class InfrasSidebarComponent implements OnInit, OnDestroy {
     //   name: 'Fournisseurs',
     //   icon: 'business',
     //   route: '/infrastructures/fournisseurs',
-    //   requireDG: true
+    //   requireDG: false
     // }
   ];
 

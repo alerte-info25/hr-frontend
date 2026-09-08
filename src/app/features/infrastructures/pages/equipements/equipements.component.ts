@@ -491,25 +491,25 @@ export class EquipementsComponent implements OnInit {
       if (result && result.success) {
         // Succès - Afficher le toast
         this.snackBar.open(
-          result.message || 'Affectation réalisée avec succès !', 
-          'Fermer', 
-          { 
+          result.message || 'Affectation réalisée avec succès !',
+          'Fermer',
+          {
             duration: 5000,
             panelClass: ['success-snackbar'],
             horizontalPosition: 'end',
             verticalPosition: 'top'
           }
         );
-        
+
         // Rafraîchir la liste des équipements si nécessaire
         this.loadEquipements(); // Appelez votre méthode de rechargement
-      } 
+      }
       else if (result && !result.success) {
         // Erreur - Afficher le toast d'erreur
         this.snackBar.open(
-          result.message || 'Erreur lors de l\'affectation', 
-          'Fermer', 
-          { 
+          result.message || 'Erreur lors de l\'affectation',
+          'Fermer',
+          {
             duration: 5000,
             panelClass: ['error-snackbar'],
             horizontalPosition: 'end',
@@ -553,7 +553,7 @@ export class EquipementsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
         this.loadEquipementByRole();
-        this.snackBar.open('Mouvement enregistré, en attente de validation', 'Fermer', { duration: 3000 });
+        this.snackBar.open('Mouvement enregistré avec succès !', 'Fermer', { duration: 3000 });
       }
     });
   }

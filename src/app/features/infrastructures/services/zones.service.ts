@@ -29,7 +29,7 @@ export class ZonesService {
   }
 
   update(slug: string, data: any): Observable<any> {
-    return this.http.put<any>(`${environment.apiParc}zones/${slug}`, data);
+    return this.http.post<any>(`${environment.apiParc}zones/${slug}`, data);
   }
 
   delete(slug: string): Observable<void> {

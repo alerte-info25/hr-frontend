@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getDashboardData(this.filters).subscribe({
       next: (data) => {
         this.dashboardData.set(data);
-        // console.log(this.dashboardData());
+        console.log(data.demandes_explications);
         this.isLoading.set(false);
         setTimeout(() => {
           this.createCharts();
@@ -881,30 +881,32 @@ export class DashboardComponent implements OnInit {
     return Math.min(pourcentage, 200);
   }
 
-  getDelaiCategorie(delaiJours: number): string {
-    if (delaiJours === null || delaiJours === undefined) return 'inconnu';
+  getDelaiCategorie(delaiTotal: number): string {
+    if (delaiTotal === null || delaiTotal === undefined) return 'inconnu';
 
-    if (delaiJours < 0) {
-      const retard = Math.abs(delaiJours);
-      if (retard > 90) return 'retard-critique';
-      if (retard > 30) return 'retard-important';
-      return 'retard';
+    // Délai en jours (avec décimales pour les heures)
+    if (delaiTotal < 0) {
+        const retard = Math.abs(delaiTotal);
+        if (retard > 90) return 'retard-critique';
+        if (retard > 30) return 'retard-important';
+        return 'retard';
     }
 
-    if (delaiJours > 30) return 'delai-anormal';
-    if (delaiJours <= 3) return 'delai-rapide';
+    if (delaiTotal > 30) return 'delai-anormal';
+    if (delaiTotal <= 3) return 'delai-rapide';
     return 'delai-normal';
   }
 
-  formatDelaiAvecCategorie(delaiJours: number): string {
-    if (delaiJours === null || delaiJours === undefined) return '-';
 
-    const absDelai = Math.abs(delaiJours);
-    const jours = Math.floor(absDelai);
-    const heures = Math.round((absDelai - jours) * 24);
-    const texteDelai = `${jours}j ${heures}h`;
+  formatDelaiAvecCategorie(demande: any): string {
+    if (!demande || demande.delai_total === null || demande.delai_total === undefined) {
+        return '-';
+    }
 
-    const categorie = this.getDelaiCategorie(delaiJours);
+    // Utiliser le texte formaté venant du backend
+    const texteDelai = demande.delai_texte || `${demande.delai_jours}j ${demande.delai_heures}h`;
+
+    const categorie = this.getDelaiCategorie(demande.delai_total);
 
     switch(categorie) {
       case 'retard-critique':
@@ -924,8 +926,8 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getDelaiBadgeClass(delaiJours: number): string {
-    const categorie = this.getDelaiCategorie(delaiJours);
+  getDelaiBadgeClass(delaiTotal: number): string {
+    const categorie = this.getDelaiCategorie(delaiTotal);
 
     switch(categorie) {
       case 'retard-critique': return 'badge-retard-critique';
@@ -938,13 +940,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // ============================================
-  // GRAPHIQUES DES SANCTIONS
-  // ============================================
 
-  /**
-   * Crée le graphique d'évolution des sanctions
-   */
   createEvolutionSanctionsChart(data: DashboardData): void {
     const canvas = document.getElementById('evolutionSanctionsChart') as HTMLCanvasElement;
     if (!canvas) return;

@@ -254,7 +254,7 @@ export interface DemandeExplication {
   id_employe: string;
   id_objet: string;
   description: string;
-  statut: 1 | 2; // 1 = en attente, 2 = répondu
+  statut: 1 | 2;
   created_at: string;
   updated_at: string;
   employe_nom: string;
@@ -270,6 +270,9 @@ export interface DemandeExplication {
   a_sanction: boolean;
   reponse?: ReponseDemande;
   sanction?: Sanction;
+  delai_texte: string;
+  delai_total: number;
+  date_reponse: string;
 }
 
 export interface Objet {
@@ -334,6 +337,7 @@ export interface Sanction {
   a_demande: boolean;
   a_reponse: boolean;
   demande?: DemandeExplication;
+  delai_texte: string;
   reponse?: ReponseDemande;
 }
 

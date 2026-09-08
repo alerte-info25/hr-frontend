@@ -18,11 +18,19 @@ export class CongesService {
     return this.http.get<any[]>(`${environment.apiUrl}conges`);
   }
 
+  getListCongeValides(): Observable<any[]>{
+    return this.http.get<any[]>(`${environment.apiUrl}conges-valides`);
+  }
+
   getCongeBySlug(slug:string){
     return this.http.get<any>(`${environment.apiUrl}conges/${slug}`);
   }
   getCongeByEmp(slug:string){
     return this.http.get<any>(`${environment.apiUrl}conges-perso/${slug}`);
+  }
+
+  getCongeByEmpValides(slug:string){
+    return this.http.get<any>(`${environment.apiUrl}conges-perso-valides/${slug}`);
   }
   addConge(data: any): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}conges`, data);

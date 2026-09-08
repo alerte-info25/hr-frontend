@@ -150,7 +150,7 @@ export class CalendarComponent implements OnInit {
     this.isLoading = true;
 
     if (this.isAdmin()) {
-      this.congeSvr.getList().subscribe({
+      this.congeSvr.getListCongeValides().subscribe({
         next: res => {
           this.allConges = res;
           this.applyFilter();
@@ -161,7 +161,7 @@ export class CalendarComponent implements OnInit {
     } else {
       const slug = this.currentUser?.employe?.slug;
       if (slug) {
-        this.congeSvr.getCongeByEmp(slug).subscribe({
+        this.congeSvr.getCongeByEmpValides(slug).subscribe({
           next: res => {
             this.allConges = res;
             this.applyFilter();
@@ -195,83 +195,83 @@ export class CalendarComponent implements OnInit {
   }
 
   handleDateSelect(selectInfo: DateSelectArg) {
-    const start = selectInfo.startStr;
-    const end = selectInfo.endStr;
+    // const start = selectInfo.startStr;
+    // const end = selectInfo.endStr;
 
-    const dialogRef = this.dialog.open(FormsDialogComponent, {
-      width: 'auto',
-      data: {
-        title: 'Nouvelle demande de congé',
-        fields: [
-          {
-            name: 'id_employe',
-            label: 'Employé',
-            type: 'select2',
-            options: this.employees.map(e => ({ value: e.slug, label: `${e.nom} ${e.prenom}` })),
-            validators: ['required']
-          },
-          { name: 'debut', label: 'Début', type: 'date', value: start, validators: ['required'] },
-          { name: 'fin', label: 'Fin', type: 'date', value: end, validators: ['required'] },
-          {
-            name: 'id_type',
-            label: 'Type',
-            type: 'select2',
-            options: this.typesConges.map(t => ({ value: t.slug, label: t.nom })),
-            validators: ['required']
-          },
-          { name: 'raison', label: 'Raison', type: 'textarea' }
-        ]
-      }
-    });
+    // const dialogRef = this.dialog.open(FormsDialogComponent, {
+    //   width: 'auto',
+    //   data: {
+    //     title: 'Nouvelle demande de congé',
+    //     fields: [
+    //       {
+    //         name: 'id_employe',
+    //         label: 'Employé',
+    //         type: 'select2',
+    //         options: this.employees.map(e => ({ value: e.slug, label: `${e.nom} ${e.prenom}` })),
+    //         validators: ['required']
+    //       },
+    //       { name: 'debut', label: 'Début', type: 'date', value: start, validators: ['required'] },
+    //       { name: 'fin', label: 'Fin', type: 'date', value: end, validators: ['required'] },
+    //       {
+    //         name: 'id_type',
+    //         label: 'Type',
+    //         type: 'select2',
+    //         options: this.typesConges.map(t => ({ value: t.slug, label: t.nom })),
+    //         validators: ['required']
+    //       },
+    //       { name: 'raison', label: 'Raison', type: 'textarea' }
+    //     ]
+    //   }
+    // });
 
-    dialogRef.afterClosed().subscribe(formData => {
-      if (formData) {
-        this.congeSvr.addConge(formData).subscribe({
-          next: res => {
-            this.snackBar.open(res.message, 'Fermer', { duration: 4000, panelClass: ['snackbar-success'] });
-            this.loadConges();
-          },
-          error: err => this.handleError(err)
-        });
-      }
-    });
+    // dialogRef.afterClosed().subscribe(formData => {
+    //   if (formData) {
+    //     this.congeSvr.addConge(formData).subscribe({
+    //       next: res => {
+    //         this.snackBar.open(res.message, 'Fermer', { duration: 4000, panelClass: ['snackbar-success'] });
+    //         this.loadConges();
+    //       },
+    //       error: err => this.handleError(err)
+    //     });
+    //   }
+    // });
   }
 
   handleEventClick(clickInfo: EventClickArg) {
-    const event = clickInfo.event;
-    const props = event.extendedProps as CongeExtendedProps;
+    // const event = clickInfo.event;
+    // const props = event.extendedProps as CongeExtendedProps;
 
-    const dialogRef = this.dialog.open(FormsDialogComponent, {
-      width: 'auto',
-      data: {
-        title: 'Modifier la demande de congé',
-        item: {
-          id_employe: props.id_employe,
-          debut: event.startStr,
-          fin: event.endStr,
-          raison: props.raison,
-          id_type: props.type
-        },
-        fields: [
-          { name: 'debut', label: 'Début', type: 'date', validators: ['required'] },
-          { name: 'fin', label: 'Fin', type: 'date', validators: ['required'] },
-          { name: 'id_type', label: 'Type', type: 'select2', options: this.typesConges },
-          { name: 'raison', label: 'Raison', type: 'textarea' }
-        ]
-      }
-    });
+    // const dialogRef = this.dialog.open(FormsDialogComponent, {
+    //   width: 'auto',
+    //   data: {
+    //     title: 'Modifier la demande de congé',
+    //     item: {
+    //       id_employe: props.id_employe,
+    //       debut: event.startStr,
+    //       fin: event.endStr,
+    //       raison: props.raison,
+    //       id_type: props.type
+    //     },
+    //     fields: [
+    //       { name: 'debut', label: 'Début', type: 'date', validators: ['required'] },
+    //       { name: 'fin', label: 'Fin', type: 'date', validators: ['required'] },
+    //       { name: 'id_type', label: 'Type', type: 'select2', options: this.typesConges },
+    //       { name: 'raison', label: 'Raison', type: 'textarea' }
+    //     ]
+    //   }
+    // });
 
-    dialogRef.afterClosed().subscribe(formData => {
-      if (formData) {
-        this.congeSvr.updateConge(props.id, formData).subscribe({
-          next: res => {
-            this.snackBar.open(res.message, 'Fermer', { duration: 4000, panelClass: ['snackbar-success'] });
-            this.loadConges();
-          },
-          error: err => this.handleError(err)
-        });
-      }
-    });
+    // dialogRef.afterClosed().subscribe(formData => {
+    //   if (formData) {
+    //     this.congeSvr.updateConge(props.id, formData).subscribe({
+    //       next: res => {
+    //         this.snackBar.open(res.message, 'Fermer', { duration: 4000, panelClass: ['snackbar-success'] });
+    //         this.loadConges();
+    //       },
+    //       error: err => this.handleError(err)
+    //     });
+    //   }
+    // });
   }
 
   handleEventDrop(dropInfo: EventDropArg) {

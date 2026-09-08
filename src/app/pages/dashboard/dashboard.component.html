@@ -153,6 +153,7 @@
       <!-- Moins de 30 ans -->
       <div class="kpi-card kpi-info">
         <div class="kpi-header">
+          <!-- <span class="kpi-icon material-icons">young</span> -->
           <mat-icon class="gender-icon">emoji_people</mat-icon>
           <span class="kpi-label">Moins de 30 ans</span>
         </div>
@@ -932,7 +933,8 @@
         <tr>
           <th>Employé</th>
           <th>Objet</th>
-          <th>Date</th>
+          <th>Date demande</th>
+          <th>Date réponse</th>
           <th>Statut</th>
           <th>Délai</th>
           <th>Sanction</th>
@@ -943,6 +945,7 @@
           <td class="employe-cell">{{ demande.employe_nom }}</td>
           <td><span class="type-badge">{{ demande.objet_libelle }}</span></td>
           <td>{{ demande.date_demande }}</td>
+          <td>{{ demande.a_repondu ? demande.date_reponse : '-' }}</td>
           <td>
             <span class="badge"
                   [class.badge-warning]="demande.statut === 1"
@@ -951,18 +954,18 @@
             </span>
           </td>
           <td>
-            <div class="delai-container" *ngIf="demande.delai_jours !== null">
-              <span class="delai-badge" [ngClass]="getDelaiBadgeClass(demande.delai_jours)">
-                {{ formatDelaiAvecCategorie(demande.delai_jours) }}
+            <div class="delai-container" *ngIf="demande.delai_total !== null">
+              <span class="delai-badge" [ngClass]="getDelaiBadgeClass(demande.delai_total)">
+                {{ formatDelaiAvecCategorie(demande) }}
               </span>
             </div>
-            <span *ngIf="demande.delai_jours === null" class="text-muted">-</span>
+            <span *ngIf="demande.delai_total === null" class="text-muted">-</span>
           </td>
           <td>
             <span *ngIf="demande.a_sanction" class="badge badge-danger">
               ⚖️ Sanction
             </span>
-            <span *ngIf="!demande.a_sanction" class="text-muted">-</span>
+            <span *ngIf="!demande.a_sanction" class="text-muted">Aucune sanction</span>
           </td>
         </tr>
       </tbody>

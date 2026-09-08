@@ -8,6 +8,7 @@ import { AuthService } from '../../../../../services/auth.service';
 import { BureauxService } from '../../../services/bureaux.service';
 import { ZonesService } from '../../../services/zones.service';
 import { InfrasMouvementService } from '../../../services/infras-mouvement.service';
+import { EmployesService } from '../../../services/employes.service';
 
 @Component({
   selector: 'app-mvt-equipement',
@@ -41,7 +42,6 @@ export class MvtEquipementComponent implements OnInit {
   mouvementTypes = [
     { value: 'sortie_terrain', label: 'Sortie sur terrain', icon: 'logout', color: '#ef4444' },
     { value: 'retour_terrain', label: 'Retour de terrain', icon: 'login', color: '#10b981' },
-    // { value: 'mise_en_maintenance', label: 'Mise en maintenance', icon: 'build', color: '#f59e0b' },
     { value: 'reforme', label: 'Hors service', icon: 'delete_forever', color: '#6b7280' }
   ];
 
@@ -50,18 +50,20 @@ export class MvtEquipementComponent implements OnInit {
     { value: 'neuf', label: 'Neuf', color: '#10b981' },
     { value: 'bon_etat', label: 'Bon état', color: '#8b5cf6' },
     { value: 'en_panne', label: 'En panne', color: '#f59e0b' },
+    { value: 'en_usage', label: 'En usage', color: '#f56e1b' },
     { value: 'reforme', label: 'Hors service', color: '#6b7280' }
   ];
 
-  // Listes pour les selects (maintenance et reforme)
+  // Listes pour les selects
   bureaux: any[] = [];
   zones: any[] = [];
   zonesFiltrees: any[] = [];
-  zonesDestFiltrees: any[] = []; // Pour les zones de destination
+  zonesDestFiltrees: any[] = [];
+  employes: any[] = [];
+  isLoadingEmployes = false;
 
   // État des champs
-  showSourceFields = signal(false); // Pour maintenance et reforme
-  showDestinationFields = signal(false); // Non utilisé mais gardé pour cohérence
+  showSourceFields = signal(false);
 
   // Informations de l'équipement
   equipementInfo = {
@@ -81,6 +83,7 @@ export class MvtEquipementComponent implements OnInit {
     private bureauSvr: BureauxService,
     private mvtSvr: InfrasMouvementService,
     private zoneSvr: ZonesService,
+    private empSvr: EmployesService,
     @Inject(MAT_DIALOG_DATA) public data: { equipement: any }
   ) {
     this.mouvementForm = this.initForm();
@@ -104,7 +107,8 @@ export class MvtEquipementComponent implements OnInit {
       etat_avant: this.equipementInfo.etat
     });
 
-    // Charger les bureaux pour maintenance et reforme
+    // Charger les employés et les bureaux
+    this.loadAllEmployes();
     this.loadBureaux();
 
     // Écouter les changements de type
@@ -133,6 +137,7 @@ export class MvtEquipementComponent implements OnInit {
 
   private initForm(): FormGroup {
     return this.fb.group({
+      employe_slug: ['', Validators.required],
       type: ['', Validators.required],
       bureau_source_slug: [''],
       zone_source_slug: [''],
@@ -175,10 +180,8 @@ export class MvtEquipementComponent implements OnInit {
 
       case 'reforme':
         this.showSourceFields.set(true);
-        // Champs source requis
         this.mouvementForm.get('bureau_source_slug')?.setValidators([Validators.required]);
         this.mouvementForm.get('zone_source_slug')?.setValidators([Validators.required]);
-        // Champs destination requis
         this.mouvementForm.get('bureau_dest_slug')?.setValidators([Validators.required]);
         this.mouvementForm.get('zone_dest_slug')?.setValidators([Validators.required]);
         break;
@@ -223,6 +226,28 @@ export class MvtEquipementComponent implements OnInit {
     });
   }
 
+  loadAllEmployes(): void {
+    this.isLoadingEmployes = true;
+    this.empSvr.getAll().subscribe({
+      next: (data) => {
+        this.employes = data;
+        this.isLoadingEmployes = false;
+      },
+      error: () => {
+        this.snackBar.open('Erreur chargement de la liste des employés', 'Fermer', { duration: 3000 });
+        this.isLoadingEmployes = false;
+      }
+    });
+  }
+
+  getEmployeDisplay(employe: any): string {
+    if (!employe) return '';
+    const nom = employe.nom || '';
+    const prenom = employe.prenom || '';
+    const matricule = employe.matricule || '';
+    return `${matricule} - ${prenom} ${nom}`.trim();
+  }
+
   getSelectedTypeIcon(): string {
     const type = this.mouvementForm.get('type')?.value;
     const found = this.mouvementTypes.find(t => t.value === type);
@@ -259,7 +284,8 @@ export class MvtEquipementComponent implements OnInit {
       motif: formValue.motif,
       notes: formValue.notes || '',
       equipement_slug: this.data.equipement.slug,
-      user_rh_slug: this.authSvr.getCurrentUser()?.employe.slug,
+      user_rh_slug: formValue.employe_slug,
+      valideur_rh_slug: this.authSvr.getCurrentUser()?.employe.slug, // Pour traçabilité admin
       valider: 0
     };
 

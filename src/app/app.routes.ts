@@ -1,4 +1,3 @@
-import { InfrasFournisseurComponent } from './features/infrastructures/pages/infras-fournisseur/infras-fournisseur.component';
 import { Routes } from '@angular/router';
 import { MainComponent } from './layouts/main/main.component';
 import { ApplicationsComponent } from './pages/applications/applications.component';
@@ -524,6 +523,13 @@ export const routes: Routes = [
           import('./features/infrastructures/pages/equipements/equipements.component')
             .then(m => m.EquipementsComponent),
         title: 'Équipements'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/infrastructures/pages/infras-dashboard/infras-dashboard.component')
+            .then(m => m.InfrasDashboardComponent),
+        title: 'Tableau de bord'
       },
       {
         path: 'employes',
