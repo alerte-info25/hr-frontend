@@ -366,6 +366,10 @@ export class InfrasAffectationComponent implements OnInit, OnDestroy {
     return affectation?.equipement?.designation || 'N/A';
   }
 
+  getEquipementCode(affectation: any): string {
+    return affectation.equipement?.code_interne || 'N/A';
+  }
+
   getZoneNom(affectation: any): string {
     return affectation.zone?.nom || 'N/A';
   }

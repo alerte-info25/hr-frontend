@@ -23,24 +23,25 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ================================================
-   HEADER
+   HEADER (avec pagination intégrée)
    ================================================ */
 
 .header {
   margin-bottom: 3rem;
   position: relative;
   padding-bottom: 1.5rem;
+
+  /* ✅ Aligne le titre à gauche et la pagination à droite */
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .header::after {
@@ -56,14 +57,8 @@
 }
 
 @keyframes slideIn {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 80px;
-    opacity: 1;
-  }
+  from { width: 0; opacity: 0; }
+  to   { width: 80px; opacity: 1; }
 }
 
 .header h1 {
@@ -76,14 +71,106 @@
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================
+   PAGINATION (intégrée dans le header)
+   ================================================ */
+
+.header-paginator {
+  background: transparent;
+  animation: slideDown 0.6s ease-out 0.2s both;
+  align-self: flex-end;
+}
+
+/* On neutralise le style Material par défaut */
+:host ::ng-deep .header-paginator.mat-mdc-paginator {
+  background: transparent;
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-paginator-container {
+  padding: 0;
+  min-height: auto;
+  justify-content: flex-end;
+  font-family: 'Outfit', sans-serif !important;
+  gap: 0.5rem;
+}
+
+/* Labels ("Items per page", "1 – 10 of 50") */
+:host ::ng-deep .header-paginator .mat-mdc-paginator-page-size-label,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-range-label {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0.25rem;
+}
+
+/* Sélecteur "Items per page" */
+:host ::ng-deep .header-paginator .mat-mdc-select-value,
+:host ::ng-deep .header-paginator .mat-mdc-select-arrow {
+  color: #0f172a !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-form-field {
+  width: auto;
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-text-field-wrapper {
+  background: #f8fafc;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-text-field-wrapper:hover {
+  background: #f1f5f9;
+}
+
+:host ::ng-deep .header-paginator .mdc-notched-outline__leading,
+:host ::ng-deep .header-paginator .mdc-notched-outline__notch,
+:host ::ng-deep .header-paginator .mdc-notched-outline__trailing {
+  border-color: #e2e8f0 !important;
+}
+
+/* Boutons prev/next/first/last */
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-previous,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-next,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-first,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-last {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #475569;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-previous:hover:not([disabled]),
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-next:hover:not([disabled]),
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-first:hover:not([disabled]),
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-last:hover:not([disabled]) {
+  background: #eff6ff;
+  color: #2563eb;
+  transform: translateY(-2px);
+}
+
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-previous[disabled],
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-next[disabled],
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-first[disabled],
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-last[disabled] {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Focus visible (accessibilité) */
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-previous:focus-visible,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-next:focus-visible,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-first:focus-visible,
+:host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-last:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 /* ================================================
@@ -110,14 +197,8 @@
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /* ================================================
@@ -154,18 +235,12 @@
   border-bottom: 1px solid #f1f5f9;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInRow 0.5s ease-out both;
-  animation-delay: calc(0.4s + var(--row-index, 0) * 0.05s);
+  animation-delay: calc(0.1s + var(--row-index, 0) * 0.05s);
 }
 
 @keyframes fadeInRow {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .user-table tbody tr:hover {
@@ -373,6 +448,24 @@
   }
 }
 
+@media (max-width: 900px) {
+  /* ✅ La pagination passe sous le titre */
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-paginator {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-container {
+    justify-content: flex-start;
+    padding: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1.5rem 1rem;
@@ -394,24 +487,15 @@
       0 0 0 1px rgba(0, 0, 0, 0.05);
   }
 
-  /* Table responsive en mode mobile */
   .user-table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
   }
 
-  .user-table thead {
-    display: table-header-group;
-  }
-
-  .user-table tbody {
-    display: table-row-group;
-  }
-
-  .user-table tr {
-    display: table-row;
-  }
+  .user-table thead { display: table-header-group; }
+  .user-table tbody { display: table-row-group; }
+  .user-table tr    { display: table-row; }
 
   .user-table th,
   .user-table td {
@@ -436,6 +520,20 @@
 
   .btn-icon i {
     font-size: 1rem;
+  }
+
+  /* ✅ Pagination plus compacte */
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-page-size-label,
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-range-label {
+    font-size: 0.75rem;
+  }
+
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-previous,
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-next,
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-first,
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-navigation-last {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -466,6 +564,16 @@
   .user-table th {
     font-size: 0.688rem;
   }
+
+  /* ✅ Pagination : on cache le sélecteur "Items per page" */
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-page-size {
+    display: none;
+  }
+
+  :host ::ng-deep .header-paginator .mat-mdc-paginator-range-label {
+    margin: 0;
+    font-size: 0.7rem;
+  }
 }
 
 /* ================================================
@@ -485,29 +593,13 @@ app-loading {
    ================================================ */
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
 }
 
 .table-row {
   --row-index: 0;
 }
-
-/* Ajouter des indices pour l'animation échelonnée */
-.table-row:nth-child(1) { --row-index: 0; }
-.table-row:nth-child(2) { --row-index: 1; }
-.table-row:nth-child(3) { --row-index: 2; }
-.table-row:nth-child(4) { --row-index: 3; }
-.table-row:nth-child(5) { --row-index: 4; }
-.table-row:nth-child(6) { --row-index: 5; }
-.table-row:nth-child(7) { --row-index: 6; }
-.table-row:nth-child(8) { --row-index: 7; }
-.table-row:nth-child(9) { --row-index: 8; }
-.table-row:nth-child(10) { --row-index: 9; }
 
 /* ================================================
    SCROLLBAR STYLING
@@ -537,7 +629,8 @@ app-loading {
    ================================================ */
 
 @media print {
-  .actions {
+  .actions,
+  .header-paginator {
     display: none;
   }
 

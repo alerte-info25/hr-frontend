@@ -8,6 +8,7 @@ import { CongesService } from '../../services/conges.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { Router } from '@angular/router';
 
 interface Conge {
   id: number;
@@ -114,7 +115,8 @@ export class CongesDirecteurComponent {
     private fb: FormBuilder,
     private dialog: MatDialog,
     private congeSvr: CongesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {
     this.responseForm = this.fb.group({
       commentaire_admin: [''],
@@ -401,5 +403,13 @@ export class CongesDirecteurComponent {
       month: 'long',
       year: 'numeric'
     });
+  }
+
+  goToUserConges(): void {
+    this.router.navigate(['/mes-conges']);
+  }
+
+  goToAllConges(): void {
+    this.router.navigate(['/conges']);
   }
 }

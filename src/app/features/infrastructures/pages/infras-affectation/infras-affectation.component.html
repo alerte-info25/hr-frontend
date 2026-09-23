@@ -144,9 +144,12 @@
           <td>
             <div class="cell-equipement">
               <span class="material-icons">computer</span>
-              <span>{{ getEquipementNom(affectation) }}</span>
+              <div class="equipement-info">
+                <span class="equipement-nom">{{ getEquipementNom(affectation) }}</span>
+                <small class="equipement-code">{{ getEquipementCode(affectation) }}</small>
+              </div>
             </div>
-           </td>
+          </td>
            <td>
             <div class="cell-bureau">
               <span class="material-icons">business</span>

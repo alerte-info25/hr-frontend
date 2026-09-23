@@ -6,7 +6,7 @@
   </button>
 
   <!-- Bureaux -->
-  <button class="menu-btn" (click)="goTo('/bureaux')">
+  <button class="menu-btn"  *ngIf="isDevOrDir()" (click)="goTo('/bureaux')">
     <i class="fas fa-building"></i>
     Bureaux
   </button>
