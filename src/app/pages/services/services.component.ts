@@ -7,10 +7,12 @@ import { ServicesService } from '../../services/services.service';
 import { EmployesService } from '../../services/employes.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-services',
-  imports: [CommonModule, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss'
 })
@@ -24,10 +26,14 @@ export class ServicesComponent {
     private route: Router,
     private svrService:ServicesService,
     private empSvr: EmployesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ){}
     ngOnInit(): void {
       this.refresh()
+    }
+    isEmploye(): boolean {
+      return this.authSvr.isEmploye();
     }
 
     refresh(){

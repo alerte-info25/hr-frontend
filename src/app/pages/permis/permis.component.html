@@ -1,3 +1,6 @@
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
 <div class="container-fluid py-4">
   <!-- Messages de succès/erreur -->
   <div *ngIf="messageSucces" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -511,3 +514,5 @@
 
 <!-- Modal backdrop -->
 <div class="modal-backdrop fade" [class.show]="showModal" *ngIf="showModal" (click)="fermerModal()"></div>
+
+}

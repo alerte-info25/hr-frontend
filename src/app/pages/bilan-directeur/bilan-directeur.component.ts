@@ -12,6 +12,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 
 
@@ -63,7 +65,7 @@ interface TableauDeBord {
 type ProjetStatut = 'termine' | 'en_cours' | 'en_attente' | 'annule';
 @Component({
   selector: 'app-bilan-directeur',
-  imports: [CommonModule, MaterialModule, FormsModule],
+  imports: [CommonModule, MaterialModule, FormsModule, AccessDeniedComponent],
   templateUrl: './bilan-directeur.component.html',
   styleUrls: ['./bilan-directeur.component.scss'],
   animations: [
@@ -126,7 +128,8 @@ export class BilanDirecteurComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
-    private router: Router
+    private router: Router,
+    private authSvr: AuthService
   ) {
     const currentYear = new Date().getFullYear();
     for (let i = 0; i < 5; i++) this.annees.push(currentYear - i);
@@ -136,6 +139,9 @@ export class BilanDirecteurComponent implements OnInit {
     return bilan.slug;
   }
 
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
 
   ngOnInit(): void {
     this.loadTableauDeBord();

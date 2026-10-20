@@ -7,10 +7,12 @@ import { TypeCongesService } from '../../services/type-conges.service';
 import { LoadingComponent } from "../loading/loading.component";
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-type-conges',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './type-conges.component.html',
   styleUrl: './type-conges.component.scss'
 })
@@ -23,12 +25,18 @@ export class TypeCongesComponent {
     private router: Router,
     private dialog: MatDialog,
     private typecongeSvr: TypeCongesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
   ngOnInit(): void {
     this.refresh();
   }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
+
   refresh(){
     this.typecongeSvr.getList().subscribe({
       next: (data) => {

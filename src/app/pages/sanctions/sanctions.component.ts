@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 })
 export class SanctionsComponent {
 
-isLoading = true;
+  isLoading = true;
   sanctions: any[] = [];
   employes: any[] = [];
 

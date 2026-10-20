@@ -2,10 +2,12 @@ import { Component } from '@angular/core';
 import { RegisterCodesService } from '../../services/register-codes.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule, DatePipe } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-register-codes',
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, AccessDeniedComponent],
   templateUrl: './register-codes.component.html',
   styleUrl: './register-codes.component.scss'
 })
@@ -15,7 +17,8 @@ export class RegisterCodesComponent {
 
   constructor(
     private registerCodesService: RegisterCodesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
   refresh(){
@@ -34,6 +37,9 @@ export class RegisterCodesComponent {
         this.isLoading = false;
       }
     });
+  }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
   generateCode(){
     this.isLoading = true;

@@ -785,3 +785,184 @@ app-loading {
     }
   }
 }
+
+@media (max-width: 768px) {
+  // 👇 IMPORTANT : la carte ne doit PAS être en overflow hidden sur mobile
+  // pour laisser le contenu défiler normalement dans la page
+  .employee-details-card {
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 1rem 0.75rem 1rem 0.75rem;
+    overflow: visible;
+    max-width: 100%;
+
+    &::before {
+      height: 4px;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      margin-bottom: 1.25rem;
+      padding: 0 0.5rem;
+      line-height: 1.3;
+    }
+
+    .employee-avatar {
+      margin-bottom: 1.5rem;
+
+      img,
+      .avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+        border-width: 4px;
+
+        &:hover {
+          transform: none;
+        }
+      }
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr;
+      padding: 0.75rem;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+
+      .detail-item {
+        padding: 0.75rem 0.85rem;
+        border-radius: 8px;
+
+        &:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        &::before {
+          width: 3px;
+        }
+
+        strong {
+          font-size: 0.75rem;
+          gap: 0.4rem;
+
+          .material-icons {
+            font-size: 1rem !important;
+            width: 1rem;
+            height: 1rem;
+          }
+        }
+
+        > span {
+          font-size: 0.9rem;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+      }
+    }
+
+    .details-grid.contract-section {
+      padding-top: 2rem;
+    }
+  }
+
+  .detail-item.responsable-item,
+  .detail-item.caisse-item {
+    grid-column: span 1 !important;
+    margin: 0 !important;
+    padding: 0.85rem !important;
+
+    .responsable-badge,
+    .caisse-badge {
+      flex-direction: column;
+      align-items: flex-start;
+      margin-left: 0;
+      gap: 0.35rem;
+
+      .badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.65rem;
+
+        .material-icons {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+
+      .responsable-note,
+      .caisse-note {
+        font-size: 0.72rem;
+        line-height: 1.3;
+      }
+    }
+  }
+
+  // 👇 Barre d'actions FIXE en bas + spacer pour ne pas cacher le contenu
+  .actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.75rem;
+    margin: 0;
+    border-top: 1px solid $gray-200;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    z-index: 100;
+
+    .btn {
+      width: 100%;
+      min-width: 0;
+      padding: 0.7rem 0.5rem;
+      font-size: 0.78rem;
+      gap: 0.35rem;
+      border-radius: 8px;
+      box-shadow: none;
+
+      .material-icons {
+        font-size: 1rem !important;
+        width: 1rem;
+        height: 1rem;
+      }
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    a {
+      width: 100%;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  // 👇 Spacer qui pousse le contenu vers le haut pour laisser la place à la barre fixe
+  .employee-details-card::after {
+    content: '';
+    display: block;
+    height: 200px; // hauteur approximative de la barre d'actions fixe
+    width: 100%;
+  }
+
+  .text-danger {
+    font-size: 1rem;
+    padding: 2rem 1rem;
+    margin: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &::before {
+      font-size: 2rem;
+    }
+  }
+}

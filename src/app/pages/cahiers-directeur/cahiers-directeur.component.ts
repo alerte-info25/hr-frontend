@@ -11,11 +11,12 @@ import { CahierChargeService } from '../../services/cahier-charge.service';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { LoadingComponent } from '../loading/loading.component';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-cahiers-directeur',
   standalone: true,
-  imports: [MaterialModule, CommonModule, FormsModule, ReactiveFormsModule, ConfirmDeleteDialogComponent, LoadingComponent],
+  imports: [MaterialModule, CommonModule, FormsModule, ReactiveFormsModule, ConfirmDeleteDialogComponent, LoadingComponent, AccessDeniedComponent],
   templateUrl: './cahiers-directeur.component.html',
   styleUrl: './cahiers-directeur.component.scss',
   animations: [
@@ -112,6 +113,10 @@ export class CahiersDirecteurComponent implements OnInit {
   generateYears(): void {
     const currentYear = new Date().getFullYear();
     this.years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   initForm(): void {

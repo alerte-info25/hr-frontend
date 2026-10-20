@@ -7,10 +7,12 @@ import { FormsDialogComponent } from '../dialog/forms-dialog/forms-dialog.compon
 import { CommonModule } from '@angular/common';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { LoadingComponent } from '../loading/loading.component';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-objets',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './objets.component.html',
   styleUrl: './objets.component.scss'
 })
@@ -22,11 +24,15 @@ export class ObjetsComponent {
   constructor(
     private dialog: MatDialog,
     private objetSvr: ObjetService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService,
   ) { }
 
   ngOnInit(): void {
     this.refresh();
+  }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   refresh(){

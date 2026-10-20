@@ -8,6 +8,8 @@ import { MatSelectModule } from "@angular/material/select";
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { DroitsService } from '../../services/droits.service';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -16,8 +18,9 @@ import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/co
     LoadingComponent,
     FormsModule,
     MatSelectModule,
-    MatPaginatorModule,     // ✅ ajouté
-    ConfirmDeleteDialogComponent
+    MatPaginatorModule,
+    ConfirmDeleteDialogComponent,
+    AccessDeniedComponent
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
@@ -43,7 +46,8 @@ export class UsersComponent implements OnInit, AfterViewInit {
   constructor(
     private userSvr: UsersService,
     private snackBar: MatSnackBar,
-    private rolesvr: DroitsService
+    private rolesvr: DroitsService,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +56,9 @@ export class UsersComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     // Rien ici, on gère manuellement via (page) dans le template
+  }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   refresh() {

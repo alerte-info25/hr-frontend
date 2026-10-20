@@ -7,10 +7,12 @@ import { CommonModule } from '@angular/common';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-bureaux',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './bureaux.component.html',
   styleUrl: './bureaux.component.scss'
 })
@@ -23,12 +25,18 @@ export class BureauxComponent {
     private router: Router,
     private dialog: MatDialog,
     private bureauSvr: BureauService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
-  ngOnInit(): void { 
+  ngOnInit(): void {
     this.refresh();
   }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
+
 
   refresh(){
     this.bureauSvr.getList().subscribe({

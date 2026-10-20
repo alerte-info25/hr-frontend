@@ -11,7 +11,8 @@ import { LoadingComponent } from '../../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UsersService } from '../../../services/users.service';
-
+import { AuthService } from '../../../services/auth.service';
+import { AccessDeniedComponent } from '../../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-liste',
@@ -19,7 +20,8 @@ import { UsersService } from '../../../services/users.service';
     CommonModule, FormsModule,
     ReactiveFormsModule, RouterLink,
     MaterialModule, LoadingComponent,
-    ConfirmDeleteDialogComponent
+    ConfirmDeleteDialogComponent,
+    AccessDeniedComponent
   ],
   templateUrl: './liste.component.html',
   styleUrls: ['./liste.component.scss']
@@ -34,7 +36,8 @@ export class ListeComponent implements OnInit {
     private svrservice: ServicesService,
     private fonctionSvr: FonctionsService,
     private snackBar: MatSnackBar,
-    private userSvr: UsersService
+    private userSvr: UsersService,
+    private authSvr: AuthService
   ){}
   employees: any[] =[];
 
@@ -51,6 +54,10 @@ export class ListeComponent implements OnInit {
   itemsPerPage: number = 8;
   totalPages: number = 1;
   countries: any;
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
 
   ngOnInit(): void {
     this.refresh();

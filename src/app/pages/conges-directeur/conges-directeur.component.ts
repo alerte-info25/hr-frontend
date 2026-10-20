@@ -9,6 +9,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { Router } from '@angular/router';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
+import { AuthService } from '../../services/auth.service';
 
 interface Conge {
   id: number;
@@ -58,7 +60,8 @@ interface Stats {
     FormsModule,
     ReactiveFormsModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    AccessDeniedComponent
   ],
   templateUrl: './conges-directeur.component.html',
   styleUrl: './conges-directeur.component.scss'
@@ -116,7 +119,8 @@ export class CongesDirecteurComponent {
     private dialog: MatDialog,
     private congeSvr: CongesService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private authSvr: AuthService
   ) {
     this.responseForm = this.fb.group({
       commentaire_admin: [''],
@@ -127,6 +131,10 @@ export class CongesDirecteurComponent {
   ngOnInit(): void {
     this.loadConges();
     setTimeout(() => this.fadeIn = true, 100);
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   loadConges(): void {

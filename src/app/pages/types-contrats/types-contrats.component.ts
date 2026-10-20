@@ -7,10 +7,12 @@ import { LoadingComponent } from '../loading/loading.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-types-contrats',
-  imports: [LoadingComponent, ConfirmDeleteDialogComponent,CommonModule],
+  imports: [LoadingComponent, ConfirmDeleteDialogComponent,CommonModule, AccessDeniedComponent],
   templateUrl: './types-contrats.component.html',
   styleUrl: './types-contrats.component.scss'
 })
@@ -24,11 +26,17 @@ export class TypesContratsComponent {
     private router: Router,
     private dialog: MatDialog,
     private typecontratSvr: TypeContratService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
   ngOnInit(){
     this.refresh();
   }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
+
   refresh(){
     this.typecontratSvr.getList().subscribe({
       next: (data) => {

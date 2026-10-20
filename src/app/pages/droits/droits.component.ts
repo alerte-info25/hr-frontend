@@ -8,10 +8,12 @@ import { CommonModule } from '@angular/common';
 import { LoadingComponent } from '../loading/loading.component';
 import { DroitFormsDialogComponent } from '../dialog/droit-forms-dialog/droit-forms-dialog.component';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-droits',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent, DroitFormsDialogComponent],
   templateUrl: './droits.component.html',
   styleUrl: './droits.component.scss'
 })
@@ -47,11 +49,15 @@ export class DroitsComponent {
     private dialog: MatDialog,
     private droitSvr: DroitsService,
     private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
   ngOnInit(): void {
     this.refresh()
-   }
+  }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
   refresh(){
     this.isLoading = true;
     this.droitSvr.getListeDroit().subscribe({

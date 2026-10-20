@@ -2,6 +2,10 @@
   <app-loading></app-loading>
 }
 
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
+
 <div class="employees-header">
   <h1>Liste des employés</h1>
   <a routerLink="/ajout-employe">
@@ -110,3 +114,5 @@
   (confirm)="confirmDelete()"
   (cancel)="closeModal()"
 ></app-confirm-delete-dialog>
+
+}

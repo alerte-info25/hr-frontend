@@ -1,6 +1,9 @@
 @if(isLoading){
 <app-loading></app-loading>
 }
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
 <div class="roles-header">
   <h1>Gestion des types contrat</h1>
   <button class="btn-add" (click)="openAddDialog()">
@@ -38,3 +41,4 @@
   (confirm)="confirmDelete()"
   (cancel)="closeModal()"
 ></app-confirm-delete-dialog>
+}

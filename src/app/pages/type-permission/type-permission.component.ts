@@ -7,10 +7,12 @@ import { TypePermissionsService } from '../../services/type-permissions.service'
 import { LoadingComponent } from '../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-type-permission',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './type-permission.component.html',
   styleUrl: './type-permission.component.scss'
 })
@@ -23,12 +25,18 @@ export class TypePermissionComponent {
     private router: Router,
     private dialog: MatDialog,
     private typePermisSvr: TypePermissionsService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
   ngOnInit(): void {
     this.refresh();
   }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
+
   refresh(){
     this.typePermisSvr.getList().subscribe({
       next: (data) => {

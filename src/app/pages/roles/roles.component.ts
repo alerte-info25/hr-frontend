@@ -7,10 +7,12 @@ import { DroitsService } from '../../services/droits.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoadingComponent } from '../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-roles',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './roles.component.html',
   styleUrl: './roles.component.scss'
 })
@@ -23,12 +25,16 @@ export class RolesComponent {
     private router: Router,
     private dialog: MatDialog,
     private roleSvr: DroitsService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) { }
 
   ngOnInit(): void {
     this.refresh()
-   }
+  }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
   refresh(){
     this.isLoading = true;
     this.roleSvr.getListeRole().subscribe({

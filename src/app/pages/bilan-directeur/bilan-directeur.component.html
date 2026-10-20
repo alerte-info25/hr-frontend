@@ -1,3 +1,7 @@
+
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
 <div class="bilan-directeur-container">
   <!-- Header avec filtres -->
   <div class="header-section" @fadeInUp>
@@ -338,6 +342,7 @@
     </div>
   </div>
 </div>
+}
 
 <!-- Modal détails bilan -->
 <div *ngIf="selectedBilan" class="modal-overlay" (click)="closeBilanDetails()" @fadeInUp>

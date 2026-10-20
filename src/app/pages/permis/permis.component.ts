@@ -12,12 +12,14 @@ import { Router } from '@angular/router';
 import { TypePermissionsService } from '../../services/type-permissions.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { DurationCalculatorService } from '../../services/duration-calculator.service';
+import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 declare var bootstrap: any;
 
 @Component({
   selector: 'app-permis',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MaterialModule, AccessDeniedComponent],
   templateUrl: './permis.component.html',
   styleUrl: './permis.component.scss',
 })
@@ -53,18 +55,22 @@ export class PermisComponent implements OnInit {
     private router: Router,
     private typePermissionService: TypePermissionsService,
     private sanitizer: DomSanitizer,
-    private durationCalculator: DurationCalculatorService
+    private durationCalculator: DurationCalculatorService,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit(): void {
     this.chargerToutesPermissions();
     this.loadTypesPermission();
   }
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
+  }
 
   // ========== STATISTIQUES ==========
 
   get totalDemandes(): number {
-    return this.toutesPermissions.length;
+    return this.toutesPermissions1.length;
   }
 
   get totalEnAttente(): number {
@@ -72,13 +78,12 @@ export class PermisComponent implements OnInit {
   }
 
   get totalAcceptees(): number {
-    return this.toutesPermissions.filter(p => p.statut == 2).length;
+    return this.toutesPermissions.filter(p => p.statut === 2).length;
   }
 
   get totalRefusees(): number {
     return this.toutesPermissions.filter(p => p.statut === 3).length;
   }
-
   // ========== CHARGEMENT DES DONNÉES ==========
 
   loadTypesPermission(): void {

@@ -1,6 +1,9 @@
 @if(isLoading){
   <app-loading></app-loading>
 }
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
 <div class="container">
   <!-- Header Section -->
   <div class="header" @fadeIn>
@@ -213,3 +216,5 @@
   (confirm)="confirmDelete()"
   (cancel)="closeModal()"
 ></app-confirm-delete-dialog>
+
+}

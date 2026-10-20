@@ -1,3 +1,6 @@
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
 <div class="roles-header">
   <h1>Gestion des services</h1>
   <button class="btn-add" (click)="openAddDialog()">
@@ -23,3 +26,4 @@
   (confirm)="confirmDelete()"
   (cancel)="closeModal()"
 ></app-confirm-delete-dialog>
+}

@@ -74,7 +74,7 @@ export class LoginComponent {
   }
 
   openAutoRegister(): void {
-    const codeDialogRef = this.dialog.open(CodeVerificationDialogComponent, { width: '400px' });
+    const codeDialogRef = this.dialog.open(CodeVerificationDialogComponent, { width: 'auto' });
     const instance = codeDialogRef.componentInstance;
 
     instance.onSubmit = (code: string) => {

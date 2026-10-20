@@ -5,10 +5,11 @@ import { CommonModule } from '@angular/common';
 import { LoadingComponent } from '../loading/loading.component';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
 @Component({
   selector: 'app-documents',
-  imports: [CommonModule, LoadingComponent],
+  imports: [CommonModule, LoadingComponent, AccessDeniedComponent],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss'
 })
@@ -27,6 +28,10 @@ export class DocumentsComponent implements OnInit{
   ngOnInit(): void {
     this.user = this.authSvr.getCurrentUser();
     this.refresh();
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   refresh(){
