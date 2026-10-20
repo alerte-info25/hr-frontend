@@ -51,6 +51,24 @@ export class DashboardCaisseComponent implements OnInit, AfterViewInit {
   // Computed
   soldePositif = computed(() => (this.data()?.kpis.solde ?? 0) >= 0);
 
+  // KPIs limités aux opérations comptabilisées
+  // (ce que la direction retrouve dans l'état financier)
+  // comptabilisé = total brut - non comptabilisé
+  kpisComptabilises = computed(() => {
+    const k = this.data()?.kpis;
+    if (!k) return null;
+
+    const nc = k.non_comptabilises;
+    const depenses = Number(k.total_depenses || 0) - Number(nc?.depenses || 0);
+    const entrees =
+      Number(k.total_recouvrements || 0) - Number(nc?.recouvrements || 0);
+    const solde = entrees - depenses;
+    const taux =
+      depenses > 0 ? Math.round((entrees / depenses) * 1000) / 10 : 0;
+
+    return { depenses, entrees, solde, taux };
+  });
+
   hasActiveFilters = computed(() => {
     return !!(
       this.selectedTypeOperation() || this.selectedAComptabiliser() !== null

@@ -98,6 +98,18 @@
 
   <!-- Dashboard Content -->
   @if (!isLoading() && !isLoadingExercices() && data(); as data) {
+    <!-- ============================================ -->
+    <!-- ZONE 1 : TOTAUX BRUTS (comptabilisé + non)   -->
+    <!-- ============================================ -->
+    <div class="zone-header">
+      <h2 class="zone-title">
+        <i class="fa-solid fa-layer-group"></i> Totaux bruts
+      </h2>
+      <p class="zone-desc">
+        Toutes opérations confondues (comptabilisées et non comptabilisées)
+      </p>
+    </div>
+
     <!-- KPIs Cards -->
     <div class="kpis-grid">
       <!-- Total Dépenses -->
@@ -198,6 +210,137 @@
         </div>
       </div>
     </div>
+
+    <!-- ============================================ -->
+    <!-- ZONE 2 : SITUATION COMPTABILISÉE             -->
+    <!-- ============================================ -->
+    @if (kpisComptabilises(); as kc) {
+      <div class="zone-header zone-header--accounted">
+        <h2 class="zone-title">
+          <i class="fa-regular fa-circle-check"></i> Situation comptabilisée
+        </h2>
+        <p class="zone-desc">
+          Uniquement les opérations comptabilisées : correspond à l'état
+          financier
+        </p>
+      </div>
+
+      <div class="kpis-grid">
+        <!-- Sorties comptabilisées -->
+        <div class="kpi-card kpi-danger">
+          <div class="kpi-icon-wrapper">
+            <span class="kpi-icon"
+              ><i class="fa-solid fa-money-bill-1-wave"></i
+            ></span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Sorties comptabilisées</span>
+            <span class="kpi-value">{{ kc.depenses | number: "1.0-0" }} F</span>
+          </div>
+        </div>
+
+        <!-- Entrées comptabilisées -->
+        <div class="kpi-card kpi-success">
+          <div class="kpi-icon-wrapper">
+            <span class="kpi-icon"
+              ><i class="fa-solid fa-sack-dollar"></i
+            ></span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Entrées comptabilisées</span>
+            <span class="kpi-value">{{ kc.entrees | number: "1.0-0" }} F</span>
+          </div>
+        </div>
+
+        <!-- Solde comptabilisé -->
+        <div
+          class="kpi-card"
+          [class.kpi-success]="kc.solde >= 0"
+          [class.kpi-danger]="kc.solde < 0"
+        >
+          <div class="kpi-icon-wrapper">
+            <span class="kpi-icon"><i class="fa-solid fa-chart-pie"></i></span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Solde comptabilisé</span>
+            <span
+              class="kpi-value"
+              [class.text-success]="kc.solde >= 0"
+              [class.text-danger]="kc.solde < 0"
+            >
+              {{ soldePrefix(kc.solde) }}{{ kc.solde | number: "1.0-0" }} F
+            </span>
+            <span class="kpi-footer">
+              Taux de couverture
+              <span class="kpi-detail">{{ kc.taux }}%</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rapprochement brut → comptabilisé -->
+      <div class="section-card reconciliation-card">
+        <h3 class="section-title">
+          <span class="section-icon"
+            ><i class="fa-solid fa-scale-balanced"></i
+          ></span>
+          Rapprochement brut → comptabilisé
+        </h3>
+        <div class="table-container">
+          <table class="reconciliation-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Sorties</th>
+                <th>Entrées</th>
+                <th>Solde</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Total brut</td>
+                <td>{{ data.kpis?.total_depenses | number: "1.0-0" }} F</td>
+                <td>
+                  {{ data.kpis?.total_recouvrements | number: "1.0-0" }} F
+                </td>
+                <td>{{ data.kpis?.solde | number: "1.0-0" }} F</td>
+              </tr>
+              <tr class="row-minus">
+                <td>− Non comptabilisé</td>
+                <td>
+                  {{
+                    data.kpis?.non_comptabilises?.depenses || 0
+                      | number: "1.0-0"
+                  }}
+                  F
+                </td>
+                <td>
+                  {{
+                    data.kpis?.non_comptabilises?.recouvrements || 0
+                      | number: "1.0-0"
+                  }}
+                  F
+                </td>
+                <td>
+                  {{
+                    (data.kpis?.non_comptabilises?.recouvrements || 0) -
+                      (data.kpis?.non_comptabilises?.depenses || 0)
+                      | number: "1.0-0"
+                  }}
+                  F
+                </td>
+              </tr>
+              <tr class="row-total">
+                <td>= Comptabilisé</td>
+                <td>{{ kc.depenses | number: "1.0-0" }} F</td>
+                <td>{{ kc.entrees | number: "1.0-0" }} F</td>
+                <td>{{ kc.solde | number: "1.0-0" }} F</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
 
     <!-- Stats de comptabilisation -->
     <div class="stats-summary">
