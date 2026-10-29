@@ -63,62 +63,68 @@
     Tâches
   </button> -->
  <!-- Dossiers -->
-<button class="menu-btn" *ngIf="hasRight('dossiers')" (click)="goToDossiers()">
-  <i class="fas fa-folder-open"></i>
-  Dossiers
-</button>
+  <button class="menu-btn" *ngIf="hasRight('dossiers')" (click)="goToDossiers()">
+    <i class="fas fa-folder-open"></i>
+    Dossiers
+  </button>
 
-<!-- Cahiers des charges -->
-<button class="menu-btn" (click)="gotoCahierChares()">
-  <i class="fa-solid fa-clipboard-list"></i>
-  Cahiers des charges
-</button>
+  <!-- Cahiers des charges -->
+  <button class="menu-btn" (click)="gotoCahierChares()">
+    <i class="fa-solid fa-clipboard-list"></i>
+    Cahiers des charges
+  </button>
 
 
-<!-- Codes -->
-<button class="menu-btn" *ngIf="hasRight('codes')" (click)="goTo('/codes')">
-  <i class="fa-solid fa-person-chalkboard"></i>
-  Codes
-</button>
+  <!-- Codes -->
+  <button class="menu-btn" *ngIf="hasRight('codes')" (click)="goTo('/codes')">
+    <i class="fa-solid fa-person-chalkboard"></i>
+    Codes
+  </button>
 
-<!-- Demande d'explication -->
-<button class="menu-btn" (click)="goTo('/demande-explication')">
-  <i class="fa-solid fa-circle-question"></i>
-  Demande d'explication
-</button>
+  <!-- Demande d'explication -->
+  <button class="menu-btn" (click)="goTo('/demande-explication')">
+    <i class="fa-solid fa-circle-question"></i>
+    Demande d'explication
+  </button>
 
-<!-- Liste des objets de demandes d'explication -->
-<button class="menu-btn" *ngIf="hasRight('objets')"
-        (click)="goTo('/objet-demande-explication')">
-  <i class="fa-solid fa-list-check"></i>
-  Objets des demandes
-</button>
+  <!-- Liste des objets de demandes d'explication -->
+  <button class="menu-btn" *ngIf="hasRight('objets')"
+          (click)="goTo('/objet-demande-explication')">
+    <i class="fa-solid fa-list-check"></i>
+    Objets des demandes
+  </button>
 
-<!-- Rapports trimestriels -->
-<button class="menu-btn"
-  (click)="goToRapport()">
-  <i class="fas fa-chart-line"></i>
-  Bilan trimestriels
-</button>
+  <!-- Rapports trimestriels -->
+  <button class="menu-btn"
+    (click)="goToRapport()">
+    <i class="fas fa-chart-line"></i>
+    Bilan trimestriels
+  </button>
 
-<!-- Liste des sanctions -->
-<button class="menu-btn" *ngIf="hasRight('sanctions')"
-        (click)="goTo('/sanctions')">
-  <i class="fa-solid fa-gavel"></i>
-  Sanctions disciplinaires
-</button>
+  <!-- Liste des sanctions -->
+  <button class="menu-btn" *ngIf="hasRight('sanctions')"
+          (click)="goTo('/sanctions')">
+    <i class="fa-solid fa-gavel"></i>
+    Sanctions disciplinaires
+  </button>
 
-<!-- Suivi des primes -->
-<button class="menu-btn" *ngIf="isDevOrDir()"
-        (click)="goToPrime()">
-  <i class="fa-solid fa-coins"></i>
-  Suivi des primes
-</button>
+  <!-- Suivi des primes -->
+  <button class="menu-btn" *ngIf="isDevOrDir()"
+          (click)="goToPrime()">
+    <i class="fa-solid fa-coins"></i>
+    Suivi des primes
+  </button>
 
-<!-- Permissions -->
-<!-- <button class="menu-btn" *ngIf="hasRight('employe')" (click)="goTo('/droits')">
-  <i class="fas fa-shield-alt"></i>
-  Droits
-</button> -->
+  <!-- Permanances -->
+  <button class="menu-btn" (click)="goTo('/permanances')">
+    <i class="fas fa-calendar-week"></i>
+    Permanances
+  </button>
+
+  <!-- Horaire de travail -->
+  <button class="menu-btn" *ngIf="isDG()" (click)="goTo('/horaire-travail')">
+    <i class="fa-solid fa-clock"></i>
+    Horaire de travail  
+  </button>
 
 </div>

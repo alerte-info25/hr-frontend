@@ -24,8 +24,6 @@ export class PermissionDetailDialogComponent {
     private sanitizer: DomSanitizer
   ) {}
 
-  // ========== DÉCISION ==========
-
   accepter() {
     this.updateStatus(2);
   }
@@ -56,8 +54,6 @@ export class PermissionDetailDialogComponent {
     });
   }
 
-  // ========== DÉTECTION DES TYPES DE DOCUMENTS ==========
-
   isImageDocument(doc: any): boolean {
     return doc.type === 'image' ||
            ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(doc.extension?.toLowerCase());
@@ -68,22 +64,14 @@ export class PermissionDetailDialogComponent {
   }
 
   getDocumentIcon(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'fa-file-image';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'fa-file-pdf';
-    }
+    if (this.isImageDocument(doc)) return 'fa-file-image';
+    if (this.isPdfDocument(doc)) return 'fa-file-pdf';
     return 'fa-file';
   }
 
   getFileExtensionLabel(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'Image';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'PDF';
-    }
+    if (this.isImageDocument(doc)) return 'Image';
+    if (this.isPdfDocument(doc)) return 'PDF';
     return doc.extension?.toUpperCase() || 'Fichier';
   }
 
@@ -125,15 +113,25 @@ export class PermissionDetailDialogComponent {
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
   }
 
-  calculerDuree(debut: string, fin: string): string {
-    const dateDebut = new Date(debut);
-    const dateFin = new Date(fin);
-    const diffMs = Math.abs(dateFin.getTime() - dateDebut.getTime());
-    const totalHeures = Math.floor(diffMs / (1000 * 60 * 60));
-    const jours = Math.floor(totalHeures / 24);
-    const heures = totalHeures % 24;
-    const heuresFormattees = heures.toString().padStart(2, '0');
-    return `${jours}j ${heuresFormattees}h`;
+  /**
+   * Formate la durée (minutes) renvoyée par le backend.
+   */
+  formaterDureeMinutes(minutes: number | null | undefined): string {
+    if (minutes == null || minutes <= 0) return '—';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h${String(m).padStart(2, '0')}`;
+  }
+
+  /**
+   * Durée formatée d'une permission (source : backend).
+   */
+  getDureeFormatee(): string {
+    if (!this.permission) return '—';
+    if (this.permission.duree_formatee) return this.permission.duree_formatee;
+    return this.formaterDureeMinutes(this.permission.duree_minutes);
   }
 
   fermer() {

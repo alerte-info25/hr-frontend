@@ -103,6 +103,10 @@ export class ApplicationsComponent {
     );
   }
 
+  isDG() {
+    return this.authSvr.isDG();
+  }
+
   goToPrime() {
     if (
       this.userRole.toLocaleLowerCase() === 'employe' ||

@@ -25,6 +25,14 @@ export class PermissionService {
     return this.http.get<any[]>(`${environment.apiUrl}permissions-documents/${slug}`);
   }
 
+  previewDuree(payload: {
+    debut: string;
+    fin: string;
+    id_employe: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}permissions-preview-duree`, payload);
+  }
+
   getPermissionBySlug(slug:string){
     return this.http.get<any>(`${environment.apiUrl}permissions/${slug}`);
   }

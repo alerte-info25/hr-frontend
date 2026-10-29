@@ -57,6 +57,9 @@ import { PrimeDeveloppeurComponent } from './pages/prime-developpeur/prime-devel
 import { CaisseLayoutComponent } from './layouts/caisse-layout/caisse-layout.component';
 import { CaisseGuard } from './core/guards/caisse.guard';
 import { InfrasLayoutComponent } from './layouts/infras-layout/infras-layout.component';
+import { PermananceResponsableComponent } from './pages/permanance-responsable/permanance-responsable.component';
+import { HoraireTravailComponent } from './pages/horaire-travail/horaire-travail.component';
+import { PermananceAdminComponent } from './pages/permanance-admin/permanance-admin.component';
 
 export const routes: Routes = [
   {
@@ -81,6 +84,24 @@ export const routes: Routes = [
         component: FonctionsComponent,
         canActivate: [AuthGuard],
         title: 'Fonctions',
+      },
+      {
+        path: 'permanances',
+        component: PermananceResponsableComponent,
+        canActivate: [AuthGuard],
+        title: 'Permanance',
+      },
+      {
+        path: 'permanances-admin',
+        component: PermananceAdminComponent,
+        canActivate: [AuthGuard],
+        title: 'Permanances',
+      },
+      {
+        path: 'horaire-travail',
+        component: HoraireTravailComponent,
+        canActivate: [AuthGuard],
+        title: 'Horaire de travail',
       },
       {
         path: 'services',

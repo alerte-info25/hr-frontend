@@ -1,0 +1,140 @@
+<div class="permanence-container">
+
+  <!-- En-tête -->
+  <header class="page-header">
+    <div class="title-block">
+      <div class="title-icon"><i class="fa-solid fa-clock"></i></div>
+      <div>
+        <h1>Planning des permanences</h1>
+        <p class="subtitle" *ngIf="service">
+          Service <strong>{{ service.nom }}</strong>
+          <span class="badge" *ngIf="service.est_journaliste">
+            <i class="bi bi-info-circle"></i>
+            Un seul jour par semaine
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <button
+      class="btn-consulter-toutes"
+      (click)="consulterToutesPermanences()"
+      matTooltip="Voir les permanences de tous les services">
+      <mat-icon>groups</mat-icon>
+      <span>Consulter toutes les permanences</span>
+    </button>
+  </header>
+
+  <!-- Navigation semaine -->
+  <div class="week-navigation">
+    <button class="btn-nav" (click)="semainePrecedente()" aria-label="Semaine précédente">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <div class="week-info">
+      <span class="week-label">Week-end du</span>
+      <span class="week-range">
+        {{ formatDate(samedi, true) }} <span class="sep">→</span> {{ formatDate(dimanche) }}
+      </span>
+    </div>
+
+    <button class="btn-today" (click)="semaineCourante()" [disabled]="estSemaineCourante">
+      Cette semaine
+    </button>
+
+    <button class="btn-nav" (click)="semaineSuivante()" aria-label="Semaine suivante">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-state" *ngIf="isLoading">
+    <span class="spinner"></span>
+    <span>Chargement du planning…</span>
+  </div>
+
+  <!-- Planning -->
+  <section class="planning-card" *ngIf="!isLoading && employes.length > 0">
+
+    <div class="planning-head">
+      <div class="col-employe">Employé</div>
+      <div class="col-day">
+        <span class="day-name">Samedi</span>
+        <span class="day-date">{{ formatDate(samedi, true) }}</span>
+      </div>
+      <div class="col-day">
+        <span class="day-name">Dimanche</span>
+        <span class="day-date">{{ formatDate(dimanche, true) }}</span>
+      </div>
+    </div>
+
+    <div class="planning-row"
+         *ngFor="let emp of employes; trackBy: trackBySlug"
+         [class.is-selected]="selection[emp.slug]?.samedi || selection[emp.slug]?.dimanche">
+
+      <div class="col-employe employe-info">
+        <div class="avatar">{{ initiales(emp) }}</div>
+        <div class="employe-text">
+          <div class="employe-name">{{ emp.prenom }} {{ emp.nom }}</div>
+          <div class="employe-fonction" *ngIf="emp.fonction?.nom">{{ emp.fonction.nom }}</div>
+        </div>
+      </div>
+
+      <div class="col-day">
+        <label class="check"
+              [class.checked]="selection[emp.slug]?.samedi"
+              [class.disabled]="isDisabled(emp.slug, 'samedi')">
+          <input type="checkbox"
+                [(ngModel)]="selection[emp.slug].samedi"
+                (change)="onToggle(emp.slug, 'samedi')"
+                [disabled]="isDisabled(emp.slug, 'samedi')">
+          <span class="switch"></span>
+          <span class="hint" *ngIf="isDisabled(emp.slug, 'samedi')">Déjà dimanche</span>
+        </label>
+      </div>
+
+      <div class="col-day">
+        <label class="check"
+              [class.checked]="selection[emp.slug]?.dimanche"
+              [class.disabled]="isDisabled(emp.slug, 'dimanche')">
+          <input type="checkbox"
+                [(ngModel)]="selection[emp.slug].dimanche"
+                (change)="onToggle(emp.slug, 'dimanche')"
+                [disabled]="isDisabled(emp.slug, 'dimanche')">
+          <span class="switch"></span>
+          <span class="hint" *ngIf="isDisabled(emp.slug, 'dimanche')">Déjà samedi</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- État vide -->
+  <div class="empty-state" *ngIf="!isLoading && employes.length === 0">
+    <i class="bi bi-inbox"></i>
+    <p>Aucun employé dans votre service.</p>
+  </div>
+
+  <!-- Barre d'actions -->
+  <footer class="actions-bar" *ngIf="!isLoading && employes.length > 0">
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value">{{ totalSelectionnes }}</span>
+        <span class="stat-label">planifié(s)</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ totalSamedi }}</span>
+        <span class="stat-label">samedi</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ totalDimanche }}</span>
+        <span class="stat-label">dimanche</span>
+      </div>
+    </div>
+
+    <button class="btn-save" (click)="enregistrer()" [disabled]="isSaving">
+      <i class="bi bi-check2-circle" *ngIf="!isSaving"></i>
+      <span class="spinner-small" *ngIf="isSaving"></span>
+      {{ isSaving ? 'Enregistrement…' : 'Enregistrer le planning' }}
+    </button>
+  </footer>
+</div>

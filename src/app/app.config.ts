@@ -1,6 +1,7 @@
 import {
   ApplicationConfig,
   importProvidersFrom,
+  LOCALE_ID,
   provideZoneChangeDetection,
 } from '@angular/core';
 import {
@@ -9,7 +10,7 @@ import {
   withViewTransitions,
 } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
-
+import localeFr from '@angular/common/locales/fr';
 import { routes } from './app.routes';
 import {
   HTTP_INTERCEPTORS,
@@ -18,6 +19,9 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { AuthInterceptor } from '../../auth.interceptor';
+import { registerLocaleData } from '@angular/common';
+
+registerLocaleData(localeFr, 'fr');
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,5 +31,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'fr' },
   ],
 };

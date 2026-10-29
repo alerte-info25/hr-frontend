@@ -9,7 +9,8 @@ import { AuthService } from '../../services/auth.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { LoadingComponent } from '../loading/loading.component';
-import { DurationCalculatorService } from '../../services/duration-calculator.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 declare var bootstrap: any;
 
@@ -50,6 +51,11 @@ export class PermissionEmployeComponent implements OnInit {
   itemToDelete: any = null;
   isDragging = false;
 
+  // Prévisualisation de durée
+  dureePreview: any = null;
+  isLoadingPreview = false;
+  private previewTrigger$ = new Subject<{ debut: string; fin: string }>();
+
   // Configuration des fichiers
   maxFiles = 3;
   maxFileSize = 10 * 1024 * 1024; // 10 Mo
@@ -66,9 +72,9 @@ export class PermissionEmployeComponent implements OnInit {
   searchQuery = '';
   selectedStatus: number | null = null;
   selectedType: string | null = null;
+
   constructor(
     private typePermissionService: TypePermissionsService,
-    private durationCalculator: DurationCalculatorService,
     private snackBar: MatSnackBar,
     private permissionSvr: PermissionService,
     private authSvr: AuthService,
@@ -79,6 +85,31 @@ export class PermissionEmployeComponent implements OnInit {
     this.user = this.authSvr.getUser();
     this.loadPermissions();
     this.loadTypesPermission();
+
+    // 🔄 Prévisualisation de durée avec debounce
+    this.previewTrigger$
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged((a, b) => a.debut === b.debut && a.fin === b.fin),
+        switchMap(({ debut, fin }) => {
+          this.isLoadingPreview = true;
+          return this.permissionSvr.previewDuree({
+            debut,
+            fin,
+            id_employe: this.user?.employe?.slug,
+          });
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          this.isLoadingPreview = false;
+          this.dureePreview = res?.success ? res.data : null;
+        },
+        error: () => {
+          this.isLoadingPreview = false;
+          this.dureePreview = null;
+        },
+      });
   }
 
   // ========== CHARGEMENT DES DONNÉES ==========
@@ -185,7 +216,6 @@ export class PermissionEmployeComponent implements OnInit {
   // ========== GESTION DES DOCUMENTS ==========
 
   validateFile(file: File): { valid: boolean; message?: string } {
-    // Vérifier l'extension
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
     if (!this.allowedExtensions.includes(extension)) {
       return {
@@ -193,23 +223,18 @@ export class PermissionEmployeComponent implements OnInit {
         message: `Le fichier "${file.name}" n'est pas autorisé. Types acceptés : PDF, JPG, PNG, GIF, WEBP, SVG`
       };
     }
-
-    // Vérifier le type MIME
     if (!this.allowedMimeTypes.includes(file.type)) {
       return {
         valid: false,
         message: `Le fichier "${file.name}" a un type non autorisé.`
       };
     }
-
-    // Vérifier la taille
     if (file.size > this.maxFileSize) {
       return {
         valid: false,
         message: `Le fichier "${file.name}" dépasse la taille maximale de 10 Mo.`
       };
     }
-
     return { valid: true };
   }
 
@@ -239,10 +264,8 @@ export class PermissionEmployeComponent implements OnInit {
       }
     }
 
-    // Ajouter les fichiers valides
     this.selectedFiles = [...this.selectedFiles, ...validFiles];
 
-    // Afficher les erreurs
     if (errors.length > 0) {
       errors.forEach(error => {
         this.snackBar.open(error, 'Fermer', {
@@ -252,7 +275,6 @@ export class PermissionEmployeComponent implements OnInit {
       });
     }
 
-    // Réinitialiser l'input file
     event.target.value = '';
   }
 
@@ -329,32 +351,20 @@ export class PermissionEmployeComponent implements OnInit {
   }
 
   getDocumentIcon(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'fa-file-image';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'fa-file-pdf';
-    }
+    if (this.isImageDocument(doc)) return 'fa-file-image';
+    if (this.isPdfDocument(doc)) return 'fa-file-pdf';
     return 'fa-file';
   }
 
   getDocumentColor(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'text-primary';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'text-danger';
-    }
+    if (this.isImageDocument(doc)) return 'text-primary';
+    if (this.isPdfDocument(doc)) return 'text-danger';
     return 'text-secondary';
   }
 
   getFileTypeLabel(file: File): string {
-    if (file.type.startsWith('image/')) {
-      return 'Image';
-    }
-    if (file.type === 'application/pdf') {
-      return 'PDF';
-    }
+    if (file.type.startsWith('image/')) return 'Image';
+    if (file.type === 'application/pdf') return 'PDF';
     return 'Fichier';
   }
 
@@ -370,7 +380,13 @@ export class PermissionEmployeComponent implements OnInit {
       this.currentPermission = this.getEmptyPermission();
     }
     this.selectedFiles = [];
+    this.dureePreview = null;
     this.showModal = true;
+
+    // Prévisualiser si on édite une permission existante
+    if (permission?.debut && permission?.fin) {
+      this.triggerPreview();
+    }
   }
 
   closeModal(): void {
@@ -378,6 +394,7 @@ export class PermissionEmployeComponent implements OnInit {
     this.currentPermission = this.getEmptyPermission();
     this.selectedFiles = [];
     this.documentsToDelete = [];
+    this.dureePreview = null;
   }
 
   openDetailsModal(permission: any) {
@@ -390,10 +407,24 @@ export class PermissionEmployeComponent implements OnInit {
     this.permissionSelectionnee = null;
   }
 
+  // ========== PRÉVISUALISATION DE DURÉE ==========
+
+  onDatesChange(): void {
+    this.triggerPreview();
+  }
+
+  private triggerPreview(): void {
+    const { debut, fin } = this.currentPermission;
+    if (!debut || !fin || new Date(fin) <= new Date(debut)) {
+      this.dureePreview = null;
+      return;
+    }
+    this.previewTrigger$.next({ debut, fin });
+  }
+
   // ========== CRUD PERMISSIONS ==========
 
   savePermission(): void {
-    const now = new Date();
     const debut = new Date(this.currentPermission.debut);
     const fin = new Date(this.currentPermission.fin);
 
@@ -413,7 +444,6 @@ export class PermissionEmployeComponent implements OnInit {
       return;
     }
 
-    // Vérifier que les fichiers sont valides avant l'envoi
     if (this.selectedFiles.length > 0) {
       for (const file of this.selectedFiles) {
         const validation = this.validateFile(file);
@@ -434,7 +464,6 @@ export class PermissionEmployeComponent implements OnInit {
     formData.append('id_type', this.currentPermission.id_type);
     formData.append('id_employe', this.user?.employe.slug);
 
-    // Ajouter les fichiers avec les bons indices pour Laravel
     this.selectedFiles.forEach((file, index) => {
       formData.append(`documents[${index}]`, file, file.name);
     });
@@ -501,7 +530,7 @@ export class PermissionEmployeComponent implements OnInit {
         });
         this.loadPermissions();
       },
-      error: (err) => {
+      error: () => {
         this.closeDeleteModal();
         this.snackBar.open('Échec lors de la suppression de la demande ❌', 'Fermer', {
           duration: 3000,
@@ -527,6 +556,27 @@ export class PermissionEmployeComponent implements OnInit {
       id_type: '',
       documents: []
     };
+  }
+
+  /**
+   * Formate la durée (minutes) renvoyée par le backend.
+   */
+  formaterDureeMinutes(minutes: number | null | undefined): string {
+    if (minutes == null || minutes <= 0) return '—';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h${String(m).padStart(2, '0')}`;
+  }
+
+  /**
+   * Durée formatée d'une permission (source : backend).
+   */
+  getDureeFormatee(permission: any): string {
+    if (!permission) return '—';
+    if (permission.duree_formatee) return permission.duree_formatee;
+    return this.formaterDureeMinutes(permission.duree_minutes);
   }
 
   formatDate(dateString: string): string {
@@ -559,16 +609,6 @@ export class PermissionEmployeComponent implements OnInit {
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
   }
 
-  getDuration(debut: string, fin: string): string {
-    const start = new Date(debut);
-    const end = new Date(fin);
-    const diffMs = end.getTime() - start.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 1) return '1 jour';
-    if (diffDays < 1) return 'Moins d\'un jour';
-    return `${diffDays} jours`;
-  }
-
   getMinDate(): string {
     const now = new Date();
     return now.toISOString().slice(0, 16);
@@ -597,38 +637,6 @@ export class PermissionEmployeComponent implements OnInit {
     return URL.createObjectURL(file);
   }
 
-  calculerDuree(debut: string, fin: string): string {
-    return this.durationCalculator.formaterDuree(
-      this.durationCalculator.calculerDureeOuvrable(debut, fin)
-    );
-  }
-
-  calculerDureeLongue(debut: string, fin: string): string {
-    return this.durationCalculator.formaterDureeLongue(
-      this.durationCalculator.calculerDureeOuvrable(debut, fin)
-    );
-  }
-
-  getDureeEnHeures(debut: string, fin: string): number {
-    return this.durationCalculator.calculerDureeOuvrable(debut, fin);
-  }
-
-  getJoursOuvrables(debut: string, fin: string): number {
-    return this.durationCalculator.compterJoursOuvrables(debut, fin);
-  }
-
-  getDetailDuree(debut: string, fin: string) {
-    return this.durationCalculator.getDetailDuree(debut, fin);
-  }
-
-  getResumeDuree(debut: string, fin: string) {
-    return this.durationCalculator.getResumeDuree(debut, fin);
-  }
-
-  formaterDuree(heures: number): string {
-    return this.durationCalculator.formaterDuree(heures);
-  }
-
   formatDateSort(date: string): string {
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -638,6 +646,4 @@ export class PermissionEmployeComponent implements OnInit {
       minute: '2-digit'
     });
   }
-
-
 }

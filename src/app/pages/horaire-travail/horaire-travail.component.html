@@ -1,0 +1,260 @@
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
+  <div class="horaires-page">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="page-header">
+      <div class="header-left">
+        <div class="icon-container">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="header-text">
+          <h1>Horaires de travail</h1>
+          <p>Configurez les plages horaires pour chaque service</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button mat-stroked-button class="btn-ghost" (click)="ouvrirDuplicateModal()">
+          <mat-icon>content_copy</mat-icon>
+          Dupliquer
+        </button>
+        <button mat-flat-button color="primary" class="btn-save" (click)="enregistrer()" [disabled]="isSaving || isLoading">
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          <span *ngIf="isSaving" class="spinner-btn"></span>
+          {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════ SERVICE SELECTOR ═══════════ -->
+    <section class="service-bar">
+      <div class="service-picker">
+        <div class="service-picker-label">
+          <mat-icon>business</mat-icon>
+          <span>Service</span>
+        </div>
+        <mat-form-field appearance="outline" class="service-field" subscriptSizing="dynamic">
+          <mat-select
+            [(ngModel)]="serviceSelectionne"
+            (ngModelChange)="selectionnerService($event)"
+            [compareWith]="compareServiceParSlug">
+            <mat-option *ngFor="let s of services" [value]="s">
+              <div class="service-option">
+                <span>{{ s.nom }}</span>
+                <span class="tag-journaliste" *ngIf="s.est_journaliste">Journalistes</span>
+              </div>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- KPIs rapides -->
+      <div class="quick-kpis">
+        <div class="kpi">
+          <span class="kpi-value">{{ totalJoursActifs }}</span>
+          <span class="kpi-label">jours actifs</span>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi">
+          <span class="kpi-value">{{ totalHeuresSemaine }}</span>
+          <span class="kpi-label">par semaine</span>
+        </div>
+        <div class="kpi-sep"></div>
+        <div class="kpi">
+          <span class="kpi-value">{{ joursPermanence }}</span>
+          <span class="kpi-label">permanences</span>
+        </div>
+      </div>
+
+      <button mat-stroked-button class="btn-apply-all" (click)="appliquerATous()" [disabled]="isLoading">
+        <mat-icon>content_copy</mat-icon>
+        Appliquer aux autres jours
+      </button>
+    </section>
+
+    <!-- ═══════════ LOADING ═══════════ -->
+    <div class="loading-state" *ngIf="isLoading">
+      <mat-icon class="spinning">sync</mat-icon>
+      <p>Chargement des horaires...</p>
+    </div>
+
+    <!-- ═══════════ GRILLE DES JOURS ═══════════ -->
+    <div class="jours-grid" *ngIf="!isLoading">
+      <div
+        class="jour-card"
+        *ngFor="let jour of jours"
+        [class.inactive]="!jour.actif"
+        [class.weekend]="estWeekend(jour)"
+        [class.permanence]="jour.actif && jour.est_permanence">
+
+        <!-- Header -->
+        <div class="jour-header">
+          <div class="jour-identity">
+            <div class="jour-avatar" [class.weekend-avatar]="estWeekend(jour)">
+              <span>{{ jour.court }}</span>
+            </div>
+            <div class="jour-labels">
+              <span class="jour-nom">{{ jour.nom }}</span>
+              <span class="jour-duree" *ngIf="jour.actif">{{ getDureeJour(jour) }}</span>
+              <span class="jour-duree muted" *ngIf="!jour.actif">Repos</span>
+            </div>
+          </div>
+
+          <mat-slide-toggle
+            [(ngModel)]="jour.actif"
+            color="primary"
+            class="jour-toggle">
+          </mat-slide-toggle>
+        </div>
+
+        <!-- Badges -->
+        <div class="jour-badges" *ngIf="jour.actif && (estWeekend(jour) || jour.est_permanence)">
+          <span class="badge badge-weekend" *ngIf="estWeekend(jour)">
+            <mat-icon>weekend</mat-icon>
+            Weekend
+          </span>
+          <span class="badge badge-permanence" *ngIf="jour.est_permanence">
+            <mat-icon>event_available</mat-icon>
+            Permanence
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="jour-body" *ngIf="jour.actif">
+
+          <!-- Plage de travail -->
+          <div class="time-section">
+            <div class="section-label">
+              <mat-icon>work</mat-icon>
+              <span>Plage de travail</span>
+            </div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <label>Début</label>
+                <input type="time" [(ngModel)]="jour.heure_debut" class="time-input">
+              </div>
+              <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+              <div class="time-input-group">
+                <label>Fin</label>
+                <input type="time" [(ngModel)]="jour.heure_fin" class="time-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Pause -->
+          <div class="pause-section" *ngIf="jour.pause_debut && jour.pause_fin">
+            <div class="section-label">
+              <mat-icon>free_breakfast</mat-icon>
+              <span>Pause</span>
+              <button class="btn-remove-pause" (click)="togglePause(jour)" matTooltip="Retirer la pause">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <label>Début</label>
+                <input type="time" [(ngModel)]="jour.pause_debut" class="time-input">
+              </div>
+              <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+              <div class="time-input-group">
+                <label>Fin</label>
+                <input type="time" [(ngModel)]="jour.pause_fin" class="time-input">
+              </div>
+            </div>
+          </div>
+
+          <button
+            *ngIf="!jour.pause_debut || !jour.pause_fin"
+            mat-stroked-button
+            class="btn-add-pause"
+            (click)="togglePause(jour)">
+            <mat-icon>add</mat-icon>
+            Ajouter une pause
+          </button>
+
+          <!-- Permanence toggle -->
+          <div class="permanence-row">
+            <mat-checkbox [(ngModel)]="jour.est_permanence" color="accent">
+              Jour de permanence (weekend travaillé si planifié)
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <!-- Inactif -->
+        <div class="jour-body inactive-body" *ngIf="!jour.actif">
+          <mat-icon>bedtime</mat-icon>
+          <span>Jour non travaillé</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ MOBILE FAB SAVE ═══════════ -->
+    <div class="mobile-save-bar" *ngIf="!isLoading">
+      <button mat-fab color="primary" (click)="enregistrer()" [disabled]="isSaving">
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        <span *ngIf="isSaving" class="spinner-btn"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════ MODAL DUPLICATION ═══════════ -->
+  <div class="modal-backdrop" *ngIf="showDuplicateModal" (click)="fermerDuplicateModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">
+            <mat-icon>content_copy</mat-icon>
+          </div>
+          <div>
+            <h2>Dupliquer les horaires</h2>
+            <p>Copiez la configuration d'un service vers un autre</p>
+          </div>
+        </div>
+        <button mat-icon-button (click)="fermerDuplicateModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Service source</mat-label>
+          <mat-select [(ngModel)]="duplicateSource">
+            <mat-option *ngFor="let s of services" [value]="s.slug">
+              {{ s.nom }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>file_copy</mat-icon>
+        </mat-form-field>
+
+        <div class="arrow-divider">
+          <mat-icon>arrow_downward</mat-icon>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Service cible (sera écrasé)</mat-label>
+          <mat-select [(ngModel)]="duplicateCible">
+            <mat-option *ngFor="let s of services" [value]="s.slug">
+              {{ s.nom }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>save_alt</mat-icon>
+        </mat-form-field>
+
+        <div class="warning-box" *ngIf="duplicateCible">
+          <mat-icon>warning</mat-icon>
+          <span>Les horaires actuels du service cible seront <strong>définitivement remplacés</strong>.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button mat-stroked-button (click)="fermerDuplicateModal()">Annuler</button>
+        <button mat-flat-button color="primary" (click)="dupliquer()" [disabled]="isSaving || !duplicateCible">
+          <mat-icon *ngIf="!isSaving">content_copy</mat-icon>
+          <span *ngIf="isSaving" class="spinner-btn"></span>
+          {{ isSaving ? 'Duplication...' : 'Dupliquer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

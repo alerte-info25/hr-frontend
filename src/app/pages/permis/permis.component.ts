@@ -1,17 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PermissionService } from '../../services/permission.service';
 import { PermissionDetailDialogComponent } from '../permission-detail-dialog/permission-detail-dialog.component';
 import { MaterialModule } from '../../../../material.module';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { TypePermissionsService } from '../../services/type-permissions.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { DurationCalculatorService } from '../../services/duration-calculator.service';
 import { AuthService } from '../../services/auth.service';
 import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 
@@ -55,7 +53,6 @@ export class PermisComponent implements OnInit {
     private router: Router,
     private typePermissionService: TypePermissionsService,
     private sanitizer: DomSanitizer,
-    private durationCalculator: DurationCalculatorService,
     private authSvr: AuthService
   ) {}
 
@@ -63,11 +60,10 @@ export class PermisComponent implements OnInit {
     this.chargerToutesPermissions();
     this.loadTypesPermission();
   }
+
   isEmploye(): boolean {
     return this.authSvr.isEmploye();
   }
-
-  // ========== STATISTIQUES ==========
 
   get totalDemandes(): number {
     return this.toutesPermissions1.length;
@@ -84,7 +80,6 @@ export class PermisComponent implements OnInit {
   get totalRefusees(): number {
     return this.toutesPermissions.filter(p => p.statut === 3).length;
   }
-  // ========== CHARGEMENT DES DONNÉES ==========
 
   loadTypesPermission(): void {
     this.typePermissionService.getList().subscribe({
@@ -115,8 +110,6 @@ export class PermisComponent implements OnInit {
     });
   }
 
-  // ========== FILTRES ET RECHERCHE ==========
-
   get filteredPermissions(): any[] {
     return this.toutesPermissions.filter(perm => {
       const matchesSearch = !this.searchQuery ||
@@ -125,10 +118,8 @@ export class PermisComponent implements OnInit {
         perm.employe?.nom?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         perm.employe?.prenom?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         perm.employe?.fonction?.nom?.toLowerCase().includes(this.searchQuery.toLowerCase());
-
       const matchesStatus = this.selectedStatus === null || perm.statut === this.selectedStatus;
       const matchesType = !this.selectedType || perm.id_type === this.selectedType;
-
       return matchesSearch && matchesStatus && matchesType;
     });
   }
@@ -143,8 +134,6 @@ export class PermisComponent implements OnInit {
   onFilterChange(): void {
     this.currentPageToutes = 1;
   }
-
-  // ========== PAGINATION ==========
 
   get paginatedPermissionsEnAttente() {
     const start = (this.currentPageAttente - 1) * this.perPageAttente;
@@ -175,8 +164,6 @@ export class PermisComponent implements OnInit {
       this.currentPageToutes = page;
     }
   }
-
-  // ========== GESTION DES PERMISSIONS ==========
 
   archiverPermission(permission: any): void {
     if (!permission) return;
@@ -222,12 +209,10 @@ export class PermisComponent implements OnInit {
 
   soumettreReponse(): void {
     if (!this.permissionSelectionnee || !this.actionEnCours) return;
-
     if (this.actionEnCours === 'refuser' && !this.commentaireAdmin.trim()) {
       this.afficherErreur('Un commentaire est obligatoire pour refuser une demande');
       return;
     }
-
     this.isSubmitting = true;
     const statut = this.actionEnCours === 'accepter' ? 2 : 3;
     const data = {
@@ -235,9 +220,8 @@ export class PermisComponent implements OnInit {
       commentaire_admin: this.commentaireAdmin.trim(),
       date_reponse: new Date().toISOString()
     };
-
     this.permissionService.responsePermission(this.permissionSelectionnee.slug, data).subscribe({
-      next: (response) => {
+      next: () => {
         const action = this.actionEnCours === 'accepter' ? 'acceptée' : 'refusée';
         this.afficherSucces(`Demande ${action} avec succès`);
         this.fermerModal();
@@ -256,19 +240,15 @@ export class PermisComponent implements OnInit {
     if (!doc || !doc.url) {
       return '#';
     }
-    // Si l'URL est déjà complète
     if (doc.url.startsWith('http://') || doc.url.startsWith('https://')) {
       return doc.url;
     }
-    // Si l'URL commence par /storage/
     if (doc.url.startsWith('/storage/')) {
       return doc.url;
     }
-    // Si c'est un chemin relatif
     if (doc.url.startsWith('storage/')) {
       return '/' + doc.url;
     }
-    // Si c'est juste un chemin
     if (!doc.url.startsWith('/') && !doc.url.startsWith('http')) {
       return '/storage/' + doc.url;
     }
@@ -285,22 +265,14 @@ export class PermisComponent implements OnInit {
   }
 
   getDocumentIcon(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'fa-file-image';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'fa-file-pdf';
-    }
+    if (this.isImageDocument(doc)) return 'fa-file-image';
+    if (this.isPdfDocument(doc)) return 'fa-file-pdf';
     return 'fa-file';
   }
 
   getFileExtensionLabel(doc: any): string {
-    if (this.isImageDocument(doc)) {
-      return 'Image';
-    }
-    if (this.isPdfDocument(doc)) {
-      return 'PDF';
-    }
+    if (this.isImageDocument(doc)) return 'Image';
+    if (this.isPdfDocument(doc)) return 'PDF';
     return doc.extension?.toUpperCase() || 'Fichier';
   }
 
@@ -328,47 +300,25 @@ export class PermisComponent implements OnInit {
     }
   }
 
-  // calculerDuree(debut: string, fin: string): string {
-  //   const dateDebut = new Date(debut);
-  //   const dateFin = new Date(fin);
-  //   const diffMs = Math.abs(dateFin.getTime() - dateDebut.getTime());
-  //   const totalHeures = Math.floor(diffMs / (1000 * 60 * 60));
-  //   const jours = Math.floor(totalHeures / 24);
-  //   const heures = totalHeures % 24;
-  //   const heuresFormattees = heures.toString().padStart(2, '0');
-  //   return `${jours}j ${heuresFormattees}h`;
-  // }
-
-  calculerDuree(debut: string, fin: string): string {
-    return this.durationCalculator.formaterDuree(
-      this.durationCalculator.calculerDureeOuvrable(debut, fin)
-    );
+  /**
+   * Formate la durée (minutes) renvoyée par le backend.
+   */
+  formaterDureeMinutes(minutes: number | null | undefined): string {
+    if (minutes == null || minutes <= 0) return '—';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h${String(m).padStart(2, '0')}`;
   }
 
-  calculerDureeLongue(debut: string, fin: string): string {
-    return this.durationCalculator.formaterDureeLongue(
-      this.durationCalculator.calculerDureeOuvrable(debut, fin)
-    );
-  }
-
-  getDureeEnHeures(debut: string, fin: string): number {
-    return this.durationCalculator.calculerDureeOuvrable(debut, fin);
-  }
-
-  getJoursOuvrables(debut: string, fin: string): number {
-    return this.durationCalculator.compterJoursOuvrables(debut, fin);
-  }
-
-  getDetailDuree(debut: string, fin: string) {
-    return this.durationCalculator.getDetailDuree(debut, fin);
-  }
-
-  getResumeDuree(debut: string, fin: string) {
-    return this.durationCalculator.getResumeDuree(debut, fin);
-  }
-
-  formaterDuree(heures: number): string {
-    return this.durationCalculator.formaterDuree(heures);
+  /**
+   * Durée formatée d'une permission (source : backend).
+   */
+  getDureeFormatee(permission: any): string {
+    if (!permission) return '—';
+    if (permission.duree_formatee) return permission.duree_formatee;
+    return this.formaterDureeMinutes(permission.duree_minutes);
   }
 
   formatDateSort(date: string): string {
@@ -416,24 +366,18 @@ export class PermisComponent implements OnInit {
     this.router.navigate(['/mes-permissions']);
   }
 
-  // ========== GÉNÉRATION PDF ==========
-
-  // ========== GÉNÉRATION PDF AVEC GESTION D'ERREURS ==========
+  // ========== PDF ==========
 
   async generatePdf(permission: any) {
     if (!permission) {
       this.snackbar.open('Permission invalide', 'Fermer', { duration: 3000 });
       return;
     }
-
     this.isLoading = true;
-
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-
-      // Ajouter le logo si disponible
       try {
         const logoUrl = window.location.origin + '/assets/images/logo/logo-alerteInfo.png';
         const logoResponse = await fetch(logoUrl);
@@ -453,7 +397,6 @@ export class PermisComponent implements OnInit {
       } catch (e) {
         this.generatePdfContent(doc, permission, pageWidth, pageHeight);
       }
-
     } catch (error) {
       console.error('Erreur lors de la génération du PDF:', error);
       this.snackbar.open('Erreur lors de la génération du PDF ❌', 'Fermer', { duration: 3000 });
@@ -463,7 +406,6 @@ export class PermisComponent implements OnInit {
 
   private generatePdfContent(doc: jsPDF, permission: any, pageWidth: number, pageHeight: number) {
     try {
-      // Titre
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(41, 128, 185);
@@ -478,12 +420,10 @@ export class PermisComponent implements OnInit {
       const leftMargin = 14;
       const rightColX = 120;
 
-      // Ligne de séparation
       doc.setDrawColor(200);
       doc.line(leftMargin, y, pageWidth - leftMargin, y);
       y += 5;
 
-      // Informations
       const infoData = [
         ['Employé', `${permission.employe?.prenom || ''} ${permission.employe?.nom || ''}`],
         ['Fonction', permission.employe?.fonction?.nom || 'N/A'],
@@ -491,7 +431,7 @@ export class PermisComponent implements OnInit {
         ['Date demande', this.formatDateSort(permission.date_demande)],
         ['Début', this.formatDateSort(permission.debut)],
         ['Fin', this.formatDateSort(permission.fin)],
-        ['Durée', this.calculerDuree(permission.debut, permission.fin)],
+        ['Durée', this.getDureeFormatee(permission)],   // ⬅️ Backend
         ['Statut', this.getStatutLabel(permission.statut)],
       ];
 
@@ -506,7 +446,6 @@ export class PermisComponent implements OnInit {
 
       y += 4 * lineHeight + 8;
 
-      // Raison
       if (permission.raison) {
         doc.setFont('helvetica', 'bold');
         doc.text('Raison:', leftMargin, y);
@@ -518,7 +457,6 @@ export class PermisComponent implements OnInit {
         y += raisonLines.length * 5 + 8;
       }
 
-      // Commentaire
       if (permission.commentaire_admin) {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
@@ -531,7 +469,6 @@ export class PermisComponent implements OnInit {
         y += commentLines.length * 5 + 8;
       }
 
-      // Documents
       const documents = permission.documents || [];
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
@@ -554,21 +491,15 @@ export class PermisComponent implements OnInit {
         y += 5;
       }
 
-      // Pied de page
       const dateStr = new Date().toLocaleDateString('fr-FR');
       doc.setFontSize(8);
       doc.setTextColor(128);
       doc.text(`Généré le ${dateStr}`, leftMargin, pageHeight - 10);
       doc.text('ALERTE INFO - Tous droits réservés', pageWidth - leftMargin, pageHeight - 10, { align: 'right' });
 
-      const fileName = this.generateFileName(permission);
-
-      doc.save(fileName);
-      // doc.save(`permission_${permission.slug || 'download'}.pdf`);
-
+      doc.save(this.generateFileName(permission));
       this.snackbar.open('PDF téléchargé avec succès ✅', 'Fermer', { duration: 3000 });
       this.isLoading = false;
-
     } catch (error) {
       console.error('Erreur lors de la génération du contenu PDF:', error);
       this.snackbar.open('Erreur lors de la génération du PDF ❌', 'Fermer', { duration: 3000 });
@@ -580,21 +511,19 @@ export class PermisComponent implements OnInit {
     const prenom = permission.employe?.prenom || 'inconnu';
     const nom = permission.employe?.nom || 'inconnu';
 
-    // Nettoyer les noms (minuscules, sans accents, remplacement des espaces)
     const cleanName = (name: string) => {
       return name
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
-        .replace(/[^a-z0-9]/g, '_') // Remplace tout caractère spécial par _
-        .replace(/_+/g, '_') // Supprime les _ multiples
-        .replace(/^_|_$/g, ''); // Supprime les _ en début/fin
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '');
     };
 
     const prenomFormatted = cleanName(prenom);
     const nomFormatted = cleanName(nom);
 
-    // Formater la date
     const date = permission.date_demande ? new Date(permission.date_demande) : new Date();
     const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
                     'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -604,5 +533,4 @@ export class PermisComponent implements OnInit {
 
     return `permission_${prenomFormatted}_${nomFormatted}_du_${day}_${month}_${year}.pdf`;
   }
-
 }

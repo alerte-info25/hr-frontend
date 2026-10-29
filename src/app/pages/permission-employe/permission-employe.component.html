@@ -67,6 +67,7 @@
           <tr>
             <th>Type</th>
             <th>Période</th>
+            <th>Durée</th>
             <th>Raison</th>
             <th>Statut</th>
             <th>Date demande</th>
@@ -97,6 +98,12 @@
                   <span class="date-value">{{ formatDateShort(permission.fin) }}</span>
                 </div>
               </div>
+            </td>
+            <td class="duration-cell">
+              <span class="duration-badge">
+                <i class="bi bi-clock"></i>
+                {{ getDureeFormatee(permission) }}
+              </span>
             </td>
             <td class="reason-cell">
               <div class="reason-text" [title]="permission.raison">
@@ -162,6 +169,11 @@
             <span class="mobile-value">
               {{ formatDateShort(permission.debut) }} → {{ formatDateShort(permission.fin) }}
             </span>
+          </div>
+
+          <div class="mobile-info-row">
+            <span class="mobile-label">Durée</span>
+            <span class="mobile-value">{{ getDureeFormatee(permission) }}</span>
           </div>
 
           <div class="mobile-info-row">
@@ -348,47 +360,33 @@
           <div class="detail-content">
             <span class="detail-label">Période</span>
             <span class="detail-value period">
-              <span class="date-badge">{{ formatDate(permissionSelectionnee.debut) }}</span>
+              <span class="date-badge">{{ formatDateShort(permissionSelectionnee.debut) }}</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
-              <span class="date-badge">{{ formatDate(permissionSelectionnee.fin) }}</span>
+              <span class="date-badge">{{ formatDateShort(permissionSelectionnee.fin) }}</span>
             </span>
           </div>
         </div>
 
-        <div class="card mb-3" *ngIf="getDetailDuree(permissionSelectionnee.debut, permissionSelectionnee.fin) as detail">
-          <div class="card-body">
-            <h6 class="card-title">
-              <i class="bi bi-clock-history me-2"></i>
-              Détail de la durée par jour
-            </h6>
-            <div class="duration-detail-list">
-              <div *ngFor="let heure of detail.heuresParJour; let i = index" class="day-detail-item">
-                <span class="day-label">Jour {{ i + 1 }} :</span>
-                <span class="day-duration">{{ formaterDuree(heure) }}</span>
-                <span class="day-hours">({{ heure }}h)</span>
-              </div>
-              <div class="total-detail-item">
-                <span class="total-label"><strong>Total :</strong></span>
-                <span class="total-duration"><strong>{{ formaterDuree(detail.totalHeures) }}</strong></span>
-                <span class="total-hours">({{ detail.totalHeures }}h)</span>
-              </div>
-              <div class="info-detail-item">
-                <small class="text-muted">
-                  <i class="bi bi-info-circle me-1"></i>
-                  Jours ouvrables : {{ detail.joursOuvrables }} |
-                  Plage horaire : 08:00 - 18:00 |
-                  Pause déjeuner : 12:30 - 14:30 (exclue)
-                </small>
-                <br>
-                <small class="text-muted">
-                  <i class="bi bi-calculator me-1"></i>
-                  Une journée = 8 heures de travail effectif
-                </small>
-              </div>
-            </div>
+        <!-- Durée effective (calculée backend) -->
+        <div class="detail-item full-width">
+          <div class="detail-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="detail-content">
+            <span class="detail-label">Durée effective</span>
+            <span class="detail-value duration-highlight">
+              {{ getDureeFormatee(permissionSelectionnee) }}
+            </span>
+            <small class="text-muted d-block mt-1">
+              <i class="bi bi-info-circle me-1"></i>
+              Calculée selon les horaires de votre service et, le cas échéant, vos permanences.
+            </small>
           </div>
         </div>
 
@@ -461,12 +459,10 @@
              [class.image-card]="isImageDocument(doc)"
              [class.pdf-card]="isPdfDocument(doc)">
 
-            <!-- Aperçu pour les images -->
             <div *ngIf="isImageDocument(doc)" class="document-thumbnail">
               <img [src]="getSafeUrl(doc.url)" [alt]="doc.nom_fichier" class="img-thumbnail">
             </div>
 
-            <!-- Icône pour PDF -->
             <div *ngIf="isPdfDocument(doc)" class="document-icon-container">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -494,7 +490,6 @@
           </a>
         </div>
 
-        <!-- Empty State -->
         <div class="documents-empty" *ngIf="permissionSelectionnee.documents.length === 0">
           <div class="empty-icon-container">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -567,6 +562,7 @@
             <input
               type="datetime-local"
               [(ngModel)]="currentPermission.debut"
+              (ngModelChange)="onDatesChange()"
               name="debut"
               [min]="getMinDate()"
               class="form-control"
@@ -582,12 +578,49 @@
             <input
               type="datetime-local"
               [(ngModel)]="currentPermission.fin"
+              (ngModelChange)="onDatesChange()"
               name="fin"
               [min]="getMinReturnDate()"
               class="form-control"
               required
             >
           </div>
+        </div>
+
+        <!-- Prévisualisation de la durée -->
+        <div class="duration-preview" *ngIf="dureePreview || isLoadingPreview">
+          <div class="duration-preview-header">
+            <i class="bi bi-calculator"></i>
+            <strong>Durée estimée</strong>
+            <span class="spinner-border spinner-border-sm" *ngIf="isLoadingPreview"></span>
+          </div>
+
+          <ng-container *ngIf="!isLoadingPreview && dureePreview">
+            <div class="duration-preview-total">
+              {{ formaterDureeMinutes(dureePreview.duree_minutes) }}
+            </div>
+
+            <ul class="duration-preview-details">
+              <li *ngFor="let d of dureePreview.detail_par_jour">
+                <span class="dp-date">{{ d.date }} ({{ d.jour_semaine }})</span>
+                <span class="dp-minutes" [class.text-muted]="d.minutes === 0">
+                  {{ d.minutes > 0 ? formaterDureeMinutes(d.minutes) : 'Non travaillé' }}
+                </span>
+                <span class="dp-tag" *ngIf="d.est_permanence">permanence</span>
+              </li>
+            </ul>
+
+            <div class="alert alert-warning py-2 mb-0 mt-2" *ngIf="dureePreview.avertissements?.length">
+              <small>
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <span *ngFor="let w of dureePreview.avertissements">{{ w }} </span>
+              </small>
+            </div>
+          </ng-container>
+
+          <small class="text-muted d-block mt-2" *ngIf="!isLoadingPreview && !dureePreview">
+            Renseignez les dates pour voir la durée estimée.
+          </small>
         </div>
 
         <div class="form-group">
@@ -616,11 +649,9 @@
               [class.pdf-doc]="isPdfDocument(doc)"
             >
               <div class="document-info-existing">
-                <!-- Aperçu des images -->
                 <div *ngIf="isImageDocument(doc)" class="document-preview-existing">
                   <img [src]="getSafeUrl(doc.url)" [alt]="doc.nom_fichier" class="img-thumbnail">
                 </div>
-                <!-- Icône pour PDF -->
                 <div *ngIf="isPdfDocument(doc)" class="document-icon-existing">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -649,7 +680,7 @@
           </div>
         </div>
 
-        <!-- Zone d'upload modifiée -->
+        <!-- Zone d'upload -->
         <div class="form-group">
           <label class="form-label">
             Ajouter des documents (max 3 fichiers - PDF ou Images)
@@ -676,15 +707,12 @@
             </label>
           </div>
 
-          <!-- Fichiers sélectionnés avec aperçu -->
           <div class="selected-files" *ngIf="selectedFiles.length > 0">
             <div class="file-item" *ngFor="let file of selectedFiles; let i = index">
               <div class="file-info">
-                <!-- Aperçu pour les images -->
                 <div *ngIf="file.type.startsWith('image/')" class="file-preview">
                   <img [src]="getSafeUrl(createObjectURL(file))" [alt]="file.name" class="img-thumbnail">
                 </div>
-                <!-- Icône pour PDF -->
                 <div *ngIf="file.type === 'application/pdf'" class="file-icon-wrapper">
                   <svg class="file-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -724,7 +752,14 @@
       <button
         class="btn btn-submit"
         (click)="savePermission()"
-        [disabled]="!currentPermission.id_type || !currentPermission.debut || !currentPermission.fin || !currentPermission.raison">
+        [disabled]="
+          !currentPermission.id_type ||
+          !currentPermission.debut ||
+          !currentPermission.fin ||
+          !currentPermission.raison ||
+          isLoadingPreview ||
+          (dureePreview && dureePreview.duree_minutes <= 0)
+        ">
         {{ isEditMode ? 'Enregistrer les modifications' : 'Soumettre la demande' }}
       </button>
     </div>

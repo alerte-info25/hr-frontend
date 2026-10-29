@@ -1,0 +1,258 @@
+@if(isEmploye()){
+  <app-access-denied />
+}@else{
+  <div class="permanences-admin-page">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="page-header">
+      <div class="header-left">
+        <div class="icon-container">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <div class="header-text">
+          <h1>Permanences — Tous les services</h1>
+          <p>Consultation globale des plannings de permanence (lecture seule)</p>
+        </div>
+      </div>
+
+      <button class="badge-lecture" (click)="consulterToutesPermanences()" *ngIf="!isDG()">
+        <mat-icon>visibility</mat-icon>
+        <span>Gerer mes parmanances</span>
+      </button>
+    </header>
+
+    <!-- ═══════════ NAVIGATION SEMAINE ═══════════ -->
+    <section class="week-navigation">
+      <button mat-icon-button (click)="semainePrecedente()" matTooltip="Semaine précédente">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <div class="week-info">
+        <div class="week-range">
+          <mat-icon>calendar_today</mat-icon>
+          <span>
+            <strong>{{ samedi | date:'EEE d MMM' }}</strong>
+            →
+            <strong>{{ dimanche | date:'EEE d MMM yyyy' }}</strong>
+          </span>
+        </div>
+        <button mat-stroked-button class="btn-today" (click)="semaineCourante()">
+          <mat-icon>today</mat-icon>
+          Cette semaine
+        </button>
+      </div>
+
+      <button mat-icon-button (click)="semaineSuivante()" matTooltip="Semaine suivante">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </section>
+
+    <!-- ═══════════ KPI GLOBAUX ═══════════ -->
+    <section class="kpis-grid" *ngIf="stats">
+      <div class="kpi-card">
+        <div class="kpi-icon blue">
+          <mat-icon>event_available</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.total_permanences }}</span>
+          <span class="kpi-label">Total permanences</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon orange">
+          <mat-icon>wb_sunny</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.total_samedi }}</span>
+          <span class="kpi-label">Samedi</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon purple">
+          <mat-icon>brightness_2</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.total_dimanche }}</span>
+          <span class="kpi-label">Dimanche</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon green">
+          <mat-icon>badge</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.total_employes }}</span>
+          <span class="kpi-label">Employés concernés</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon teal">
+          <mat-icon>business</mat-icon>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.total_services }}</span>
+          <span class="kpi-label">Services actifs</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ BARRE OUTILS ═══════════ -->
+    <section class="toolbar">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>Rechercher (employé, fonction, service)</mat-label>
+        <input matInput [(ngModel)]="searchQuery" placeholder="Ex: Dupont, Journaliste...">
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          matSuffix
+          mat-icon-button
+          *ngIf="searchQuery"
+          (click)="searchQuery = ''"
+          aria-label="Effacer">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <div class="toolbar-actions">
+        <button mat-stroked-button (click)="toutOuvrir()">
+          <mat-icon>unfold_more</mat-icon>
+          Tout ouvrir
+        </button>
+        <button mat-stroked-button (click)="toutFermer()">
+          <mat-icon>unfold_less</mat-icon>
+          Tout replier
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══════════ LOADING ═══════════ -->
+    <div class="loading-state" *ngIf="isLoading">
+      <mat-icon class="spinning">sync</mat-icon>
+      <p>Chargement des permanences...</p>
+    </div>
+
+    <!-- ═══════════ LISTE PAR SERVICE ═══════════ -->
+    <div class="services-list" *ngIf="!isLoading && servicesFiltres.length > 0">
+      <div class="service-section" *ngFor="let s of servicesFiltres">
+
+        <!-- Header du service -->
+        <div class="service-header" (click)="toggleService(s.service.slug)">
+          <div class="service-header-left">
+            <button mat-icon-button class="toggle-btn">
+              <mat-icon>{{ servicesOuverts[s.service.slug] ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+
+            <div class="service-identity">
+              <div class="service-name-row">
+                <span class="service-name">{{ s.service.nom }}</span>
+                <span class="service-tag journaliste" *ngIf="s.service.est_journaliste">
+                  <mat-icon>newspaper</mat-icon>
+                  Journalistes
+                </span>
+              </div>
+              <span class="service-meta">
+                {{ s.service.total_employes }} employé(s) dans le service
+              </span>
+            </div>
+          </div>
+
+          <div class="service-counts">
+            <span class="count-badge samedi">
+              <mat-icon>wb_sunny</mat-icon>
+              {{ s.samedi.total }}
+            </span>
+            <span class="count-badge dimanche">
+              <mat-icon>brightness_2</mat-icon>
+              {{ s.dimanche.total }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Body du service -->
+        <div class="service-body" *ngIf="servicesOuverts[s.service.slug]">
+          <div class="jours-grid">
+
+            <!-- Samedi -->
+            <div class="jour-column">
+              <div class="jour-header">
+                <div class="jour-title">
+                  <mat-icon>wb_sunny</mat-icon>
+                  <span>Samedi</span>
+                </div>
+                <span class="jour-date">{{ samedi | date:'d MMM yyyy' }}</span>
+              </div>
+
+              <div class="employes-liste" *ngIf="s.samedi.employes.length > 0">
+                <div class="employe-item" *ngFor="let e of s.samedi.employes">
+                  <div class="employe-avatar samedi">
+                    {{ getInitials(e) }}
+                  </div>
+                  <div class="employe-info">
+                    <span class="employe-nom">{{ e.prenom }} {{ e.nom }}</span>
+                    <span class="employe-fonction">{{ e.fonction || 'Sans fonction' }}</span>
+                  </div>
+                  <div class="employe-meta" *ngIf="e.cree_le" matTooltip="Créé par {{ e.cree_par }} le {{ e.cree_le }}">
+                    <mat-icon>history</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <div class="empty-day" *ngIf="s.samedi.employes.length === 0">
+                <mat-icon>event_busy</mat-icon>
+                <span>Aucune permanence planifiée</span>
+              </div>
+            </div>
+
+            <!-- Dimanche -->
+            <div class="jour-column">
+              <div class="jour-header">
+                <div class="jour-title">
+                  <mat-icon>brightness_2</mat-icon>
+                  <span>Dimanche</span>
+                </div>
+                <span class="jour-date">{{ dimanche | date:'d MMM yyyy' }}</span>
+              </div>
+
+              <div class="employes-liste" *ngIf="s.dimanche.employes.length > 0">
+                <div class="employe-item" *ngFor="let e of s.dimanche.employes">
+                  <div class="employe-avatar dimanche">
+                    {{ getInitials(e) }}
+                  </div>
+                  <div class="employe-info">
+                    <span class="employe-nom">{{ e.prenom }} {{ e.nom }}</span>
+                    <span class="employe-fonction">{{ e.fonction || 'Sans fonction' }}</span>
+                  </div>
+                  <div class="employe-meta" *ngIf="e.cree_le" matTooltip="Créé par {{ e.cree_par }} le {{ e.cree_le }}">
+                    <mat-icon>history</mat-icon>
+                  </div>
+                </div>
+              </div>
+
+              <div class="empty-day" *ngIf="s.dimanche.employes.length === 0">
+                <mat-icon>event_busy</mat-icon>
+                <span>Aucune permanence planifiée</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ ÉTAT VIDE ═══════════ -->
+    <div class="empty-state" *ngIf="!isLoading && servicesFiltres.length === 0">
+      <mat-icon class="empty-icon">search_off</mat-icon>
+      <h3>Aucun résultat</h3>
+      <p *ngIf="searchQuery">Aucune permanence ne correspond à "{{ searchQuery }}"</p>
+      <p *ngIf="!searchQuery">Aucune permanence enregistrée pour cette semaine</p>
+      <button mat-stroked-button *ngIf="searchQuery" (click)="searchQuery = ''">
+        <mat-icon>refresh</mat-icon>
+        Réinitialiser la recherche
+      </button>
+    </div>
+
+  </div>
+}
