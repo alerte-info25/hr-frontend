@@ -604,7 +604,7 @@
               <li *ngFor="let d of dureePreview.detail_par_jour">
                 <span class="dp-date">{{ d.date }} ({{ d.jour_semaine }})</span>
                 <span class="dp-minutes" [class.text-muted]="d.minutes === 0">
-                  {{ d.minutes > 0 ? formaterDureeMinutes(d.minutes) : 'Non travaillé' }}
+                  {{ d.minutes > 0 ? formaterDureeMinutes(d.minutes) : 'Reprise du service' }}
                 </span>
                 <span class="dp-tag" *ngIf="d.est_permanence">permanence</span>
               </li>

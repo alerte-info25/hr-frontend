@@ -60,6 +60,7 @@ import { InfrasLayoutComponent } from './layouts/infras-layout/infras-layout.com
 import { PermananceResponsableComponent } from './pages/permanance-responsable/permanance-responsable.component';
 import { HoraireTravailComponent } from './pages/horaire-travail/horaire-travail.component';
 import { PermananceAdminComponent } from './pages/permanance-admin/permanance-admin.component';
+import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
 
 export const routes: Routes = [
   {
@@ -78,6 +79,11 @@ export const routes: Routes = [
         component: ApplicationsComponent,
         canActivate: [AuthGuard],
         title: 'Applications',
+      },
+      {
+        path: 'access-denied',
+        component: AccessDeniedComponent,
+        title: 'Accès refusé',
       },
       {
         path: 'fonctions',

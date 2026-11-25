@@ -12,7 +12,7 @@ import { AccessDeniedComponent } from '../access-denied/access-denied.component'
 
 @Component({
   selector: 'app-bureaux',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
+  imports: [CommonModule, ConfirmDeleteDialogComponent, AccessDeniedComponent],
   templateUrl: './bureaux.component.html',
   styleUrl: './bureaux.component.scss'
 })
@@ -30,7 +30,12 @@ export class BureauxComponent {
   ) { }
 
   ngOnInit(): void {
-    this.refresh();
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.refresh();
+    }
   }
 
   isEmploye(): boolean {

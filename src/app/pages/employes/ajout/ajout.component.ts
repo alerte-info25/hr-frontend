@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoadingComponent } from '../../loading/loading.component';
 import { PAYS } from '../../../../data/pays';
 import { NATIONALITES } from '../../../../data/nationnalite';
+import { AuthService } from '../../../services/auth.service';
 export interface Employee {
   id?: number;
   nom: string;
@@ -65,14 +66,22 @@ export class AjoutComponent implements OnInit{
     private router: Router,
     private svrService: ServicesService,
     private fonctionSvr: FonctionsService,
-    private snackBar: MatSnackBar
-
+    private snackBar: MatSnackBar,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit() {
-    this.initializeForms();
-    this.getFonctionListe();
-    this.getServiceListe()
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+    } else {
+      this.initializeForms();
+      this.getFonctionListe();
+      this.getServiceListe();
+    }
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   initializeForms() {

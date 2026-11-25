@@ -57,8 +57,13 @@ export class PermisComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.chargerToutesPermissions();
-    this.loadTypesPermission();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.chargerToutesPermissions();
+      this.loadTypesPermission();
+    }
   }
 
   isEmploye(): boolean {

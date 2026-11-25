@@ -129,8 +129,14 @@ export class CongesDirecteurComponent {
   }
 
   ngOnInit(): void {
-    this.loadConges();
-    setTimeout(() => this.fadeIn = true, 100);
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.loadConges();
+      setTimeout(() => this.fadeIn = true, 100);
+    }
+    
   }
 
   isEmploye(): boolean {
@@ -139,7 +145,6 @@ export class CongesDirecteurComponent {
 
   loadConges(): void {
     this.isLoading = true;
-    // Simuler un appel API - Remplacer par votre service
     this.congeSvr.getList().subscribe({
       next: (response) => {
         this.conges = response;
@@ -154,7 +159,6 @@ export class CongesDirecteurComponent {
         this.isLoading = false;
       }
     });
-
   }
 
   processConges(): void {

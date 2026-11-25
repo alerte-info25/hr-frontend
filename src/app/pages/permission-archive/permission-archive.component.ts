@@ -10,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { TypePermissionsService } from '../../services/type-permissions.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-permission-archive',
@@ -40,15 +41,23 @@ export class PermissionArchiveComponent implements OnInit {
     private dialog: MatDialog,
     private snackbar: MatSnackBar,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.chargerToutesPermissions();
-    this.loadTypesPermission();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.chargerToutesPermissions();
+      this.loadTypesPermission();
+    }
   }
 
-  // ========== CHARGEMENT DES DONNÉES ==========
+  isEmploye(): boolean {
+    return this.authService.isEmploye();
+  }
 
   chargerToutesPermissions(): void {
     this.isLoadingToutes = true;
@@ -120,8 +129,6 @@ export class PermissionArchiveComponent implements OnInit {
       this.currentPageToutes = page;
     }
   }
-
-  // ========== DÉTECTION DES TYPES DE DOCUMENTS ==========
 
   isImageDocument(doc: any): boolean {
     return doc.type === 'image' ||

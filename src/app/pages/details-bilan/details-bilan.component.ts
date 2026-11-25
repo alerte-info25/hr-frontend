@@ -6,6 +6,7 @@ import { MaterialModule } from '../../../../material.module';
 import { Location } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PdfExportService } from '../../services/PDF/pdf-export.service';
+import { AuthService } from '../../services/auth.service';
 interface BilanComplet {
   bilan: {
     slug: string;
@@ -68,17 +69,27 @@ export class DetailsBilanComponent {
     private bilanService: BilanService,
     private location: Location,
     private snackBar: MatSnackBar,
-    private pdfExportService: PdfExportService
+    private pdfExportService: PdfExportService,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit(): void {
-    const slug = this.route.snapshot.paramMap.get('slug');
-    if (slug) {
-      this.loadBilanDetails(slug);
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
     } else {
-      this.errorMessage = 'Identifiant du bilan manquant';
-      this.isLoading = false;
+      const slug = this.route.snapshot.paramMap.get('slug');
+      if (slug) {
+        this.loadBilanDetails(slug);
+      } else {
+        this.errorMessage = 'Identifiant du bilan manquant';
+        this.isLoading = false;
+      }
     }
+  }
+
+  isEmploye(): boolean{
+    return this.authSvr.isEmploye();
   }
 
   loadBilanDetails(slug: string): void {

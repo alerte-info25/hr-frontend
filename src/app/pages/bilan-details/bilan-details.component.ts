@@ -11,7 +11,7 @@ import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/co
 import { LoadingComponent } from '../loading/loading.component';
 import { Location } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
-
+import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-bilan-details',
   standalone: true,
@@ -78,7 +78,8 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private sanitizer: DomSanitizer,
     private pdfExportService: PdfExportService,
-    private location: Location
+    private location: Location,
+    private authSvr: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -90,6 +91,10 @@ export class BilanDetailsComponent implements OnInit, OnDestroy {
           this.loadBilanDetails(this.bilanSlug);
         }
       });
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   ngOnDestroy(): void {

@@ -1,0 +1,51 @@
+<div class="details-dialog">
+  <div class="dialog-header">
+    <div class="avatar">{{ data.employeInitiales }}</div>
+    <div class="header-text">
+      <h2>{{ (data.employePrenom ? data.employePrenom + ' ' : '') + data.employeNom }}</h2>
+      <span class="subtitle">Période de congé</span>
+    </div>
+    <button mat-icon-button (click)="close()" class="close-btn" aria-label="Fermer">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <div class="period-card">
+      <div class="period-item">
+        <div class="period-icon start">
+          <mat-icon>flight_takeoff</mat-icon>
+        </div>
+        <div class="period-info">
+          <span class="period-label">Début</span>
+          <span class="period-value">{{ formatDate(data.debut) }}</span>
+        </div>
+      </div>
+
+      <div class="period-arrow">
+        <mat-icon>arrow_forward</mat-icon>
+      </div>
+
+      <div class="period-item">
+        <div class="period-icon end">
+          <mat-icon>flight_land</mat-icon>
+        </div>
+        <div class="period-info">
+          <span class="period-label">Fin</span>
+          <span class="period-value">{{ formatDate(data.fin) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="duration-badge">
+      <mat-icon>schedule</mat-icon>
+      <span>
+        {{ data.duree }} {{ data.duree > 1 ? 'jours' : 'jour' }} de congé
+      </span>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button color="primary" (click)="close()">Fermer</button>
+  </mat-dialog-actions>
+</div>

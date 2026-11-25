@@ -173,8 +173,6 @@ export class PermananceResponsableComponent implements OnInit {
     this.router.navigate(['/permanances-admin']);
   }
 
-  /* ---------- Navigation ---------- */
-
   private decalerSemaine(jours: number): void {
     const d = this.parseIso(this.semaineDate);
     d.setDate(d.getDate() + jours);
@@ -189,8 +187,6 @@ export class PermananceResponsableComponent implements OnInit {
     this.semaineDate = this.getSamedi(new Date());
     this.chargerSemaine();
   }
-
-  /* ---------- Affichage ---------- */
 
   initiales(emp: any): string {
     return `${emp.prenom?.charAt(0) ?? ''}${emp.nom?.charAt(0) ?? ''}`.toUpperCase();

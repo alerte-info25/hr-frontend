@@ -23,14 +23,19 @@ export class ServicesComponent {
   itemToDelete: any = null;
   constructor(
     private dialog: MatDialog,
-    private route: Router,
+    private router: Router,
     private svrService:ServicesService,
     private empSvr: EmployesService,
     private snackBar: MatSnackBar,
     private authSvr: AuthService
   ){}
     ngOnInit(): void {
-      this.refresh()
+      if(this.isEmploye()){
+        this.router.navigate(['/access-denied']);
+        return;
+      } else{
+        this.refresh()
+      }
     }
     isEmploye(): boolean {
       return this.authSvr.isEmploye();

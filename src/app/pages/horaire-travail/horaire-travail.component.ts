@@ -6,7 +6,7 @@ import { MaterialModule } from '../../../../material.module';
 import { HoraireTravailService } from '../../services/horaire-travail.service';
 import { AuthService } from '../../services/auth.service';
 import { AccessDeniedComponent } from '../access-denied/access-denied.component';
-
+import { Router } from '@angular/router';
 interface JourHoraire {
   jour_semaine: number;
   nom: string;
@@ -56,21 +56,23 @@ export class HoraireTravailComponent {
   constructor(
     private horaireSvr: HoraireTravailService,
     private snackBar: MatSnackBar,
-    private authSvr: AuthService
+    private authSvr: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.initialiserJours();
-    this.chargerServices();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.initialiserJours();
+      this.chargerServices();
+    }
   }
 
   isEmploye(): boolean {
     return this.authSvr.isEmploye();
   }
-
-  // ────────────────────────────────────────────
-  // Chargement
-  // ────────────────────────────────────────────
 
   chargerServices(): void {
     this.horaireSvr.getServices().subscribe({
@@ -132,10 +134,6 @@ export class HoraireTravailComponent {
     });
   }
 
-  // ────────────────────────────────────────────
-  // Manipulation
-  // ────────────────────────────────────────────
-
   private initialiserJours(): void {
     this.jours = this.JOURS_DEFAUT.map(j => ({
       jour_semaine:   j.num,
@@ -172,9 +170,6 @@ export class HoraireTravailComponent {
     return a?.slug === b?.slug;
   };
 
-  /**
-   * Copie les horaires du premier jour actif vers tous les autres jours actifs.
-   */
   appliquerATous(): void {
     const reference = this.jours.find(j => j.actif);
     if (!reference) {
@@ -192,10 +187,6 @@ export class HoraireTravailComponent {
 
     this.snackBar.open('Horaires appliqués à tous les jours actifs', 'Fermer', { duration: 2000 });
   }
-
-  // ────────────────────────────────────────────
-  // Actions
-  // ────────────────────────────────────────────
 
   enregistrer(): void {
     if (!this.serviceSelectionne) return;
@@ -290,10 +281,6 @@ export class HoraireTravailComponent {
       }
     });
   }
-
-  // ────────────────────────────────────────────
-  // Helpers / Getters
-  // ────────────────────────────────────────────
 
   private toHHmm(time: string): string {
     return time?.substring(0, 5) || '';

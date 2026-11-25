@@ -10,7 +10,7 @@ import { DroitsService } from '../../services/droits.service';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 import { AuthService } from '../../services/auth.service';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-users',
   imports: [
@@ -47,11 +47,17 @@ export class UsersComponent implements OnInit, AfterViewInit {
     private userSvr: UsersService,
     private snackBar: MatSnackBar,
     private rolesvr: DroitsService,
-    private authSvr: AuthService
+    private authSvr: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.refresh();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.refresh();
+    }
   }
 
   ngAfterViewInit(): void {

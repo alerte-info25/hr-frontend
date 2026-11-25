@@ -5,12 +5,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '../../../../material.module';
 import { PermananceAdminService } from '../../services/permanance-admin.service';
 import { AuthService } from '../../services/auth.service';
-import { AccessDeniedComponent } from '../access-denied/access-denied.component';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-permanance-admin',
-  imports: [CommonModule, FormsModule, MaterialModule, AccessDeniedComponent],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './permanance-admin.component.html',
   styleUrl: './permanance-admin.component.scss'
 })
@@ -31,6 +30,9 @@ export class PermananceAdminComponent {
   // Services repliés / dépliés
   servicesOuverts: { [key: string]: boolean } = {};
 
+  readonly iconSamedi = 'weekend';
+  readonly iconDimanche = 'home';
+
   constructor(
     private permanenceAdminSvr: PermananceAdminService,
     private snackBar: MatSnackBar,
@@ -39,8 +41,13 @@ export class PermananceAdminComponent {
   ) {}
 
   ngOnInit(): void {
-    this.semaineDate = this.getSamedi(new Date());
-    this.chargerSemaine();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.semaineDate = this.getSamedi(new Date());
+      this.chargerSemaine();
+    }
   }
 
   isEmploye(): boolean {
@@ -54,10 +61,6 @@ export class PermananceAdminComponent {
   consulterToutesPermanences(): void {
     this.router.navigate(['/permanances']);
   }
-
-  // ────────────────────────────────────────────
-  // Navigation
-  // ────────────────────────────────────────────
 
   private getSamedi(date: Date): string {
     const d = new Date(date);
@@ -85,10 +88,6 @@ export class PermananceAdminComponent {
     this.semaineDate = this.getSamedi(new Date());
     this.chargerSemaine();
   }
-
-  // ────────────────────────────────────────────
-  // Chargement
-  // ────────────────────────────────────────────
 
   chargerSemaine(): void {
     this.isLoading = true;

@@ -26,8 +26,13 @@ export class DocumentsComponent implements OnInit{
 
   }
   ngOnInit(): void {
-    this.user = this.authSvr.getCurrentUser();
-    this.refresh();
+    if(this.authSvr.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.user = this.authSvr.getCurrentUser();
+      this.refresh();
+    }
   }
 
   isEmploye(): boolean {

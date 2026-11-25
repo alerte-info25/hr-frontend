@@ -144,7 +144,12 @@ export class BilanDirecteurComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadTableauDeBord();
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.loadTableauDeBord();
+    }
   }
 
   loadTableauDeBord(): void {

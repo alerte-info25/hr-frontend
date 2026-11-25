@@ -6,6 +6,7 @@ import { DashboardService, DashboardData, DashboardFilters } from '../../service
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { AbsPipe } from '../../abs.pipe';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 Chart.register(...registerables);
 
 @Component({
@@ -32,11 +33,21 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private router: Router
+    private router: Router,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadDashboard();
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.loadDashboard();
+    }
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   loadDashboard(): void {

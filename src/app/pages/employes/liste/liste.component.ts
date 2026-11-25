@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { UsersService } from '../../../services/users.service';
 import { AuthService } from '../../../services/auth.service';
 import { AccessDeniedComponent } from '../../access-denied/access-denied.component';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-liste',
   imports: [
@@ -21,7 +21,6 @@ import { AccessDeniedComponent } from '../../access-denied/access-denied.compone
     ReactiveFormsModule, RouterLink,
     MaterialModule, LoadingComponent,
     ConfirmDeleteDialogComponent,
-    AccessDeniedComponent
   ],
   templateUrl: './liste.component.html',
   styleUrls: ['./liste.component.scss']
@@ -37,7 +36,8 @@ export class ListeComponent implements OnInit {
     private fonctionSvr: FonctionsService,
     private snackBar: MatSnackBar,
     private userSvr: UsersService,
-    private authSvr: AuthService
+    private authSvr: AuthService,
+    private router: Router
   ){}
   employees: any[] =[];
 
@@ -60,7 +60,12 @@ export class ListeComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.refresh();
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.refresh();
+    }
   }
   refresh(){
     this.isLoading = true;

@@ -30,7 +30,12 @@ export class FonctionsComponent {
   ) { }
 
   ngOnInit(): void {
-    this.refresh();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.refresh();
+    }
   }
 
   isEmploye(): boolean {

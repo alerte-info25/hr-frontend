@@ -58,7 +58,6 @@ export class ApplicationsComponent {
       this.userRole.toLocaleLowerCase() === 'employé'
     ) {
       const slug = this.authSvr.getCurrentUser().employe.slug;
-
       this.router.navigate(['/dossier', slug]);
     } else {
       this.router.navigate(['/dossiers']);

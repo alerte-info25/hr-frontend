@@ -30,7 +30,12 @@ export class TypesContratsComponent {
     private authSvr: AuthService
   ) { }
   ngOnInit(){
-    this.refresh();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.refresh();
+    }
   }
 
   isEmploye(): boolean {

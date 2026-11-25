@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoadingComponent } from '../../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { Location } from '@angular/common';
+import { AuthService } from '../../../services/auth.service';
 @Component({
   selector: 'app-details-empleoye',
   imports: [CommonModule, RouterLink, LoadingComponent,ConfirmDeleteDialogComponent],
@@ -23,32 +24,41 @@ export class DetailsEmployeComponent {
     private router: Router,
     private employeSvr: EmployesService,
     private snackBar: MatSnackBar,
-    private location: Location
+    private location: Location,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit(): void {
-    const slug:string|null = this.route.snapshot.paramMap.get('id');
-    if (slug) {
-      this.employeSvr.getEmployesBySlug(slug).subscribe({
-        next: (data) =>{
-          this.theEmployee = data
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.snackBar.open('Erreur lors de la recuperation de l\'employe{', 'Fermer', {
-            duration: 3000,
-            panelClass: ['toast-warning']
-          })
-        }
-      })
-
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {  
+      const slug:string|null = this.route.snapshot.paramMap.get('id');
+      if (slug) {
+        this.employeSvr.getEmployesBySlug(slug).subscribe({
+          next: (data) =>{
+            this.theEmployee = data
+            this.isLoading = false;
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.snackBar.open('Erreur lors de la recuperation de l\'employe{', 'Fermer', {
+              duration: 3000,
+              panelClass: ['toast-warning']
+            })
+          }
+        })
+      } 
     }
   }
 
   goBack() {
     this.location.back();
     // this.router.navigate(['/employes']);
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   getInitials(): string {

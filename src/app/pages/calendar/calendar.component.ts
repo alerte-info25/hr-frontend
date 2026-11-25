@@ -19,6 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoadingComponent } from '../loading/loading.component';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { CalendarCongeDetailsComponent, CongeDetailsData } from '../dialog/calendar-conge-details/calendar-conge-details.component';
 
 interface CongeExtendedProps {
   debut: any;
@@ -194,6 +195,36 @@ export class CalendarComponent implements OnInit {
     this.applyFilter();
   }
 
+  handleEventClick(clickInfo: EventClickArg) {
+    const props = clickInfo.event.extendedProps as CongeExtendedProps;
+
+    const nom = props.employe?.nom ?? '';
+    const prenom = props.employe?.prenom ?? '';
+    const initiales =
+      ((prenom.charAt(0) ?? '') + (nom.charAt(0) ?? '')).toUpperCase() || '?';
+
+    const debut = new Date(props.debut);
+    const fin = new Date(props.fin);
+    const duree = Math.max(
+      1,
+      Math.round((fin.getTime() - debut.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    );
+
+    this.dialog.open(CalendarCongeDetailsComponent, {
+      width: 'auto',
+      maxWidth: '95vw',
+      panelClass: 'conge-details-panel',
+      data: {
+        employeNom: nom || 'Inconnu',
+        employePrenom: prenom,
+        employeInitiales: initiales,
+        debut: props.debut,
+        fin: props.fin,
+        duree
+      } as CongeDetailsData
+    });
+  }
+
   handleDateSelect(selectInfo: DateSelectArg) {
     // const start = selectInfo.startStr;
     // const end = selectInfo.endStr;
@@ -237,7 +268,7 @@ export class CalendarComponent implements OnInit {
     // });
   }
 
-  handleEventClick(clickInfo: EventClickArg) {
+  // handleEventClick(clickInfo: EventClickArg) {
     // const event = clickInfo.event;
     // const props = event.extendedProps as CongeExtendedProps;
 
@@ -272,7 +303,7 @@ export class CalendarComponent implements OnInit {
     //     });
     //   }
     // });
-  }
+  // }
 
   handleEventDrop(dropInfo: EventDropArg) {
     const props = dropInfo.event.extendedProps as CongeExtendedProps;

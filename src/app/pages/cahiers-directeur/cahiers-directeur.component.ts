@@ -4,7 +4,7 @@ import {FormsModule,ReactiveFormsModule,FormBuilder,FormGroup,Validators,FormArr
 import { MaterialModule } from '../../../../material.module';
 import { trigger, transition, query, style, stagger, animate } from '@angular/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
+import { Router } from '@angular/router';
 import { EmployesService } from '../../services/employes.service';
 import { ServicesService } from '../../services/services.service';
 import { CahierChargeService } from '../../services/cahier-charge.service';
@@ -98,16 +98,22 @@ export class CahiersDirecteurComponent implements OnInit {
     private employeSrv: EmployesService,
     private serviceSrv: ServicesService,
     private cahierSrv: CahierChargeService,
-    private authSvr: AuthService
+    private authSvr: AuthService,
+    private router: Router
   ) {}
 
   // ================= INIT =================
   ngOnInit(): void {
-    this.user = this.authSvr.getUser();
-    this.generateYears();
-    this.initForm();
-    this.loadAllData();
-    this.loadCahier()
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.user = this.authSvr.getUser();
+      this.generateYears();
+      this.initForm();
+      this.loadAllData();
+      this.loadCahier()
+    }
   }
 
   generateYears(): void {

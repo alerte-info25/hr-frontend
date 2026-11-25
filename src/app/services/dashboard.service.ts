@@ -396,6 +396,7 @@ export interface EmployesKPIs {
   moins_30_ans: number;
   cdd: number;
   cdi: number;
+  essai: number;
   stage: number;
   sans_contrat: number;
   interim: number;

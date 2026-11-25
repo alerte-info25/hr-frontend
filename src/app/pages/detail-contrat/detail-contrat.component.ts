@@ -9,6 +9,7 @@ import { ContratService } from '../../services/contrat.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { FormContratDialogComponent } from '../dialog/form-contrat-dialog/form-contrat-dialog.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-detail-contrat',
@@ -29,24 +30,42 @@ export class DetailContratComponent {
     private router: Router,
     private dialog: MatDialog,
     private contratSvr: ContratService,
-    private snackBar: MatSnackBar
-  ){
-    const slug: string | null = this.route.snapshot.paramMap.get('id');
-    if (slug) {
+    private snackBar: MatSnackBar,
+    private authService: AuthService
+  ) {}
 
-      this.contratSvr.getContratBySlug(slug).subscribe({
-        next: (data) => {
-          this.theConrat = data;
-          this.isLoading = false;
-        },
-          error: (err) => {
-          console.error('Erreur de chargement du contrat', err);
-          this.isLoading = false;
-        }
-      })
+  isEmploye(): boolean {
+    return this.authService.isEmploye();
+  }
 
+  ngOnInit(): void {
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      const slug: string | null = this.route.snapshot.paramMap.get('id');
+      if (slug) {
+
+        this.contratSvr.getContratBySlug(slug).subscribe({
+          next: (data) => {
+            this.theConrat = data;
+            this.isLoading = false;
+          },
+            error: (err) => {
+            console.error('Erreur de chargement du contrat', err);
+            this.isLoading = false;
+          }
+        })
+      } else {
+        this.isLoading = false;
+        this.snackBar.open('Aucun contrat trouvé', 'Fermer', {
+          duration: 3000,
+          panelClass: ['toast-warning']
+        });
+      }
     }
   }
+
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('fr-FR');
   }

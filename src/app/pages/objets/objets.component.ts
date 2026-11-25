@@ -9,10 +9,9 @@ import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/co
 import { LoadingComponent } from '../loading/loading.component';
 import { AuthService } from '../../services/auth.service';
 import { AccessDeniedComponent } from '../access-denied/access-denied.component';
-
 @Component({
   selector: 'app-objets',
-  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent, AccessDeniedComponent],
+  imports: [CommonModule, LoadingComponent, ConfirmDeleteDialogComponent],
   templateUrl: './objets.component.html',
   styleUrl: './objets.component.scss'
 })
@@ -26,10 +25,16 @@ export class ObjetsComponent {
     private objetSvr: ObjetService,
     private snackBar: MatSnackBar,
     private authSvr: AuthService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
-    this.refresh();
+    if(this.isEmploye()){
+      this.router.navigate(['/access-denied']);
+      return;
+    } else {
+      this.refresh();
+    }
   }
   isEmploye(): boolean {
     return this.authSvr.isEmploye();

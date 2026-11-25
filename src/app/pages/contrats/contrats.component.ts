@@ -10,7 +10,8 @@ import { EmployesService } from '../../services/employes.service';
 import { LoadingComponent } from '../loading/loading.component';
 import { ConfirmDeleteDialogComponent } from '../dialog/confirm-delete-dialog/confirm-delete-dialog.component';
 import { FormContratDialogComponent } from '../dialog/form-contrat-dialog/form-contrat-dialog.component';
-
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-contrats',
   imports: [
@@ -59,10 +60,21 @@ export class ContratsComponent implements OnInit {
     private typecontratSvr: TypeContratService,
     private employeSvr: EmployesService,
     private snackBar: MatSnackBar,
+    private router: Router,
+    private authSvr: AuthService
   ) {}
 
   ngOnInit() {
-    this.refresh();
+    if (this.isEmploye()) {
+      this.router.navigate(['/access-denied']);
+      return;
+    } else{
+      this.refresh();
+    }
+  }
+
+  isEmploye(): boolean {
+    return this.authSvr.isEmploye();
   }
 
   refresh() {
